@@ -1,5 +1,7 @@
 export type NoteState = "draft" | "published" | "archived";
 export type ResolutionStatus = "public" | "private" | "missing";
+export type ReferenceFragmentKind = "none" | "heading" | "block";
+export type ReferenceRole = "link" | "embed";
 
 export interface HeadingNode {
   depth: 2 | 3;
@@ -7,11 +9,33 @@ export interface HeadingNode {
   id: string;
 }
 
+export interface BlockAnchor {
+  id: string;
+  anchor: string;
+}
+
 export interface ResolvedReference {
   raw: string;
   target: string;
   status: ResolutionStatus;
   replacement?: string;
+  sourceSlug?: string;
+  sourceTitle?: string;
+  targetSlug?: string;
+  targetTitle?: string;
+  targetDescription?: string;
+  label?: string;
+  fragmentKind?: ReferenceFragmentKind;
+  targetAnchor?: string;
+  role?: ReferenceRole;
+  /**
+   * Internal-only diagnostic context for manifests and debugging.
+   * Never include this field in public-link-index.json.
+   */
+  sourceContext?: {
+    containerHeading?: string;
+    surroundingText?: string;
+  };
 }
 
 export interface ResolvedAsset {
@@ -60,6 +84,30 @@ export interface PublishManifest {
   errors: string[];
 }
 
+export interface PublicLinkNode {
+  slug: string;
+  title: string;
+  description: string;
+  excerpt: string;
+  tags: string[];
+  href: string;
+  headings: HeadingNode[];
+}
+
+export interface PublicLinkEdge {
+  sourceSlug: string;
+  targetSlug: string;
+  kind: ReferenceFragmentKind;
+  targetAnchor?: string;
+  label: string;
+}
+
+export interface PublicLinkIndex {
+  generatedAt: string;
+  nodes: PublicLinkNode[];
+  edges: PublicLinkEdge[];
+}
+
 export interface TransformOptions {
   vaultRoot: string;
   sourceDir?: string;
@@ -67,6 +115,7 @@ export interface TransformOptions {
   assetOutputDir: string;
   assetPublicBase?: string;
   manifestPath?: string;
+  publicLinkIndexPath?: string;
   preview?: boolean;
 }
 

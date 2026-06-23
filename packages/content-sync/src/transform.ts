@@ -8,10 +8,12 @@ import {
   asNumber,
   asString,
   asStringArray,
+  type BlockAnchor,
   type ContentModel,
   type HeadingNode,
   type ManifestEntry,
   type ParsedNote,
+  type PublicLinkIndex,
   type PublishManifest,
   type TransformOptions,
 } from "./schema.js";
@@ -50,19 +52,32 @@ export function transformVault(options: TransformOptions): PublishManifest {
   const parsedNotes = sourceFiles.map((file) => parseNote(file, readFileSync(file, "utf8")));
   const prevalidated = parsedNotes.map((note) => {
     const title = asString(note.frontmatter.title) ?? path.basename(note.sourcePath, path.extname(note.sourcePath));
+    const description = asString(note.frontmatter.description) ?? "";
     const slug = asString(note.frontmatter.slug) ?? slugify(title);
     const published = asBoolean(note.frontmatter.published) === true;
+    const tags = asStringArray(note.frontmatter.tags) ?? [];
     const isInPublishedRoot = isWithin(sourceDir, note.sourcePath);
     return {
       note,
       slug,
+      title,
+      description,
+      excerpt: extractExcerpt(note.body),
+      tags,
+      headings: extractHeadings(note.body),
+      blockAnchors: extractBlockAnchors(note.body),
+      duplicateBlockIds: extractDuplicateBlockIds(note.body),
       isPublic: published && isInPublishedRoot,
     };
   });
   const noteIndex = createNoteIndex(
-    prevalidated.map<NoteIndexEntry>(({ note, slug, isPublic }) => ({
+    prevalidated.map<NoteIndexEntry>(({ note, slug, title, description, headings, blockAnchors, isPublic }) => ({
       sourcePath: note.sourcePath,
       slug,
+      title,
+      description,
+      headings,
+      blockAnchors,
       isPublic,
     })),
   );
@@ -81,6 +96,8 @@ export function transformVault(options: TransformOptions): PublishManifest {
     const entry = transformNote({
       note: item.note,
       slug: item.slug,
+      title: item.title,
+      duplicateBlockIds: item.duplicateBlockIds,
       noteIndex,
       options: {
         vaultRoot,
@@ -115,6 +132,14 @@ export function transformVault(options: TransformOptions): PublishManifest {
     writeFileSync(options.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   }
 
+  if (options.publicLinkIndexPath && errors.length === 0) {
+    mkdirSync(path.dirname(options.publicLinkIndexPath), { recursive: true });
+    writeFileSync(
+      options.publicLinkIndexPath,
+      `${JSON.stringify(buildPublicLinkIndex(exportedPosts, prevalidated), null, 2)}\n`,
+    );
+  }
+
   if (errors.length > 0 && !options.preview) {
     throw new Error(`Content sync failed with ${errors.length} blocking error(s).`);
   }
@@ -125,6 +150,8 @@ export function transformVault(options: TransformOptions): PublishManifest {
 function transformNote(input: {
   note: ParsedNote;
   slug: string;
+  title: string;
+  duplicateBlockIds: string[];
   noteIndex: ReturnType<typeof createNoteIndex>;
   options: {
     vaultRoot: string;
@@ -160,8 +187,17 @@ function transformNote(input: {
   const modelResult = createContentModel(note, slug, state, input.hasDuplicateSlug);
   warnings.push(...modelResult.warnings);
   errors.push(...modelResult.errors);
+  for (const id of input.duplicateBlockIds) {
+    errors.push(`Duplicate block id: ${id}`);
+  }
 
-  const linkResult = rewriteWikilinks(modelResult.value?.body ?? note.body, input.noteIndex);
+  const linkResult = rewriteWikilinks(modelResult.value?.body ?? note.body, input.noteIndex, {
+    sourceSlug: slug,
+    sourceTitle: input.title,
+  });
+  if (modelResult.value) {
+    modelResult.value.outboundLinks = linkResult.references;
+  }
   errors.push(...linkResult.errors);
 
   const assetResult = rewriteAssets(linkResult.body, {
@@ -198,7 +234,7 @@ function transformNote(input: {
     seriesOrder: modelResult.value?.seriesOrder,
     published: state === "published",
   });
-  const outputText = `${frontmatter}${normalizeCallouts(assetResult.body).trimEnd()}\n`;
+  const outputText = `${frontmatter}${normalizeCallouts(normalizeBlockAnchors(assetResult.body)).trimEnd()}\n`;
   const outputPath = path.join(input.options.outputDir, `${slug}.mdx`);
   writeFileSync(outputPath, outputText);
 
@@ -301,6 +337,167 @@ export function extractHeadings(body: string): HeadingNode[] {
   }
 
   return headings;
+}
+
+export function extractBlockAnchors(body: string): BlockAnchor[] {
+  return collectBlockAnchors(body).anchors;
+}
+
+export function extractDuplicateBlockIds(body: string): string[] {
+  return Array.from(collectBlockAnchors(body).duplicates).sort();
+}
+
+function normalizeBlockAnchors(body: string): string {
+  const lines = body.split(/\r?\n/);
+  let inFence = false;
+
+  const rewritten = lines.map((line) => {
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      return line;
+    }
+    if (inFence) return line;
+
+    const standalone = /^\s*\^([A-Za-z0-9_-]+)\s*$/.exec(line);
+    if (standalone) {
+      return `<span id="block-${standalone[1]}"></span>`;
+    }
+
+    const inline = /^(.*?)(?:\s+)\^([A-Za-z0-9_-]+)\s*$/.exec(line);
+    if (inline) {
+      return `${inline[1]} <span id="block-${inline[2]}"></span>`;
+    }
+
+    return line;
+  });
+
+  return rewritten.join("\n");
+}
+
+function collectBlockAnchors(body: string): { anchors: BlockAnchor[]; duplicates: Set<string> } {
+  const anchors: BlockAnchor[] = [];
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  let inFence = false;
+
+  for (const line of body.split(/\r?\n/)) {
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+
+    const standalone = /^\s*\^([A-Za-z0-9_-]+)\s*$/.exec(line);
+    const inline = /(?:^|\s)\^([A-Za-z0-9_-]+)\s*$/.exec(line);
+    const id = standalone?.[1] ?? inline?.[1];
+    if (!id) continue;
+
+    if (seen.has(id)) {
+      duplicates.add(id);
+    }
+    seen.add(id);
+    anchors.push({ id, anchor: `block-${id}` });
+  }
+
+  return { anchors, duplicates };
+}
+
+function buildPublicLinkIndex(
+  exportedPosts: ManifestEntry[],
+  notes: Array<{
+    slug: string;
+    title: string;
+    description: string;
+    excerpt: string;
+    tags: string[];
+    headings: HeadingNode[];
+    isPublic: boolean;
+  }>,
+): PublicLinkIndex {
+  const exportedSlugs = new Set(exportedPosts.map((post) => post.slug).filter((slug): slug is string => Boolean(slug)));
+  const nodes = notes
+    .filter((note) => note.isPublic && exportedSlugs.has(note.slug))
+    .map((note) => ({
+      slug: note.slug,
+      title: note.title,
+      description: note.description,
+      excerpt: note.excerpt,
+      tags: note.tags,
+      href: `/posts/${note.slug}/`,
+      headings: note.headings,
+    }))
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+
+  const edges = exportedPosts
+    .flatMap((post) =>
+      post.rewrittenLinks
+        .filter((reference) => reference.status === "public" && reference.targetSlug && post.slug && reference.role !== "embed")
+        .map((reference, order) => ({
+          sourceSlug: post.slug!,
+          targetSlug: reference.targetSlug!,
+          kind: reference.fragmentKind ?? "none",
+          targetAnchor: reference.targetAnchor,
+          label: reference.label ?? reference.target,
+          order,
+        })),
+    )
+    .sort((a, b) => {
+      const source = a.sourceSlug.localeCompare(b.sourceSlug);
+      if (source !== 0) return source;
+      const target = a.targetSlug.localeCompare(b.targetSlug);
+      if (target !== 0) return target;
+      return a.order - b.order;
+    })
+    .map(({ order: _order, ...edge }) => edge);
+
+  return {
+    generatedAt: new Date().toISOString(),
+    nodes,
+    edges,
+  };
+}
+
+function extractExcerpt(body: string): string {
+  const paragraphs: string[][] = [];
+  let current: string[] = [];
+  let inFence = false;
+
+  for (const line of body.split(/\r?\n/)) {
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence || /^\s*#{1,6}\s+/.test(line)) continue;
+
+    if (line.trim().length === 0) {
+      if (current.length > 0) {
+        paragraphs.push(current);
+        current = [];
+      }
+      continue;
+    }
+
+    current.push(line.trim());
+  }
+
+  if (current.length > 0) {
+    paragraphs.push(current);
+  }
+
+  const paragraph = paragraphs[0]?.join(" ") ?? "";
+  return toPlainPreviewText(paragraph).slice(0, 180).trim();
+}
+
+function toPlainPreviewText(value: string): string {
+  return value
+    .replace(/!\[\[[^\]]+\]\]/g, "")
+    .replace(/\[\[([^\]|#^]+)(?:[#^][^\]|]+)?(?:\|([^\]]+))?\]\]/g, (_match, target, alias) => alias ?? target)
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/\s+\^[A-Za-z0-9_-]+\b/g, "")
+    .replace(/[`*_~>#]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function normalizeCallouts(body: string): string {

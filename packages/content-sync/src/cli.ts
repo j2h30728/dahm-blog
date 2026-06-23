@@ -8,6 +8,7 @@ interface CliArgs {
   outputDir: string;
   assetOutputDir: string;
   manifestPath: string;
+  publicLinkIndexPath: string;
   preview: boolean;
 }
 
@@ -34,6 +35,7 @@ function parseArgs(argv: string[]): CliArgs {
     outputDir: path.resolve(root, "apps/blog/src/content/posts"),
     assetOutputDir: path.resolve(root, "apps/blog/public/assets/posts"),
     manifestPath: path.resolve(root, "apps/blog/src/content/publish-manifest.json"),
+    publicLinkIndexPath: path.resolve(root, "apps/blog/src/content/public-link-index.json"),
     preview: false,
   };
 
@@ -58,6 +60,9 @@ function parseArgs(argv: string[]): CliArgs {
       index += 1;
     } else if (arg === "--manifest" && value) {
       defaults.manifestPath = path.resolve(value);
+      index += 1;
+    } else if (arg === "--public-index" && value) {
+      defaults.publicLinkIndexPath = path.resolve(value);
       index += 1;
     } else if (arg === "--preview") {
       defaults.preview = true;
