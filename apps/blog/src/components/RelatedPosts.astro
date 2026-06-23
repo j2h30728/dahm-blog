@@ -1,0 +1,21 @@
+---
+import type { RelatedPostScore } from "../lib/related-posts";
+
+const { related } = Astro.props as { related: RelatedPostScore[] };
+---
+{
+  related.length > 0 && (
+    <section class="related" aria-labelledby="related-title">
+      <h2 id="related-title">Related posts</h2>
+      <div class="related-grid">
+        {related.map(({ post, reasons }) => (
+          <a class="related-card" href={`/posts/${post.data.slug}/`}>
+            <span>{post.data.series}</span>
+            <strong>{post.data.title}</strong>
+            <small>{reasons.join(", ")}</small>
+          </a>
+        ))}
+      </div>
+    </section>
+  )
+}

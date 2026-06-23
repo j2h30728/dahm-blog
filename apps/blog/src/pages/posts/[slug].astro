@@ -1,0 +1,37 @@
+---
+import { render } from "astro:content";
+import RelatedPosts from "../../components/RelatedPosts.astro";
+import Toc from "../../components/Toc.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getPublishedPosts } from "../../lib/posts";
+import { getRelatedPosts } from "../../lib/related-posts";
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  return posts.map((post) => ({
+    params: { slug: post.data.slug },
+    props: { post, posts },
+  }));
+}
+
+const { post, posts } = Astro.props;
+const { Content, headings } = await render(post);
+const related = getRelatedPosts(post, posts);
+---
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article>
+    <p class="tagline">{post.data.series}</p>
+    <h1 class="page-title">{post.data.title}</h1>
+    <div class="meta">
+      <time datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time>
+      {post.data.tags.map((tag) => <a class="tag" href={`/tags/${tag}/`}>{tag}</a>)}
+    </div>
+    <div class="post-layout">
+      <div class="content">
+        <Content />
+      </div>
+      <Toc headings={headings} />
+    </div>
+    <RelatedPosts related={related} />
+  </article>
+</BaseLayout>

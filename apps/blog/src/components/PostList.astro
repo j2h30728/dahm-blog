@@ -1,0 +1,19 @@
+---
+import type { Post } from "../lib/posts";
+
+const { posts } = Astro.props as { posts: Post[] };
+---
+<div class="post-list">
+  {
+    posts.map((post) => (
+      <article class="post-item">
+        <a href={`/posts/${post.data.slug}/`}>
+          <span>{post.data.series}</span>
+          <h2>{post.data.title}</h2>
+          <p>{post.data.description}</p>
+          <time datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time>
+        </a>
+      </article>
+    ))
+  }
+</div>

@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getPublishedPosts } from "../../lib/posts";
+
+const posts = await getPublishedPosts();
+const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort();
+---
+<BaseLayout title="Tags">
+  <h1 class="page-title">Tags</h1>
+  <div class="tags">
+    {tags.map((tag) => <a class="tag" href={`/tags/${tag}/`}>{tag}</a>)}
+  </div>
+</BaseLayout>

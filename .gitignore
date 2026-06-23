@@ -1,0 +1,11 @@
+node_modules
+.astro
+dist
+.env
+.env.*
+apps/blog/dist
+apps/blog/.astro
+apps/blog/public/search/pagefind
+packages/*/dist
+packages/private-wiki-index/.private-index
+*.tsbuildinfo

@@ -1,0 +1,13 @@
+---
+import PostList from "../components/PostList.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getPublishedPosts } from "../lib/posts";
+
+const posts = await getPublishedPosts();
+---
+<BaseLayout title="Personal Tech Blog" description="Technical essays exported from an Obsidian-first workflow.">
+  <p class="tagline">Obsidian-first publishing</p>
+  <h1 class="page-title">Personal Tech Blog</h1>
+  <p class="page-subtitle">Technical notes, essays, and series built from a file-based publishing pipeline.</p>
+  <PostList posts={posts} />
+</BaseLayout>

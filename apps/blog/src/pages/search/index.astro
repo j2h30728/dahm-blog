@@ -1,0 +1,36 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Search">
+  <h1 class="page-title">Search</h1>
+  <input class="search-box" id="search" type="search" placeholder="Search posts, tags, and series" autocomplete="off" />
+  <div id="results" class="post-list" aria-live="polite"></div>
+  <script>
+    const input = document.querySelector("#search");
+    const results = document.querySelector("#results");
+    const response = await fetch("/search/index.json");
+    const posts = await response.json();
+
+    function render(query) {
+      const normalized = query.trim().toLowerCase();
+      const matches = normalized
+        ? posts.filter((post) => post.searchText.includes(normalized))
+        : posts;
+
+      results.innerHTML = matches
+        .map((post) => `
+          <article class="post-item">
+            <a href="${post.url}">
+              <span>${post.series}</span>
+              <h2>${post.title}</h2>
+              <p>${post.description}</p>
+            </a>
+          </article>
+        `)
+        .join("");
+    }
+
+    input.addEventListener("input", () => render(input.value));
+    render("");
+  </script>
+</BaseLayout>

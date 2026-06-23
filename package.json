@@ -1,0 +1,22 @@
+{
+  "name": "personal-tech-blog-stack",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "yarn@4.9.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "sync:content": "yarn workspace @personal-tech-blog/content-sync sync",
+    "index:private": "yarn workspace @personal-tech-blog/private-wiki-index index",
+    "test": "yarn workspace @personal-tech-blog/content-sync test && yarn workspace @personal-tech-blog/private-wiki-index test && yarn workspace @personal-tech-blog/blog test",
+    "build": "yarn workspace @personal-tech-blog/content-sync build && yarn sync:content && yarn workspace @personal-tech-blog/private-wiki-index build && yarn index:private && yarn workspace @personal-tech-blog/blog build",
+    "typecheck": "yarn workspace @personal-tech-blog/content-sync typecheck && yarn workspace @personal-tech-blog/private-wiki-index typecheck && yarn workspace @personal-tech-blog/blog typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.4",
+    "typescript": "^5.8.3"
+  }
+}

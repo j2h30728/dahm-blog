@@ -1,0 +1,19 @@
+---
+title: "Content Boundaries"
+slug: "content-boundaries"
+description: "How public and private notes stay separated."
+date: "2026-06-24"
+updated: "2026-06-24"
+tags: ["architecture", "privacy"]
+series: "Building The Blog"
+seriesOrder: 2
+published: true
+---
+
+## Public allowlist
+
+The export step accepts only notes in the published folder with `published: true`.
+
+## Private blocklist is not enough
+
+The pipeline uses an allowlist so accidental private folders are not exported.

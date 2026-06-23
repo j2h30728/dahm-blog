@@ -1,0 +1,32 @@
+---
+import "../styles/global.css";
+
+const {
+  title = "Personal Tech Blog",
+  description = "Notes and technical essays.",
+} = Astro.props as { title?: string; description?: string };
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="nav" aria-label="Primary">
+        <a class="brand" href="/">Personal Tech Blog</a>
+        <div class="nav-links">
+          <a href="/search/">Search</a>
+          <a href="/tags/">Tags</a>
+          <a href="/series/">Series</a>
+        </div>
+      </nav>
+    </header>
+    <main class="shell">
+      <slot />
+    </main>
+  </body>
+</html>
