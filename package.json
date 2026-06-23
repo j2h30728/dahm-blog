@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@9.15.5",
+  "packageManager": "pnpm@11.8.0",
   "scripts": {
     "dev": "pnpm sync:content && pnpm --filter @personal-tech-blog/blog dev",
     "sync:content": "pnpm --filter @personal-tech-blog/content-sync sync",
@@ -15,5 +15,8 @@
   "devDependencies": {
     "@types/node": "^24.0.4",
     "typescript": "^5.8.3"
+  },
+  "volta": {
+    "node": "24.17.0"
   }
 }
