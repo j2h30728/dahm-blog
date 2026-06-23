@@ -1,9 +1,11 @@
 ---
 import { render } from "astro:content";
+import Backlinks from "../../components/Backlinks.astro";
 import RelatedPosts from "../../components/RelatedPosts.astro";
 import Toc from "../../components/Toc.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getPublishedPosts } from "../../lib/posts";
+import { getBacklinks, getLinkPreviewPayload } from "../../lib/public-link-index";
 import { getRelatedPosts } from "../../lib/related-posts";
 
 export async function getStaticPaths() {
@@ -17,6 +19,8 @@ export async function getStaticPaths() {
 const { post, posts } = Astro.props;
 const { Content, headings } = await render(post);
 const related = getRelatedPosts(post, posts);
+const backlinks = getBacklinks(post.data.slug);
+const previewPayloadJson = JSON.stringify(getLinkPreviewPayload()).replace(/</g, "\\u003c");
 ---
 <BaseLayout title={post.data.title} description={post.data.description}>
   <article>
@@ -33,5 +37,89 @@ const related = getRelatedPosts(post, posts);
       <Toc headings={headings} />
     </div>
     <RelatedPosts related={related} />
+    <Backlinks backlinks={backlinks} />
   </article>
+  <script id="internal-link-preview-data" type="application/json" set:html={previewPayloadJson}></script>
+  <script is:inline>
+    (() => {
+      const dataElement = document.getElementById("internal-link-preview-data");
+      if (!dataElement?.textContent) return;
+
+      let previews;
+      try {
+        previews = JSON.parse(dataElement.textContent);
+      } catch {
+        return;
+      }
+
+      const preview = document.createElement("div");
+      preview.id = "internal-link-preview";
+      preview.className = "internal-link-preview";
+      preview.setAttribute("role", "status");
+      preview.setAttribute("aria-live", "polite");
+      preview.hidden = true;
+      document.body.append(preview);
+
+      const internalLinks = document.querySelectorAll('.content a[href^="/posts/"]');
+
+      function slugFromLink(anchor) {
+        const href = anchor.getAttribute("href");
+        if (!href) return null;
+        const url = new URL(href, window.location.origin);
+        const match = /^\/posts\/([^/]+)\/?/.exec(url.pathname);
+        return match?.[1] ?? null;
+      }
+
+      function show(anchor) {
+        const slug = slugFromLink(anchor);
+        const item = slug ? previews[slug] : null;
+        if (!item) return;
+
+        const summary = item.description || item.excerpt || "";
+        const tags = Array.isArray(item.tags) ? item.tags.slice(0, 4) : [];
+        preview.innerHTML = [
+          `<strong>${escapeHtml(item.title)}</strong>`,
+          summary ? `<span>${escapeHtml(summary)}</span>` : "",
+          tags.length > 0
+            ? `<div class="internal-link-preview-tags">${tags.map((tag) => `<small>${escapeHtml(tag)}</small>`).join("")}</div>`
+            : "",
+        ].join("");
+        preview.hidden = false;
+        anchor.setAttribute("aria-describedby", preview.id);
+
+        const rect = anchor.getBoundingClientRect();
+        const width = Math.min(320, window.innerWidth - 32);
+        const left = Math.max(16, Math.min(rect.left, window.innerWidth - width - 16));
+        const top = Math.min(rect.bottom + 10, window.innerHeight - preview.offsetHeight - 16);
+        preview.style.width = `${width}px`;
+        preview.style.left = `${left}px`;
+        preview.style.top = `${Math.max(16, top)}px`;
+      }
+
+      function hide(anchor) {
+        preview.hidden = true;
+        anchor.removeAttribute("aria-describedby");
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      internalLinks.forEach((anchor) => {
+        anchor.classList.add("internal-link");
+        anchor.addEventListener("mouseenter", () => show(anchor));
+        anchor.addEventListener("mouseleave", () => hide(anchor));
+        anchor.addEventListener("focus", () => show(anchor));
+        anchor.addEventListener("blur", () => hide(anchor));
+        anchor.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") hide(anchor);
+        });
+      });
+    })();
+  </script>
 </BaseLayout>

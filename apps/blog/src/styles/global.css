@@ -192,6 +192,65 @@ a:hover {
   padding: 14px;
 }
 
+.related-card p {
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.backlink-card small {
+  color: var(--muted);
+  display: block;
+}
+
+.internal-link {
+  border-bottom: 1px dotted color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.internal-link:focus-visible {
+  border-radius: 4px;
+  outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 3px;
+}
+
+.internal-link-preview {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgb(29 37 44 / 16%);
+  color: var(--ink);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  padding: 12px 14px;
+  position: fixed;
+  z-index: 20;
+}
+
+.internal-link-preview strong,
+.internal-link-preview span {
+  display: block;
+}
+
+.internal-link-preview span {
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.internal-link-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.internal-link-preview-tags small {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 4px 7px;
+}
+
 .search-box {
   border: 1px solid var(--line);
   border-radius: 8px;

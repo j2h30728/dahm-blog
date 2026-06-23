@@ -1,0 +1,22 @@
+---
+import type { Backlink } from "../lib/public-link-index";
+
+const { backlinks } = Astro.props as { backlinks: Backlink[] };
+---
+{
+  backlinks.length > 0 && (
+    <section class="related backlinks" aria-labelledby="backlinks-title">
+      <h2 id="backlinks-title">Backlinks</h2>
+      <div class="related-grid">
+        {backlinks.map(({ source, edge }) => (
+          <a class="related-card backlink-card" href={source.href}>
+            <span>{edge.kind === "none" ? "Mentioned by" : `${edge.kind} reference`}</span>
+            <strong>{source.title}</strong>
+            <small>{edge.label}</small>
+            <p>{source.description}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  )
+}
