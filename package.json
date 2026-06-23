@@ -1,16 +1,16 @@
 {
-  "name": "personal-tech-blog-stack",
+  "name": "dahm-blog-stack",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.8.0",
   "scripts": {
-    "dev": "pnpm sync:content && pnpm --filter @personal-tech-blog/blog dev",
-    "sync:content": "pnpm --filter @personal-tech-blog/content-sync sync",
-    "index:private": "pnpm --filter @personal-tech-blog/private-wiki-index index",
-    "test": "pnpm --filter @personal-tech-blog/content-sync test && pnpm --filter @personal-tech-blog/private-wiki-index test && pnpm --filter @personal-tech-blog/blog test",
-    "build": "pnpm --filter @personal-tech-blog/content-sync build && pnpm sync:content && pnpm --filter @personal-tech-blog/private-wiki-index build && pnpm index:private && pnpm --filter @personal-tech-blog/blog build",
-    "typecheck": "pnpm --filter @personal-tech-blog/content-sync typecheck && pnpm --filter @personal-tech-blog/private-wiki-index typecheck && pnpm --filter @personal-tech-blog/blog typecheck"
+    "dev": "pnpm sync:content && pnpm --filter @dahm-blog/blog dev",
+    "sync:content": "pnpm --filter @dahm-blog/content-sync sync",
+    "index:private": "pnpm --filter @dahm-blog/private-wiki-index index",
+    "test": "pnpm --filter @dahm-blog/content-sync test && pnpm --filter @dahm-blog/private-wiki-index test && pnpm --filter @dahm-blog/blog test",
+    "build": "pnpm --filter @dahm-blog/content-sync build && pnpm sync:content && pnpm --filter @dahm-blog/private-wiki-index build && pnpm index:private && pnpm --filter @dahm-blog/blog build",
+    "typecheck": "pnpm --filter @dahm-blog/content-sync typecheck && pnpm --filter @dahm-blog/private-wiki-index typecheck && pnpm --filter @dahm-blog/blog typecheck"
   },
   "devDependencies": {
     "@types/node": "^24.0.4",
