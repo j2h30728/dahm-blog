@@ -29,6 +29,9 @@ importers:
       astro:
         specifier: ^5.10.1
         version: 5.18.2(@types/node@24.13.2)(rollup@4.62.2)(tsx@4.22.4)(typescript@5.9.3)(yaml@2.9.0)
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
       tsx:
         specifier: ^4.20.3
         version: 4.22.4

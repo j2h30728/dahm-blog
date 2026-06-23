@@ -24,6 +24,8 @@ It also includes a local diagram.
 
 ![[../assets/pipeline.svg|Pipeline diagram]]
 
+![[../assets/pipeline-thumb.png|Pipeline thumbnail]]
+
 > [!note] Publishing contract
 > Public content is explicit and reproducible.
 

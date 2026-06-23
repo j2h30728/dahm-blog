@@ -7,29 +7,33 @@ import { transformVault } from "../src/transform.js";
 
 test("exports published Obsidian notes with manifest, links, assets, and stable output", () => {
   const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-"));
-  const published = path.join(root, "published");
-  const assets = path.join(root, "assets");
+  const publicRoot = path.join(root, "public");
+  const published = path.join(publicRoot, "published");
+  const assets = path.join(publicRoot, "assets");
   const output = path.join(root, "out");
-  const publicAssets = path.join(root, "public-assets");
+  const postAssets = path.join(root, "post-assets");
   const publicLinkIndex = path.join(root, "public-link-index.json");
   mkdirSync(published, { recursive: true });
   mkdirSync(assets, { recursive: true });
 
   writeFileSync(path.join(assets, "diagram.svg"), "<svg />");
+  writeFileSync(path.join(assets, "manual.png"), "manual");
+  mkdirSync(path.join(assets, "posts", "legacy"), { recursive: true });
+  writeFileSync(path.join(assets, "posts", "legacy", "image.png"), "legacy");
   writeFileSync(
     path.join(published, "second.md"),
     `---\ntitle: "Second"\nslug: "second"\ndescription: "Second post."\ndate: "2026-06-24"\ntags: ["test"]\nseries: "Demo"\npublished: true\n---\n\n## Second heading\n\nBody. ^second-block\n`,
   );
   writeFileSync(
     path.join(published, "first.md"),
-    `---\ntitle: "First"\nslug: "first"\ndescription: "First post."\ndate: "2026-06-23"\ntags: ["test", "sync"]\nseries: "Demo"\npublished: true\n---\n\n## First heading\n\nSee [[second|the second post]].\n\nSee [[second#Second heading|the second heading]].\n\nSee [[second^second-block|the second block]].\n\n![[second|Embedded second post]]\n\n![[../assets/diagram.svg|Diagram]]\n`,
+    `---\ntitle: "First"\nslug: "first"\ndescription: "First post."\ndate: "2026-06-23"\ntags: ["test", "sync"]\nseries: "Demo"\npublished: true\n---\n\n## First heading\n\nSee [[second|the second post]].\n\nSee [[second#Second heading|the second heading]].\n\nSee [[second^second-block|the second block]].\n\n![[second|Embedded second post]]\n\n![[../assets/diagram.svg|Diagram]]\n\n![Remote](https://example.com/remote.png)\n\n![Static](/assets/manual.png)\n\n![Legacy](/assets/posts/legacy/image.png)\n`,
   );
 
   const first = transformVault({
     vaultRoot: root,
     sourceDir: published,
     outputDir: output,
-    assetOutputDir: publicAssets,
+    assetOutputDir: postAssets,
     manifestPath: path.join(root, "manifest.json"),
     publicLinkIndexPath: publicLinkIndex,
   });
@@ -37,7 +41,7 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
     vaultRoot: root,
     sourceDir: published,
     outputDir: output,
-    assetOutputDir: publicAssets,
+    assetOutputDir: postAssets,
     manifestPath: path.join(root, "manifest.json"),
     publicLinkIndexPath: publicLinkIndex,
   });
@@ -54,9 +58,24 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
   assert.match(outputText, /\[the second heading\]\(\/posts\/second\/#second-heading\)/);
   assert.match(outputText, /\[the second block\]\(\/posts\/second\/#block-second-block\)/);
   assert.match(outputText, /<aside class="note-embed"><a href="\/posts\/second\/">Embedded second post<\/a><\/aside>/);
-  assert.match(outputText, /!\[Diagram\]\(\/assets\/posts\/first\/diagram.svg\)/);
+  assert.match(outputText, /!\[Diagram\]\(\.\.\/post-assets\/first\/diagram.svg\)/);
+  assert.match(outputText, /!\[Remote\]\(https:\/\/example.com\/remote.png\)/);
+  assert.match(outputText, /!\[Static\]\(\.\.\/post-assets\/first\/manual.png\)/);
+  assert.match(outputText, /!\[Legacy\]\(\.\.\/post-assets\/first\/image.png\)/);
+  assert.equal(outputText.includes("/assets/posts"), false);
   assert.match(readFileSync(path.join(output, "second.mdx"), "utf8"), /<span id="block-second-block"><\/span>/);
-  assert.equal(existsSync(path.join(publicAssets, "first", "diagram.svg")), true);
+  assert.equal(existsSync(path.join(postAssets, "first", "diagram.svg")), true);
+  assert.equal(existsSync(path.join(postAssets, "first", "manual.png")), true);
+  assert.equal(existsSync(path.join(postAssets, "first", "image.png")), true);
+  const firstEntry = first.exportedPosts.find((entry) => entry.slug === "first");
+  assert.deepEqual(
+    firstEntry?.copiedAssets.map((asset) => asset.importPath).sort(),
+    [
+      "../post-assets/first/diagram.svg",
+      "../post-assets/first/image.png",
+      "../post-assets/first/manual.png",
+    ],
+  );
 
   const publicIndexText = readFileSync(publicLinkIndex, "utf8");
   const publicIndex = JSON.parse(publicIndexText) as {
@@ -93,7 +112,7 @@ test("fails closed when a public note references private notes or assets", () =>
   const published = path.join(root, "published");
   const privateRoot = path.join(root, "private");
   const output = path.join(root, "out");
-  const publicAssets = path.join(root, "public-assets");
+  const postAssets = path.join(root, "post-assets");
   mkdirSync(published, { recursive: true });
   mkdirSync(privateRoot, { recursive: true });
 
@@ -110,7 +129,7 @@ test("fails closed when a public note references private notes or assets", () =>
         vaultRoot: root,
         sourceDir: published,
         outputDir: output,
-        assetOutputDir: publicAssets,
+        assetOutputDir: postAssets,
       }),
     /blocking error/,
   );
@@ -122,7 +141,7 @@ test("fails closed when a public note references an absolute private asset path"
   const published = path.join(root, "published");
   const privateRoot = path.join(root, "private");
   const output = path.join(root, "out");
-  const publicAssets = path.join(root, "public-assets");
+  const postAssets = path.join(root, "post-assets");
   mkdirSync(published, { recursive: true });
   mkdirSync(privateRoot, { recursive: true });
 
@@ -139,18 +158,142 @@ test("fails closed when a public note references an absolute private asset path"
         vaultRoot: root,
         sourceDir: published,
         outputDir: output,
-        assetOutputDir: publicAssets,
+        assetOutputDir: postAssets,
       }),
     /blocking error/,
   );
   assert.equal(existsSync(path.join(output, "absolute-leak.mdx")), false);
 });
 
+test("fails closed when a public note references assets outside public roots", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-non-public-"));
+  const publicRoot = path.join(root, "public");
+  const published = path.join(publicRoot, "published");
+  const publicAssets = path.join(publicRoot, "assets");
+  const externalRoot = mkdtempSync(path.join(os.tmpdir(), "content-sync-external-"));
+  const output = path.join(root, "out");
+  const postAssets = path.join(root, "post-assets");
+  mkdirSync(published, { recursive: true });
+  mkdirSync(publicAssets, { recursive: true });
+  mkdirSync(path.join(postAssets, "leaky"), { recursive: true });
+
+  const externalAsset = path.join(externalRoot, "secret.png");
+  writeFileSync(path.join(publicAssets, "safe.png"), "safe");
+  writeFileSync(externalAsset, "secret");
+  writeFileSync(path.join(postAssets, "leaky", "stale.png"), "stale");
+  const relativeExternalAsset = path.relative(published, externalAsset).split(path.sep).join("/");
+  writeFileSync(
+    path.join(published, "leaky.md"),
+    `---\ntitle: "Leaky"\nslug: "leaky"\ndescription: "Non-public assets."\ndate: "2026-06-23"\ntags: ["privacy"]\nseries: "Demo"\npublished: true\n---\n\n![[../assets/safe.png|Safe]]\n\n![[${externalAsset}|Absolute external]]\n\n![[${relativeExternalAsset}|Relative external]]\n`,
+  );
+
+  assert.throws(
+    () =>
+      transformVault({
+        vaultRoot: root,
+        sourceDir: published,
+        outputDir: output,
+        assetOutputDir: postAssets,
+      }),
+    /blocking error/,
+  );
+  assert.equal(existsSync(path.join(output, "leaky.mdx")), false);
+  assert.equal(existsSync(path.join(postAssets, "leaky", "stale.png")), false);
+  assert.equal(existsSync(path.join(postAssets, "leaky", "safe.png")), false);
+});
+
+test("cleans all generated posts and assets when a later public note has blocking errors", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-global-failure-"));
+  const publicRoot = path.join(root, "public");
+  const published = path.join(publicRoot, "published");
+  const publicAssets = path.join(publicRoot, "assets");
+  const output = path.join(root, "out");
+  const postAssets = path.join(root, "post-assets");
+  const publicLinkIndex = path.join(root, "public-link-index.json");
+  mkdirSync(published, { recursive: true });
+  mkdirSync(publicAssets, { recursive: true });
+  mkdirSync(output, { recursive: true });
+  mkdirSync(path.join(postAssets, "a-valid"), { recursive: true });
+
+  writeFileSync(path.join(output, "stale.mdx"), "stale");
+  writeFileSync(path.join(postAssets, "a-valid", "stale.png"), "stale");
+  writeFileSync(publicLinkIndex, "stale");
+  writeFileSync(path.join(publicAssets, "safe.png"), "safe");
+  writeFileSync(
+    path.join(published, "a-valid.md"),
+    `---\ntitle: "Valid"\nslug: "a-valid"\ndescription: "Valid post."\ndate: "2026-06-23"\ntags: ["publishing"]\nseries: "Demo"\npublished: true\n---\n\n![[../assets/safe.png|Safe]]\n`,
+  );
+  writeFileSync(
+    path.join(published, "z-invalid.md"),
+    `---\ntitle: "Invalid"\nslug: "z-invalid"\ndescription: "Invalid post."\ndate: "2026-06-24"\ntags: ["publishing"]\nseries: "Demo"\npublished: true\n---\n\nSee [[missing-private-note]].\n`,
+  );
+
+  assert.throws(
+    () =>
+      transformVault({
+        vaultRoot: root,
+        sourceDir: published,
+        outputDir: output,
+        assetOutputDir: postAssets,
+        publicLinkIndexPath: publicLinkIndex,
+      }),
+    /blocking error/,
+  );
+  assert.equal(existsSync(path.join(output, "a-valid.mdx")), false);
+  assert.equal(existsSync(path.join(output, "stale.mdx")), false);
+  assert.equal(existsSync(path.join(postAssets, "a-valid", "safe.png")), false);
+  assert.equal(existsSync(path.join(postAssets, "a-valid", "stale.png")), false);
+  assert.equal(existsSync(publicLinkIndex), false);
+});
+
+test("rolls back generated posts and assets when the staged copy phase fails", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-copy-failure-"));
+  const publicRoot = path.join(root, "public");
+  const published = path.join(publicRoot, "published");
+  const publicAssets = path.join(publicRoot, "assets");
+  const output = path.join(root, "out");
+  const postAssets = path.join(root, "post-assets");
+  const manifestPath = path.join(root, "manifest.json");
+  const publicLinkIndex = path.join(root, "public-link-index.json");
+  mkdirSync(published, { recursive: true });
+  mkdirSync(path.join(publicAssets, "bad.png"), { recursive: true });
+  mkdirSync(output, { recursive: true });
+  mkdirSync(path.join(postAssets, "copy-fails"), { recursive: true });
+
+  writeFileSync(path.join(output, "stale.mdx"), "stale");
+  writeFileSync(path.join(postAssets, "copy-fails", "stale.png"), "stale");
+  writeFileSync(manifestPath, "stale");
+  writeFileSync(publicLinkIndex, "stale");
+  writeFileSync(
+    path.join(published, "copy-fails.md"),
+    `---\ntitle: "Copy Fails"\nslug: "copy-fails"\ndescription: "Copy failure rollback."\ndate: "2026-06-23"\ntags: ["publishing"]\nseries: "Demo"\npublished: true\n---\n\n![[../assets/bad.png|Bad]]\n`,
+  );
+
+  assert.throws(
+    () =>
+      transformVault({
+        vaultRoot: root,
+        sourceDir: published,
+        outputDir: output,
+        assetOutputDir: postAssets,
+        manifestPath,
+        publicLinkIndexPath: publicLinkIndex,
+      }),
+    /EISDIR|ENOTSUP|illegal operation|directory/,
+  );
+  assert.equal(existsSync(path.join(output, "copy-fails.mdx")), false);
+  assert.equal(existsSync(path.join(output, "stale.mdx")), false);
+  assert.equal(existsSync(path.join(postAssets, "copy-fails", "bad.png")), false);
+  assert.equal(existsSync(path.join(postAssets, "copy-fails", "stale.png")), false);
+  assert.equal(existsSync(manifestPath), false);
+  assert.equal(existsSync(publicLinkIndex), false);
+});
+
 test("fails closed when heading or block references cannot be resolved", () => {
   const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-missing-anchor-"));
   const published = path.join(root, "published");
   const output = path.join(root, "out");
-  const publicAssets = path.join(root, "public-assets");
+  const postAssets = path.join(root, "post-assets");
   mkdirSync(published, { recursive: true });
 
   writeFileSync(
@@ -168,7 +311,7 @@ test("fails closed when heading or block references cannot be resolved", () => {
         vaultRoot: root,
         sourceDir: published,
         outputDir: output,
-        assetOutputDir: publicAssets,
+        assetOutputDir: postAssets,
       }),
     /blocking error/,
   );
@@ -179,7 +322,7 @@ test("fails closed when a public note references a duplicate block id", () => {
   const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-duplicate-block-"));
   const published = path.join(root, "published");
   const output = path.join(root, "out");
-  const publicAssets = path.join(root, "public-assets");
+  const postAssets = path.join(root, "post-assets");
   mkdirSync(published, { recursive: true });
 
   writeFileSync(
@@ -197,7 +340,7 @@ test("fails closed when a public note references a duplicate block id", () => {
         vaultRoot: root,
         sourceDir: published,
         outputDir: output,
-        assetOutputDir: publicAssets,
+        assetOutputDir: postAssets,
       }),
     /blocking error/,
   );
@@ -208,7 +351,7 @@ test("fails closed when a public note defines duplicate block ids without refere
   const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-unreferenced-duplicate-block-"));
   const published = path.join(root, "published");
   const output = path.join(root, "out");
-  const publicAssets = path.join(root, "public-assets");
+  const postAssets = path.join(root, "post-assets");
   mkdirSync(published, { recursive: true });
 
   writeFileSync(
@@ -222,7 +365,7 @@ test("fails closed when a public note defines duplicate block ids without refere
         vaultRoot: root,
         sourceDir: published,
         outputDir: output,
-        assetOutputDir: publicAssets,
+        assetOutputDir: postAssets,
       }),
     /blocking error/,
   );

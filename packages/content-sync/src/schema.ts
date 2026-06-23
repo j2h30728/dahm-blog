@@ -42,6 +42,7 @@ export interface ResolvedAsset {
   raw: string;
   sourcePath: string;
   outputPath?: string;
+  importPath?: string;
   publicPath?: string;
   status: ResolutionStatus;
 }
@@ -113,7 +114,6 @@ export interface TransformOptions {
   sourceDir?: string;
   outputDir: string;
   assetOutputDir: string;
-  assetPublicBase?: string;
   manifestPath?: string;
   publicLinkIndexPath?: string;
   preview?: boolean;

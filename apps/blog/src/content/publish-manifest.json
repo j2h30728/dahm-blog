@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-23T08:54:21.342Z",
+  "generatedAt": "2026-06-23T09:56:08.654Z",
   "exportedPosts": [
     {
       "sourcePath": "/Users/langdy-45/workspace/private/content/public/published/content-boundaries.md",
@@ -18,14 +18,21 @@
       "outputPath": "/Users/langdy-45/workspace/private/apps/blog/src/content/posts/hello-pipeline.mdx",
       "slug": "hello-pipeline",
       "state": "published",
-      "sourceChecksum": "c482d1360d0f43cbfc955fa1521fee5fa39eb9e1dc983daf20717e400156f47c",
-      "outputChecksum": "43a024902ad760af0ea4b33992e977c9b8eab07a488e2c88a5d5b61fda1d5a0e",
+      "sourceChecksum": "178e1bb9332484f569aa6effcf102146475659c5886fb27d9f7b0366044d481c",
+      "outputChecksum": "bfac522555d64bbb7d386644af2ba7058aea78aedc721259787c3cdc2c74d57b",
       "copiedAssets": [
         {
           "raw": "![[../assets/pipeline.svg|Pipeline diagram]]",
           "sourcePath": "/Users/langdy-45/workspace/private/content/public/assets/pipeline.svg",
-          "outputPath": "/Users/langdy-45/workspace/private/apps/blog/public/assets/posts/hello-pipeline/pipeline.svg",
-          "publicPath": "/assets/posts/hello-pipeline/pipeline.svg",
+          "outputPath": "/Users/langdy-45/workspace/private/apps/blog/src/content/post-assets/hello-pipeline/pipeline.svg",
+          "importPath": "../post-assets/hello-pipeline/pipeline.svg",
+          "status": "public"
+        },
+        {
+          "raw": "![[../assets/pipeline-thumb.png|Pipeline thumbnail]]",
+          "sourcePath": "/Users/langdy-45/workspace/private/content/public/assets/pipeline-thumb.png",
+          "outputPath": "/Users/langdy-45/workspace/private/apps/blog/src/content/post-assets/hello-pipeline/pipeline-thumb.png",
+          "importPath": "../post-assets/hello-pipeline/pipeline-thumb.png",
           "status": "public"
         }
       ],

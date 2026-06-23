@@ -33,7 +33,7 @@ function parseArgs(argv: string[]): CliArgs {
     vaultRoot,
     sourceDir: path.resolve(process.env.OBSIDIAN_PUBLIC_SOURCE ?? path.join(vaultRoot, "public/published")),
     outputDir: path.resolve(root, "apps/blog/src/content/posts"),
-    assetOutputDir: path.resolve(root, "apps/blog/public/assets/posts"),
+    assetOutputDir: path.resolve(root, "apps/blog/src/content/post-assets"),
     manifestPath: path.resolve(root, "apps/blog/src/content/publish-manifest.json"),
     publicLinkIndexPath: path.resolve(root, "apps/blog/src/content/public-link-index.json"),
     preview: false,
@@ -55,7 +55,7 @@ function parseArgs(argv: string[]): CliArgs {
     } else if (arg === "--out" && value) {
       defaults.outputDir = path.resolve(value);
       index += 1;
-    } else if (arg === "--assets" && value) {
+    } else if ((arg === "--assets" || arg === "--asset-source-out") && value) {
       defaults.assetOutputDir = path.resolve(value);
       index += 1;
     } else if (arg === "--manifest" && value) {

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { rewriteAssets } from "./assets.js";
 import { parseNote, stringifyFrontmatter } from "./frontmatter.js";
@@ -15,16 +15,27 @@ import {
   type ParsedNote,
   type PublicLinkIndex,
   type PublishManifest,
+  type ResolvedAsset,
   type TransformOptions,
 } from "./schema.js";
 import { checksum, isWithin, slugify, walkFiles } from "./utils.js";
+
+interface TransformNoteResult {
+  entry: ManifestEntry;
+  outputText?: string;
+}
+
+interface PendingPostWrite {
+  outputPath: string;
+  outputText: string;
+  copiedAssets: ResolvedAsset[];
+}
 
 export function transformVault(options: TransformOptions): PublishManifest {
   const vaultRoot = path.resolve(options.vaultRoot);
   const sourceDir = path.resolve(options.sourceDir ?? path.join(vaultRoot, "published"));
   const outputDir = path.resolve(options.outputDir);
   const assetOutputDir = path.resolve(options.assetOutputDir);
-  const assetPublicBase = options.assetPublicBase ?? "/assets/posts";
   const privateRoot = path.join(vaultRoot, "private");
 
   if (!existsSync(vaultRoot)) {
@@ -43,10 +54,7 @@ export function transformVault(options: TransformOptions): PublishManifest {
     throw new Error(`No published Markdown files found in source directory: ${sourceDir}`);
   }
 
-  mkdirSync(outputDir, { recursive: true });
-  mkdirSync(assetOutputDir, { recursive: true });
   rmSync(outputDir, { recursive: true, force: true });
-  mkdirSync(outputDir, { recursive: true });
 
   const sourceFiles = walkFiles(vaultRoot);
   const parsedNotes = sourceFiles.map((file) => parseNote(file, readFileSync(file, "utf8")));
@@ -86,6 +94,7 @@ export function transformVault(options: TransformOptions): PublishManifest {
   const skippedPosts: ManifestEntry[] = [];
   const warnings: string[] = [];
   const errors: string[] = [];
+  const pendingWrites: PendingPostWrite[] = [];
   const duplicateSlugs = findDuplicateSlugs(prevalidated.map((item) => item.slug));
 
   for (const item of prevalidated) {
@@ -93,7 +102,7 @@ export function transformVault(options: TransformOptions): PublishManifest {
       continue;
     }
 
-    const entry = transformNote({
+    const result = transformNote({
       note: item.note,
       slug: item.slug,
       title: item.title,
@@ -103,15 +112,22 @@ export function transformVault(options: TransformOptions): PublishManifest {
         vaultRoot,
         outputDir,
         assetOutputDir,
-        assetPublicBase,
         privateRoot,
       },
       hasDuplicateSlug: duplicateSlugs.has(item.slug),
       preview: options.preview === true,
     });
+    const { entry } = result;
 
     if (entry.outputPath) {
       exportedPosts.push(entry);
+      if (result.outputText) {
+        pendingWrites.push({
+          outputPath: entry.outputPath,
+          outputText: result.outputText,
+          copiedAssets: entry.copiedAssets,
+        });
+      }
     } else {
       skippedPosts.push(entry);
     }
@@ -127,24 +143,91 @@ export function transformVault(options: TransformOptions): PublishManifest {
     errors,
   };
 
-  if (options.manifestPath) {
-    mkdirSync(path.dirname(options.manifestPath), { recursive: true });
-    writeFileSync(options.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  }
-
-  if (options.publicLinkIndexPath && errors.length === 0) {
-    mkdirSync(path.dirname(options.publicLinkIndexPath), { recursive: true });
-    writeFileSync(
-      options.publicLinkIndexPath,
-      `${JSON.stringify(buildPublicLinkIndex(exportedPosts, prevalidated), null, 2)}\n`,
-    );
-  }
-
   if (errors.length > 0 && !options.preview) {
+    cleanupGeneratedOutputs(outputDir, assetOutputDir, options.publicLinkIndexPath);
+    writeManifest(manifest, options.manifestPath);
     throw new Error(`Content sync failed with ${errors.length} blocking error(s).`);
   }
 
+  try {
+    commitGeneratedOutputs(pendingWrites, outputDir, assetOutputDir);
+    writeManifest(manifest, options.manifestPath);
+    if (options.publicLinkIndexPath && errors.length === 0) {
+      writePublicLinkIndex(buildPublicLinkIndex(exportedPosts, prevalidated), options.publicLinkIndexPath);
+    }
+  } catch (error) {
+    cleanupGeneratedOutputs(outputDir, assetOutputDir, options.publicLinkIndexPath);
+    removeFile(options.manifestPath);
+    throw error;
+  }
+
   return manifest;
+}
+
+function writeManifest(manifest: PublishManifest, manifestPath?: string): void {
+  if (!manifestPath) return;
+  mkdirSync(path.dirname(manifestPath), { recursive: true });
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+}
+
+function writePublicLinkIndex(publicLinkIndex: PublicLinkIndex, publicLinkIndexPath: string): void {
+  mkdirSync(path.dirname(publicLinkIndexPath), { recursive: true });
+  writeFileSync(publicLinkIndexPath, `${JSON.stringify(publicLinkIndex, null, 2)}\n`);
+}
+
+function cleanupGeneratedOutputs(outputDir: string, assetOutputDir: string, publicLinkIndexPath?: string): void {
+  rmSync(outputDir, { recursive: true, force: true });
+  rmSync(assetOutputDir, { recursive: true, force: true });
+  removeFile(publicLinkIndexPath);
+}
+
+function removeFile(filePath?: string): void {
+  if (!filePath) return;
+  rmSync(filePath, { force: true });
+}
+
+function commitGeneratedOutputs(pendingWrites: PendingPostWrite[], outputDir: string, assetOutputDir: string): void {
+  const nonce = `${process.pid}-${Date.now()}`;
+  const outputStageDir = path.join(path.dirname(outputDir), `.${path.basename(outputDir)}.tmp-${nonce}`);
+  const assetStageDir = path.join(path.dirname(assetOutputDir), `.${path.basename(assetOutputDir)}.tmp-${nonce}`);
+
+  try {
+    rmSync(outputStageDir, { recursive: true, force: true });
+    rmSync(assetStageDir, { recursive: true, force: true });
+    mkdirSync(outputStageDir, { recursive: true });
+    mkdirSync(assetStageDir, { recursive: true });
+
+    for (const pending of pendingWrites) {
+      if (!isWithin(outputDir, pending.outputPath)) {
+        throw new Error(`Generated post output escapes output directory: ${pending.outputPath}`);
+      }
+      const stagedOutputPath = path.join(outputStageDir, path.relative(outputDir, pending.outputPath));
+      mkdirSync(path.dirname(stagedOutputPath), { recursive: true });
+      writeFileSync(stagedOutputPath, pending.outputText);
+
+      for (const asset of pending.copiedAssets) {
+        if (asset.status !== "public" || !asset.outputPath) continue;
+        if (!isWithin(assetOutputDir, asset.outputPath)) {
+          throw new Error(`Generated asset output escapes asset directory: ${asset.outputPath}`);
+        }
+        const stagedAssetPath = path.join(assetStageDir, path.relative(assetOutputDir, asset.outputPath));
+        mkdirSync(path.dirname(stagedAssetPath), { recursive: true });
+        copyFileSync(asset.sourcePath, stagedAssetPath);
+      }
+    }
+
+    rmSync(outputDir, { recursive: true, force: true });
+    rmSync(assetOutputDir, { recursive: true, force: true });
+    mkdirSync(path.dirname(outputDir), { recursive: true });
+    mkdirSync(path.dirname(assetOutputDir), { recursive: true });
+    renameSync(outputStageDir, outputDir);
+    renameSync(assetStageDir, assetOutputDir);
+  } catch (error) {
+    cleanupGeneratedOutputs(outputDir, assetOutputDir);
+    rmSync(outputStageDir, { recursive: true, force: true });
+    rmSync(assetStageDir, { recursive: true, force: true });
+    throw error;
+  }
 }
 
 function transformNote(input: {
@@ -157,12 +240,11 @@ function transformNote(input: {
     vaultRoot: string;
     outputDir: string;
     assetOutputDir: string;
-    assetPublicBase: string;
     privateRoot: string;
   };
   hasDuplicateSlug: boolean;
   preview: boolean;
-}): ManifestEntry {
+}): TransformNoteResult {
   const warnings: string[] = [];
   const errors: string[] = [];
   const { note, slug } = input;
@@ -173,14 +255,16 @@ function transformNote(input: {
 
   if (!published && !input.preview) {
     return {
-      sourcePath: note.sourcePath,
-      slug,
-      state,
-      sourceChecksum,
-      copiedAssets: [],
-      rewrittenLinks: [],
-      warnings,
-      errors: ["Note is inside published/ but missing published: true"],
+      entry: {
+        sourcePath: note.sourcePath,
+        slug,
+        state,
+        sourceChecksum,
+        copiedAssets: [],
+        rewrittenLinks: [],
+        warnings,
+        errors: ["Note is inside published/ but missing published: true"],
+      },
     };
   }
 
@@ -204,7 +288,7 @@ function transformNote(input: {
     sourcePath: note.sourcePath,
     vaultRoot: input.options.vaultRoot,
     outputRoot: input.options.assetOutputDir,
-    publicBase: input.options.assetPublicBase,
+    markdownOutputPath: path.join(input.options.outputDir, `${slug}.mdx`),
     slug,
     privateRoot: input.options.privateRoot,
   });
@@ -212,14 +296,16 @@ function transformNote(input: {
 
   if (errors.length > 0 && !input.preview) {
     return {
-      sourcePath: note.sourcePath,
-      slug,
-      state,
-      sourceChecksum,
-      copiedAssets: assetResult.assets,
-      rewrittenLinks: linkResult.references,
-      warnings,
-      errors,
+      entry: {
+        sourcePath: note.sourcePath,
+        slug,
+        state,
+        sourceChecksum,
+        copiedAssets: assetResult.assets,
+        rewrittenLinks: linkResult.references,
+        warnings,
+        errors,
+      },
     };
   }
 
@@ -236,19 +322,21 @@ function transformNote(input: {
   });
   const outputText = `${frontmatter}${normalizeCallouts(normalizeBlockAnchors(assetResult.body)).trimEnd()}\n`;
   const outputPath = path.join(input.options.outputDir, `${slug}.mdx`);
-  writeFileSync(outputPath, outputText);
 
   return {
-    sourcePath: note.sourcePath,
-    outputPath,
-    slug,
-    state,
-    sourceChecksum,
-    outputChecksum: checksum(outputText),
-    copiedAssets: assetResult.assets,
-    rewrittenLinks: linkResult.references,
-    warnings,
-    errors,
+    entry: {
+      sourcePath: note.sourcePath,
+      outputPath,
+      slug,
+      state,
+      sourceChecksum,
+      outputChecksum: checksum(outputText),
+      copiedAssets: assetResult.assets,
+      rewrittenLinks: linkResult.references,
+      warnings,
+      errors,
+    },
+    outputText,
   };
 }
 
