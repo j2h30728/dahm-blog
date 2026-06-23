@@ -3,17 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "yarn@4.9.2",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@9.15.5",
   "scripts": {
-    "sync:content": "yarn workspace @personal-tech-blog/content-sync sync",
-    "index:private": "yarn workspace @personal-tech-blog/private-wiki-index index",
-    "test": "yarn workspace @personal-tech-blog/content-sync test && yarn workspace @personal-tech-blog/private-wiki-index test && yarn workspace @personal-tech-blog/blog test",
-    "build": "yarn workspace @personal-tech-blog/content-sync build && yarn sync:content && yarn workspace @personal-tech-blog/private-wiki-index build && yarn index:private && yarn workspace @personal-tech-blog/blog build",
-    "typecheck": "yarn workspace @personal-tech-blog/content-sync typecheck && yarn workspace @personal-tech-blog/private-wiki-index typecheck && yarn workspace @personal-tech-blog/blog typecheck"
+    "dev": "pnpm sync:content && pnpm --filter @personal-tech-blog/blog dev",
+    "sync:content": "pnpm --filter @personal-tech-blog/content-sync sync",
+    "index:private": "pnpm --filter @personal-tech-blog/private-wiki-index index",
+    "test": "pnpm --filter @personal-tech-blog/content-sync test && pnpm --filter @personal-tech-blog/private-wiki-index test && pnpm --filter @personal-tech-blog/blog test",
+    "build": "pnpm --filter @personal-tech-blog/content-sync build && pnpm sync:content && pnpm --filter @personal-tech-blog/private-wiki-index build && pnpm index:private && pnpm --filter @personal-tech-blog/blog build",
+    "typecheck": "pnpm --filter @personal-tech-blog/content-sync typecheck && pnpm --filter @personal-tech-blog/private-wiki-index typecheck && pnpm --filter @personal-tech-blog/blog typecheck"
   },
   "devDependencies": {
     "@types/node": "^24.0.4",

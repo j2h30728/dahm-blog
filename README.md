@@ -18,11 +18,19 @@ Obsidian vault -> validated content model -> publish manifest -> exported public
 ## Commands
 
 ```bash
-yarn install
-yarn sync:content
-yarn index:private
-yarn test
-yarn build
+pnpm install
+pnpm sync:content
+pnpm index:private
+pnpm test
+pnpm build
+```
+
+If local Corepack has pnpm signature issues, run the pinned pnpm version through npm:
+
+```bash
+npm exec --yes pnpm@9.15.5 -- install
+npm exec --yes pnpm@9.15.5 -- test
+npm exec --yes pnpm@9.15.5 -- build
 ```
 
 ## Public Blog MVP

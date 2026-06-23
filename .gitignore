@@ -1,10 +1,15 @@
 node_modules
+.omx/
+.pnpm-store
+.yarn
+.pnp.*
 .astro
 dist
 .env
 .env.*
 apps/blog/dist
 apps/blog/.astro
+apps/blog/public/search/index.json
 apps/blog/public/search/pagefind
 packages/*/dist
 packages/private-wiki-index/.private-index

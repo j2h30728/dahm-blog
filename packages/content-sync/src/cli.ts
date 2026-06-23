@@ -64,6 +64,9 @@ function parseArgs(argv: string[]): CliArgs {
 function findWorkspaceRoot(): string {
   let current = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : process.cwd();
   while (true) {
+    if (existsSync(path.join(current, "pnpm-workspace.yaml"))) {
+      return current;
+    }
     const packagePath = path.join(current, "package.json");
     if (existsSync(packagePath)) {
       try {

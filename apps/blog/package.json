@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "tsx scripts/build-search.ts",
     "dev": "astro dev",
     "prebuild": "tsx scripts/build-search.ts",
     "build": "astro build",
