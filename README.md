@@ -25,6 +25,35 @@ pnpm test
 pnpm build
 ```
 
+## Obsidian Vault
+
+By default, the repository-local `content` directory is treated as the vault. To use a real Obsidian vault, point the CLI at it with environment variables:
+
+```bash
+export OBSIDIAN_VAULT_PATH="/path/to/Obsidian"
+export OBSIDIAN_PUBLIC_SOURCE="$OBSIDIAN_VAULT_PATH/public/published"
+export OBSIDIAN_PRIVATE_INCLUDE="private"
+export OBSIDIAN_PRIVATE_EXCLUDE="public"
+```
+
+Then the normal commands use that vault:
+
+```bash
+pnpm sync:content
+pnpm index:private
+pnpm dev
+```
+
+Recommended vault folders:
+
+```text
+Obsidian/
+  public/
+    published/
+    assets/
+  private/
+```
+
 If local Corepack has pnpm signature issues, run the pinned pnpm version through npm:
 
 ```bash

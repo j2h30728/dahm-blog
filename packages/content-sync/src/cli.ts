@@ -26,9 +26,11 @@ try {
 
 function parseArgs(argv: string[]): CliArgs {
   const root = findWorkspaceRoot();
+  let sourceWasExplicit = Boolean(process.env.OBSIDIAN_PUBLIC_SOURCE);
+  const vaultRoot = path.resolve(process.env.OBSIDIAN_VAULT_PATH ?? path.join(root, "content"));
   const defaults: CliArgs = {
-    vaultRoot: path.resolve(root, "content"),
-    sourceDir: path.resolve(root, "content/public/published"),
+    vaultRoot,
+    sourceDir: path.resolve(process.env.OBSIDIAN_PUBLIC_SOURCE ?? path.join(vaultRoot, "public/published")),
     outputDir: path.resolve(root, "apps/blog/src/content/posts"),
     assetOutputDir: path.resolve(root, "apps/blog/public/assets/posts"),
     manifestPath: path.resolve(root, "apps/blog/src/content/publish-manifest.json"),
@@ -40,9 +42,13 @@ function parseArgs(argv: string[]): CliArgs {
     const value = argv[index + 1];
     if (arg === "--vault" && value) {
       defaults.vaultRoot = path.resolve(value);
+      if (!sourceWasExplicit) {
+        defaults.sourceDir = path.resolve(defaults.vaultRoot, "public/published");
+      }
       index += 1;
     } else if (arg === "--source" && value) {
       defaults.sourceDir = path.resolve(value);
+      sourceWasExplicit = true;
       index += 1;
     } else if (arg === "--out" && value) {
       defaults.outputDir = path.resolve(value);

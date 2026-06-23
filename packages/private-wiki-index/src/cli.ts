@@ -4,10 +4,10 @@ import { buildPrivateIndex } from "./index.js";
 
 const args = process.argv.slice(2);
 const root = findWorkspaceRoot();
-const vaultRoot = readFlag(args, "--vault") ?? path.join(root, "content");
+const vaultRoot = readFlag(args, "--vault") ?? process.env.OBSIDIAN_VAULT_PATH ?? path.join(root, "content");
 const outputPath = readFlag(args, "--out") ?? path.join(root, "packages/private-wiki-index/.private-index/index.json");
-const include = readFlag(args, "--include")?.split(",") ?? ["private"];
-const exclude = readFlag(args, "--exclude")?.split(",") ?? ["public"];
+const include = readFlag(args, "--include")?.split(",") ?? process.env.OBSIDIAN_PRIVATE_INCLUDE?.split(",") ?? ["private"];
+const exclude = readFlag(args, "--exclude")?.split(",") ?? process.env.OBSIDIAN_PRIVATE_EXCLUDE?.split(",") ?? ["public"];
 
 const index = buildPrivateIndex({
   vaultRoot: path.resolve(vaultRoot),

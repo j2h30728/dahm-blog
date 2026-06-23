@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { rewriteAssets } from "./assets.js";
 import { parseNote, stringifyFrontmatter } from "./frontmatter.js";
@@ -24,6 +24,22 @@ export function transformVault(options: TransformOptions): PublishManifest {
   const assetOutputDir = path.resolve(options.assetOutputDir);
   const assetPublicBase = options.assetPublicBase ?? "/assets/posts";
   const privateRoot = path.join(vaultRoot, "private");
+
+  if (!existsSync(vaultRoot)) {
+    throw new Error(`Vault root does not exist: ${vaultRoot}`);
+  }
+  if (!existsSync(sourceDir)) {
+    throw new Error(`Published source directory does not exist: ${sourceDir}`);
+  }
+  if (!isWithin(vaultRoot, sourceDir)) {
+    throw new Error(`Published source directory must be inside the vault root: ${sourceDir}`);
+  }
+  if (isWithin(privateRoot, sourceDir)) {
+    throw new Error(`Published source directory cannot be inside private content: ${sourceDir}`);
+  }
+  if (walkFiles(sourceDir).length === 0) {
+    throw new Error(`No published Markdown files found in source directory: ${sourceDir}`);
+  }
 
   mkdirSync(outputDir, { recursive: true });
   mkdirSync(assetOutputDir, { recursive: true });
