@@ -16,6 +16,8 @@ This note starts in Obsidian and is exported into the public blog.
 
 It links to [[content-boundaries|content boundaries]] and embeds the same note below.
 
+It also points to [[content-boundaries#Public allowlist|the public allowlist]] and [[content-boundaries^allowlist-rule|the allowlist rule]].
+
 ![[content-boundaries|Read the content boundary note]]
 
 It also includes a local diagram.

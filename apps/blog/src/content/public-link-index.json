@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-06-23T08:54:21.354Z",
+  "nodes": [
+    {
+      "slug": "content-boundaries",
+      "title": "Content Boundaries",
+      "description": "How public and private notes stay separated.",
+      "excerpt": "The export step accepts only notes in the published folder with published: true.",
+      "tags": [
+        "architecture",
+        "privacy"
+      ],
+      "href": "/posts/content-boundaries/",
+      "headings": [
+        {
+          "depth": 2,
+          "text": "Public allowlist",
+          "id": "public-allowlist"
+        },
+        {
+          "depth": 2,
+          "text": "Private blocklist is not enough",
+          "id": "private-blocklist-is-not-enough"
+        }
+      ]
+    },
+    {
+      "slug": "hello-pipeline",
+      "title": "Hello Publishing Pipeline",
+      "description": "A first post exported from an Obsidian-first workflow.",
+      "excerpt": "This note starts in Obsidian and is exported into the public blog.",
+      "tags": [
+        "astro",
+        "obsidian",
+        "publishing"
+      ],
+      "href": "/posts/hello-pipeline/",
+      "headings": [
+        {
+          "depth": 2,
+          "text": "Why this pipeline exists",
+          "id": "why-this-pipeline-exists"
+        },
+        {
+          "depth": 3,
+          "text": "What stays private",
+          "id": "what-stays-private"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "none",
+      "label": "content boundaries"
+    },
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "heading",
+      "targetAnchor": "#public-allowlist",
+      "label": "the public allowlist"
+    },
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "block",
+      "targetAnchor": "#block-allowlist-rule",
+      "label": "the allowlist rule"
+    }
+  ]
+}

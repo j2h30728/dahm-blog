@@ -12,7 +12,7 @@ published: true
 
 ## Public allowlist
 
-The export step accepts only notes in the published folder with `published: true`.
+The export step accepts only notes in the published folder with `published: true`. ^allowlist-rule
 
 ## Private blocklist is not enough
 

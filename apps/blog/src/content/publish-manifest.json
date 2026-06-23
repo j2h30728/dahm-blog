@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-06-23T07:59:59.659Z",
+  "generatedAt": "2026-06-23T08:54:21.342Z",
   "exportedPosts": [
     {
       "sourcePath": "/Users/langdy-45/workspace/private/content/public/published/content-boundaries.md",
       "outputPath": "/Users/langdy-45/workspace/private/apps/blog/src/content/posts/content-boundaries.mdx",
       "slug": "content-boundaries",
       "state": "published",
-      "sourceChecksum": "c6ffd1d89e7816826eac3f08124a0e2727624ec95bc55afcfbdcdba643f22133",
-      "outputChecksum": "b0a2c0ab01bf883636a8d0eb3c757a91664d4706490eac1b799394f6cf323b7c",
+      "sourceChecksum": "cc3786d006e8d85221134ea0f33093ab9086ec31effdeb6d9c03b0632c5fb29a",
+      "outputChecksum": "66b099af2eab23674330ad7d67ec8f2a5daf33d9c1d99ea2b53498feb9cfaf64",
       "copiedAssets": [],
       "rewrittenLinks": [],
       "warnings": [],
@@ -18,8 +18,8 @@
       "outputPath": "/Users/langdy-45/workspace/private/apps/blog/src/content/posts/hello-pipeline.mdx",
       "slug": "hello-pipeline",
       "state": "published",
-      "sourceChecksum": "8e7ada9b78b75810da33e91735def0bb3a6e429ffaff626d5d6cc4dafdacd811",
-      "outputChecksum": "04d74fabf1454c0b9461776b059517b0a2e18d87a43c67bf13a88ef9d86e9dad",
+      "sourceChecksum": "c482d1360d0f43cbfc955fa1521fee5fa39eb9e1dc983daf20717e400156f47c",
+      "outputChecksum": "43a024902ad760af0ea4b33992e977c9b8eab07a488e2c88a5d5b61fda1d5a0e",
       "copiedAssets": [
         {
           "raw": "![[../assets/pipeline.svg|Pipeline diagram]]",
@@ -34,13 +34,59 @@
           "raw": "[[content-boundaries|content boundaries]]",
           "target": "content-boundaries",
           "status": "public",
-          "replacement": "[content boundaries](/posts/content-boundaries/)"
+          "replacement": "[content boundaries](/posts/content-boundaries/)",
+          "sourceSlug": "hello-pipeline",
+          "sourceTitle": "Hello Publishing Pipeline",
+          "targetSlug": "content-boundaries",
+          "targetTitle": "Content Boundaries",
+          "targetDescription": "How public and private notes stay separated.",
+          "label": "content boundaries",
+          "fragmentKind": "none",
+          "role": "link"
+        },
+        {
+          "raw": "[[content-boundaries#Public allowlist|the public allowlist]]",
+          "target": "content-boundaries",
+          "status": "public",
+          "replacement": "[the public allowlist](/posts/content-boundaries/#public-allowlist)",
+          "sourceSlug": "hello-pipeline",
+          "sourceTitle": "Hello Publishing Pipeline",
+          "targetSlug": "content-boundaries",
+          "targetTitle": "Content Boundaries",
+          "targetDescription": "How public and private notes stay separated.",
+          "label": "the public allowlist",
+          "fragmentKind": "heading",
+          "targetAnchor": "#public-allowlist",
+          "role": "link"
+        },
+        {
+          "raw": "[[content-boundaries^allowlist-rule|the allowlist rule]]",
+          "target": "content-boundaries",
+          "status": "public",
+          "replacement": "[the allowlist rule](/posts/content-boundaries/#block-allowlist-rule)",
+          "sourceSlug": "hello-pipeline",
+          "sourceTitle": "Hello Publishing Pipeline",
+          "targetSlug": "content-boundaries",
+          "targetTitle": "Content Boundaries",
+          "targetDescription": "How public and private notes stay separated.",
+          "label": "the allowlist rule",
+          "fragmentKind": "block",
+          "targetAnchor": "#block-allowlist-rule",
+          "role": "link"
         },
         {
           "raw": "![[content-boundaries|Read the content boundary note]]",
           "target": "content-boundaries",
           "status": "public",
-          "replacement": "<aside class=\"note-embed\"><a href=\"/posts/content-boundaries/\">Read the content boundary note</a></aside>"
+          "replacement": "<aside class=\"note-embed\"><a href=\"/posts/content-boundaries/\">Read the content boundary note</a></aside>",
+          "sourceSlug": "hello-pipeline",
+          "sourceTitle": "Hello Publishing Pipeline",
+          "targetSlug": "content-boundaries",
+          "targetTitle": "Content Boundaries",
+          "targetDescription": "How public and private notes stay separated.",
+          "label": "Read the content boundary note",
+          "fragmentKind": "none",
+          "role": "embed"
         }
       ],
       "warnings": [],
