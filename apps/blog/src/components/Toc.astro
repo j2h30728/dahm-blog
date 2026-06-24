@@ -1,4 +1,6 @@
 ---
+import { ui } from "../lib/ui-classes";
+
 interface Heading {
   depth: number;
   slug: string;
@@ -10,12 +12,12 @@ const eligible = headings.filter((heading) => heading.depth === 2 || heading.dep
 ---
 {
   eligible.length > 0 && (
-    <nav class="toc" aria-labelledby="toc-title">
-      <h2 id="toc-title">Contents</h2>
-      <ol>
+    <nav class={ui.toc} aria-labelledby="toc-title">
+      <h2 class={ui.tocTitle} id="toc-title">Contents</h2>
+      <ol class={ui.tocList}>
         {eligible.map((heading) => (
-          <li class={`depth-${heading.depth}`}>
-            <a href={`#${heading.slug}`}>{heading.text}</a>
+          <li class:list={[ui.tocItem, heading.depth === 3 && ui.tocItemNested, `depth-${heading.depth}`]}>
+            <a class={ui.tocLink} href={`#${heading.slug}`}>{heading.text}</a>
           </li>
         ))}
       </ol>

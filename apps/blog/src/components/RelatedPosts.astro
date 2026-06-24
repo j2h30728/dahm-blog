@@ -1,18 +1,19 @@
 ---
 import type { RelatedPostScore } from "../lib/related-posts";
+import { ui } from "../lib/ui-classes";
 
 const { related } = Astro.props as { related: RelatedPostScore[] };
 ---
 {
   related.length > 0 && (
-    <section class="related" aria-labelledby="related-title">
-      <h2 id="related-title">Related posts</h2>
-      <div class="related-grid">
+    <section class={ui.relatedSection} aria-labelledby="related-title">
+      <h2 class={ui.relatedTitle} id="related-title">Related posts</h2>
+      <div class={ui.relatedGrid}>
         {related.map(({ post, reasons }) => (
-          <a class="related-card" href={`/posts/${post.data.slug}/`}>
-            <span>{post.data.series}</span>
-            <strong>{post.data.title}</strong>
-            <small>{reasons.join(", ")}</small>
+          <a class={ui.relatedCard} href={`/posts/${post.data.slug}/`}>
+            <span class={ui.relatedKicker}>{post.data.series}</span>
+            <strong class={ui.postTitle}>{post.data.title}</strong>
+            <small class={ui.relatedMeta}>{reasons.join(", ")}</small>
           </a>
         ))}
       </div>

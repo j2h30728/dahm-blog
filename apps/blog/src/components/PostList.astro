@@ -1,21 +1,22 @@
 ---
 import type { Post } from "../lib/posts";
+import { ui } from "../lib/ui-classes";
 
 const { posts } = Astro.props as { posts: Post[] };
 ---
-<div class="post-list">
+<div class={ui.postList}>
   {
     posts.map((post) => (
-      <article class="post-item">
-        <a href={`/posts/${post.data.slug}/`}>
-          <div class="post-topline">
-            <span>{post.data.series}</span>
-            <time datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time>
+      <article class={ui.postCard}>
+        <a class={ui.postCardLink} href={`/posts/${post.data.slug}/`}>
+          <div class={ui.postTopline}>
+            <span class={ui.postSeries}>{post.data.series}</span>
+            <time class={ui.postDate} datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time>
           </div>
-          <h2>{post.data.title}</h2>
-          <p>{post.data.description}</p>
-          <div class="post-tags" aria-label="Tags">
-            {post.data.tags.slice(0, 4).map((tag) => <span>{tag}</span>)}
+          <h2 class={ui.postTitle}>{post.data.title}</h2>
+          <p class={ui.postDescription}>{post.data.description}</p>
+          <div class={ui.postTagList} aria-label="Tags">
+            {post.data.tags.slice(0, 4).map((tag) => <span class={ui.tagPill}>{tag}</span>)}
           </div>
         </a>
       </article>

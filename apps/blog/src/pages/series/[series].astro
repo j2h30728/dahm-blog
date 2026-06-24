@@ -3,6 +3,7 @@ import PostList from "../../components/PostList.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getPublishedPosts, getSeriesPosts } from "../../lib/posts";
 import { slugify } from "../../lib/slug";
+import { ui } from "../../lib/ui-classes";
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -16,6 +17,6 @@ export async function getStaticPaths() {
 const { series, posts } = Astro.props;
 ---
 <BaseLayout title={`Series: ${series}`}>
-  <h1 class="page-title">{series}</h1>
+  <h1 class={ui.pageTitle}>{series}</h1>
   <PostList posts={posts} />
 </BaseLayout>

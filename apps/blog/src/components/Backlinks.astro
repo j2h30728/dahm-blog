@@ -1,19 +1,20 @@
 ---
 import type { Backlink } from "../lib/public-link-index";
+import { ui } from "../lib/ui-classes";
 
 const { backlinks } = Astro.props as { backlinks: Backlink[] };
 ---
 {
   backlinks.length > 0 && (
-    <section class="related backlinks" aria-labelledby="backlinks-title">
-      <h2 id="backlinks-title">Backlinks</h2>
-      <div class="related-grid">
+    <section class={`${ui.relatedSection} backlinks`} aria-labelledby="backlinks-title">
+      <h2 class={ui.relatedTitle} id="backlinks-title">Backlinks</h2>
+      <div class={ui.relatedGrid}>
         {backlinks.map(({ source, edge }) => (
-          <a class="related-card backlink-card" href={source.href}>
-            <span>{edge.kind === "none" ? "Mentioned by" : `${edge.kind} reference`}</span>
-            <strong>{source.title}</strong>
-            <small>{edge.label}</small>
-            <p>{source.description}</p>
+          <a class={`${ui.relatedCard} backlink-card`} href={source.href}>
+            <span class={ui.relatedKicker}>{edge.kind === "none" ? "Mentioned by" : `${edge.kind} reference`}</span>
+            <strong class={ui.postTitle}>{source.title}</strong>
+            <small class={`${ui.relatedMeta} mt-1 block`}>{edge.label}</small>
+            <p class={ui.relatedDescription}>{source.description}</p>
           </a>
         ))}
       </div>

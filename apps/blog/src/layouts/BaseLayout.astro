@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import ThemeToggle from "../components/ThemeToggle.astro";
+import { ui } from "../lib/ui-classes";
 
 const {
   title = "Personal Tech Blog",
@@ -22,18 +23,21 @@ const {
     </script>
   </head>
   <body>
-    <header class="site-header">
-      <nav class="nav" aria-label="Primary">
-        <a class="brand" href="/">Personal Tech Blog</a>
-        <div class="nav-links">
-          <a href="/search/">Search</a>
-          <a href="/tags/">Tags</a>
-          <a href="/series/">Series</a>
+    <header class={ui.siteHeader}>
+      <nav class={ui.nav} aria-label="Primary">
+        <a class={ui.brand} href="/">
+          <span class={ui.brandMark} aria-hidden="true"></span>
+          Personal Tech Blog
+        </a>
+        <div class={ui.navLinks}>
+          <a class={ui.navLink} href="/search/">Search</a>
+          <a class={ui.navLink} href="/tags/">Tags</a>
+          <a class={ui.navLink} href="/series/">Series</a>
           <ThemeToggle />
         </div>
       </nav>
     </header>
-    <main class="shell">
+    <main class={ui.shell}>
       <slot />
     </main>
   </body>

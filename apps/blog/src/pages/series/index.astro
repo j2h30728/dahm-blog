@@ -2,18 +2,19 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getPublishedPosts } from "../../lib/posts";
 import { slugify } from "../../lib/slug";
+import { ui } from "../../lib/ui-classes";
 
 const posts = await getPublishedPosts();
 const series = [...new Set(posts.map((post) => post.data.series))].sort();
 ---
 <BaseLayout title="Series">
-  <h1 class="page-title">Series</h1>
-  <div class="post-list">
+  <h1 class={ui.pageTitle}>Series</h1>
+  <div class={ui.postList}>
     {series.map((name) => (
-      <article class="post-item">
-        <a href={`/series/${slugify(name)}/`}>
-          <h2>{name}</h2>
-          <p>{posts.filter((post) => post.data.series === name).length} posts</p>
+      <article class={ui.postCard}>
+        <a class={ui.postCardLink} href={`/series/${slugify(name)}/`}>
+          <h2 class={ui.postTitle}>{name}</h2>
+          <p class={ui.postDescription}>{posts.filter((post) => post.data.series === name).length} posts</p>
         </a>
       </article>
     ))}
