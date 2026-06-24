@@ -5,30 +5,25 @@ import { test } from "node:test";
 import { getBacklinks, getLinkPreviewPayload, getPublicLinkNode } from "../src/lib/public-link-index";
 
 test("public link index exposes backlinks and preview summaries", () => {
-  const backlinks = getBacklinks("content-boundaries");
+  assert.deepEqual(getBacklinks("openapi-generator-boundaries"), []);
+  assert.deepEqual(getBacklinks("rsc-dot-notation-reexport"), []);
 
-  assert.equal(backlinks.length, 3);
-  assert.deepEqual(
-    backlinks.map((backlink) => [backlink.source.slug, backlink.edge.kind, backlink.edge.label]),
-    [
-      ["hello-pipeline", "none", "content boundaries"],
-      ["hello-pipeline", "heading", "the public allowlist"],
-      ["hello-pipeline", "block", "the allowlist rule"],
-    ],
+  const rscNode = getPublicLinkNode("rsc-dot-notation-reexport");
+  assert.equal(rscNode?.title, "왜 RSC에서는 dot notation이 안 될까");
+  assert.equal(
+    rscNode?.description,
+    "Next.js App Router와 RSC에서 Object.assign 기반 compound API가 깨지는 이유와 re-export namespace를 택한 배경.",
   );
-  assert.deepEqual(getBacklinks("hello-pipeline"), []);
 
-  const node = getPublicLinkNode("content-boundaries");
-  assert.equal(node?.title, "Content Boundaries");
-  assert.equal(node?.description, "How public and private notes stay separated.");
+  const openApiNode = getPublicLinkNode("openapi-generator-boundaries");
+  assert.equal(openApiNode?.title, "OpenAPI Generator를 붙이며 나눈 경계");
+  assert.equal(openApiNode?.headings[0]?.id, "api-타입을-옮겨-적는-비용");
 
   const previewPayload = getLinkPreviewPayload();
-  assert.equal(previewPayload["content-boundaries"].title, "Content Boundaries");
-  assert.equal(
-    previewPayload["content-boundaries"].excerpt,
-    "The export step accepts only notes in the published folder with published: true.",
-  );
-  assert.deepEqual(previewPayload["content-boundaries"].tags, ["architecture", "privacy"]);
+  assert.deepEqual(Object.keys(previewPayload).sort(), ["openapi-generator-boundaries", "rsc-dot-notation-reexport"]);
+  assert.equal(previewPayload["openapi-generator-boundaries"].title, "OpenAPI Generator를 붙이며 나눈 경계");
+  assert.match(previewPayload["openapi-generator-boundaries"].excerpt, /스웨거를 보며 API 타입을/);
+  assert.deepEqual(previewPayload["openapi-generator-boundaries"].tags, ["openapi", "typescript", "codegen", "frontend"]);
   assert.equal(previewPayload["missing"], undefined);
 });
 

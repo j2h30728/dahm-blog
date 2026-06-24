@@ -1,5 +1,6 @@
 node_modules
 .omx/
+.omc/
 .pnpm-store
 .yarn
 .pnp.*

@@ -8,7 +8,7 @@ export function checksum(value: string): string {
 
 export function slugify(value: string): string {
   return value
-    .normalize("NFKD")
+    .normalize("NFC")
     .toLowerCase()
     .replace(/['"]/g, "")
     .replace(/[^a-z0-9가-힣]+/g, "-")
