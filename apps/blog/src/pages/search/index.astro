@@ -5,7 +5,16 @@ import { ui } from "../../lib/ui-classes";
 <BaseLayout title="Search">
   <h1 class={ui.pageTitle}>Search</h1>
   <input class={ui.searchBox} id="search" type="search" placeholder="Search posts, tags, and series" autocomplete="off" />
-  <div id="results" class={ui.postList} aria-live="polite"></div>
+  <div
+    id="results"
+    class={ui.postList}
+    aria-live="polite"
+    data-card={ui.postCard}
+    data-card-link={ui.postCardLink}
+    data-series={ui.postSeries}
+    data-title={ui.postTitle}
+    data-desc={ui.postDescription}
+  ></div>
   <script>
     interface SearchPost {
       url: string;
@@ -16,7 +25,8 @@ import { ui } from "../../lib/ui-classes";
     }
 
     const input = document.querySelector<HTMLInputElement>("#search");
-    const results = document.querySelector<HTMLElement>("#results");
+    const results = document.querySelector<HTMLElement>("#results")!;
+    const { card, cardLink, series: seriesCls, title: titleCls, desc } = results.dataset;
     const response = await fetch("/search/index.json");
     const posts: SearchPost[] = await response.json();
 
@@ -26,19 +36,17 @@ import { ui } from "../../lib/ui-classes";
         ? posts.filter((post) => post.searchText.includes(normalized))
         : posts;
 
-      if (results) {
-        results.innerHTML = matches
-          .map((post) => `
-            <article class="post-item rounded-lg border border-[var(--line)] bg-[var(--paper)] transition-[border-color,box-shadow,transform] duration-[240ms] ease-[var(--ease-spring)] hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--line))] hover:shadow-[var(--glow-sm)]">
-              <a class="block px-[22px] py-5 text-inherit hover:no-underline max-[640px]:p-[18px]" href="${post.url}">
-                <span class="tracking-[0.08em] text-[var(--teal)]">${post.series}</span>
-                <h2 class="mb-2 mt-0 block text-[clamp(1.28rem,2.4vw,1.7rem)] leading-[1.16] text-balance">${post.title}</h2>
-                <p class="m-0 mb-4 max-w-[760px] text-[var(--muted-strong)]">${post.description}</p>
-              </a>
-            </article>
-          `)
-          .join("");
-      }
+      results.innerHTML = matches
+        .map((post) => `
+          <article class="${card}">
+            <a class="${cardLink}" href="${post.url}">
+              <span class="${seriesCls}">${post.series}</span>
+              <h2 class="${titleCls}">${post.title}</h2>
+              <p class="${desc}">${post.description}</p>
+            </a>
+          </article>
+        `)
+        .join("");
     }
 
     if (input) {

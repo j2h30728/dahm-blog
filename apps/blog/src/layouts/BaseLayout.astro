@@ -18,8 +18,10 @@ const {
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>{title}</title>
     <script is:inline>
-      const t = localStorage.getItem('theme');
-      if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+      const _s = localStorage.getItem('theme');
+      document.documentElement.dataset.theme =
+        _s === 'dark' || _s === 'light' ? _s
+        : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     </script>
   </head>
   <body>
