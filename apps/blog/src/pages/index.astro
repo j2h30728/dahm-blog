@@ -4,10 +4,55 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { getPublishedPosts } from "../lib/posts";
 
 const posts = await getPublishedPosts();
+const featured = posts[0];
+const tags = [...new Set(posts.flatMap((post) => post.data.tags))].sort();
+const series = [...new Set(posts.map((post) => post.data.series))].sort();
+const latestDate = featured?.data.date.toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" });
 ---
 <BaseLayout title="Personal Tech Blog" description="Technical essays exported from an Obsidian-first workflow.">
-  <p class="tagline">Obsidian-first publishing</p>
-  <h1 class="page-title">Personal Tech Blog</h1>
-  <p class="page-subtitle">Technical notes, essays, and series built from a file-based publishing pipeline.</p>
-  <PostList posts={posts} />
+  <section class="home-intro" aria-labelledby="home-title">
+    <div>
+      <p class="tagline">Obsidian-first publishing</p>
+      <h1 id="home-title" class="page-title">Personal Tech Blog</h1>
+      <p class="page-subtitle">Technical essays on frontend architecture, publishing systems, and the boundaries that make engineering decisions easier to revisit.</p>
+    </div>
+    <div class="home-summary" aria-label="Blog summary">
+      <span>{posts.length} notes</span>
+      <span>{series.length} series</span>
+      <span>{tags.length} topics</span>
+    </div>
+  </section>
+
+  {
+    featured && (
+      <section class="latest-strip" aria-labelledby="latest-title">
+        <div>
+          <p class="tagline">Latest essay</p>
+          <h2 id="latest-title">
+            <a href={`/posts/${featured.data.slug}/`}>{featured.data.title}</a>
+          </h2>
+          <p>{featured.data.description}</p>
+        </div>
+        <time datetime={featured.data.date.toISOString()}>{latestDate}</time>
+      </section>
+    )
+  }
+
+  <section class="topic-rail" aria-labelledby="topic-title">
+    <div>
+      <p class="tagline">Topics</p>
+      <h2 id="topic-title">Follow a thread</h2>
+    </div>
+    <div class="topic-list">
+      {tags.map((tag) => <a class="tag" href={`/tags/${tag}/`}>{tag}</a>)}
+    </div>
+  </section>
+
+  <section class="archive-section" aria-labelledby="archive-title">
+    <div class="section-heading">
+      <p class="tagline">Archive</p>
+      <h2 id="archive-title">Recent writing</h2>
+    </div>
+    <PostList posts={posts} />
+  </section>
 </BaseLayout>
