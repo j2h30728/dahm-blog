@@ -17,7 +17,7 @@ const eligible = headings.filter((heading) => heading.depth === 2 || heading.dep
       <ol class={ui.tocList}>
         {eligible.map((heading) => (
           <li class:list={[ui.tocItem, heading.depth === 3 && ui.tocItemNested, `depth-${heading.depth}`]}>
-            <a class={ui.tocLink} href={`#${heading.slug}`}>{heading.text}</a>
+            <a class={heading.depth === 3 ? ui.tocLinkNested : ui.tocLink} href={`#${heading.slug}`}>{heading.text}</a>
           </li>
         ))}
       </ol>

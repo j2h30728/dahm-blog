@@ -16,9 +16,13 @@
   --color-accent-soft: #e3f3ef;
   --color-teal: #52796f;
   --color-rust: #b45f3c;
+  --color-header-bg: rgb(255 254 250 / 84%);
+  --color-header-border: rgb(222 222 214 / 84%);
 
   --shadow-glow-sm: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent), 0 8px 20px rgb(29 31 27 / 6%);
   --shadow-glow-md: 0 0 0 1px color-mix(in srgb, var(--color-accent) 24%, transparent), 0 16px 34px rgb(29 31 27 / 8%);
+
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
 
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -31,8 +35,6 @@
 :root {
   color-scheme: light;
   --shadow: 0 18px 44px rgb(29 31 27 / 8%);
-  --header-bg: rgb(255 254 250 / 84%);
-  --header-border: rgb(222 222 214 / 84%);
   --body-gradient: linear-gradient(180deg, rgb(255 254 250 / 98%) 0, rgb(252 251 246 / 94%) 320px, rgb(247 247 242 / 94%) 620px);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -43,6 +45,7 @@
 
 html {
   background: var(--color-canvas);
+  scroll-behavior: smooth;
 }
 
 body {
@@ -73,14 +76,20 @@ input:focus-visible {
 
 @starting-style {
   .home-intro {
+    filter: blur(4px);
     opacity: 0;
     transform: translateY(18px);
   }
 
   .page-title {
+    filter: blur(6px);
     opacity: 0;
     transform: translateY(12px);
   }
+}
+
+.content {
+  counter-reset: h2;
 }
 
 .content > :first-child {
@@ -96,13 +105,25 @@ input:focus-visible {
   letter-spacing: 0;
   line-height: 1.18;
   margin: 2rem 0 0.8rem;
+  scroll-margin-top: 5rem;
   text-wrap: balance;
 }
 
 .content h2 {
   border-top: 1px solid var(--color-line);
+  counter-increment: h2;
   font-size: clamp(1.45rem, 3vw, 2rem);
   padding-top: 1.4rem;
+}
+
+.content h2::before {
+  color: var(--color-muted);
+  content: counter(h2, decimal-leading-zero) " /";
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  margin-right: 0.5em;
 }
 
 .content h3 {
@@ -116,12 +137,20 @@ input:focus-visible {
 }
 
 .content a {
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--color-accent) 16%, transparent),
+    color-mix(in srgb, var(--color-accent) 16%, transparent)
+  );
+  background-position: 0% 90%;
+  background-repeat: no-repeat;
+  background-size: 0% 0.72em;
   font-weight: 680;
+  transition: background-size 260ms var(--ease-out-expo), color 160ms;
 }
 
 .content a:hover {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  background-size: 100% 0.72em;
+  color: var(--color-accent-ink);
 }
 
 .content blockquote {
@@ -216,6 +245,31 @@ input:focus-visible {
   }
 }
 
+.toc ol {
+  border-left: 2px solid var(--color-line);
+  margin: 6px 0 8px 1rem;
+  padding: 0;
+}
+
+.toc li {
+  border-left: 2px solid transparent;
+  margin-left: -2px;
+  transition: border-color 180ms;
+}
+
+.toc li:hover {
+  border-left-color: var(--color-accent);
+}
+
+.toc a {
+  display: block;
+  padding: 4px 14px;
+}
+
+.toc .depth-3 > a {
+  padding-left: 26px;
+}
+
 .internal-link {
   border-bottom: 1px dotted color-mix(in srgb, var(--color-accent) 50%, transparent);
 }
@@ -282,9 +336,9 @@ html[data-theme="dark"] {
   --color-accent-soft: #173a34;
   --color-teal: #79a99a;
   --color-rust: #e39a6a;
+  --color-header-bg: rgb(20 22 17 / 88%);
+  --color-header-border: rgb(52 54 47 / 82%);
   --shadow: 0 18px 44px rgb(0 0 0 / 42%);
-  --header-bg: rgb(20 22 17 / 88%);
-  --header-border: rgb(52 54 47 / 82%);
   --shadow-glow-sm: 0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent), 0 10px 22px rgb(0 0 0 / 22%);
   --shadow-glow-md: 0 0 0 1px color-mix(in srgb, var(--color-accent) 28%, transparent), 0 18px 38px rgb(0 0 0 / 30%);
   --body-gradient: linear-gradient(180deg, rgb(29 31 26 / 98%) 0, rgb(24 26 21 / 95%) 320px, rgb(20 22 17 / 94%) 620px);
@@ -323,7 +377,23 @@ html[data-theme="light"] {
   .post-item:nth-child(n+4) { animation-delay: 120ms; }
 }
 
+body::after {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  content: "";
+  inset: 0;
+  opacity: 0.025;
+  pointer-events: none;
+  position: fixed;
+  z-index: 9999;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {

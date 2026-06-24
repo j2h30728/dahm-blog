@@ -1,6 +1,6 @@
 export const ui = {
   siteHeader:
-    "sticky top-0 z-10 border-b border-[var(--header-border)] bg-[var(--header-bg)] backdrop-blur-[18px]",
+    "sticky top-0 z-10 border-b border-header-border bg-header-bg backdrop-blur-[18px]",
   nav:
     "mx-auto flex max-w-[1120px] items-center justify-between gap-6 px-6 py-4 max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-3 max-[640px]:px-[18px] max-[640px]:py-3.5",
   brand:
@@ -15,12 +15,12 @@ export const ui = {
     "mx-auto max-w-[1120px] px-6 pb-[88px] pt-14 max-[640px]:px-[18px] max-[640px]:pb-16 max-[640px]:pt-[38px]",
 
   homeIntro:
-    "home-intro grid grid-cols-[minmax(0,1fr)_auto] gap-6 border-b border-line pb-[34px] pt-2.5 transition-[opacity,transform] duration-[600ms] ease-out-expo max-[860px]:grid-cols-1",
+    "home-intro grid grid-cols-[minmax(0,1fr)_auto] gap-6 border-b border-line pb-[34px] pt-2.5 transition-[opacity,transform,filter] duration-[600ms] ease-out-expo max-[860px]:grid-cols-1",
   minWidthZero: "min-w-0",
   tagline:
     "tagline mb-3 block text-[0.76rem] font-[760] uppercase tracking-[0.12em] text-rust",
   pageTitle:
-    "page-title mb-4 max-w-[820px] text-[clamp(2.35rem,6vw,4.25rem)] font-[760] leading-none tracking-[0] text-ink text-balance transition-[opacity,transform] delay-100 duration-[700ms] ease-out-expo max-[640px]:text-[clamp(2.2rem,14vw,3.25rem)]",
+    "page-title mb-4 max-w-[820px] text-[clamp(2.35rem,6vw,4.25rem)] font-[760] leading-none tracking-[0] text-ink text-balance transition-[opacity,transform,filter] delay-100 duration-[700ms] ease-out-expo max-[640px]:text-[clamp(2.2rem,14vw,3.25rem)]",
   pageSubtitle:
     "m-0 max-w-[720px] wrap-anywhere text-[clamp(1rem,2vw,1.18rem)] text-muted",
   homeSummary:
@@ -74,14 +74,16 @@ export const ui = {
     "content min-w-0 rounded-lg border border-line bg-paper p-[clamp(22px,4vw,44px)] shadow-[0_14px_36px_rgb(29_31_27_/_6%)] max-[640px]:p-[18px]",
 
   toc:
-    "toc sticky top-[84px] self-start rounded-lg border border-line bg-paper p-4 transition-shadow duration-[200ms] hover:shadow-glow-sm max-[860px]:static",
+    "toc sticky top-[84px] self-start overflow-hidden rounded-lg border border-line bg-paper transition-shadow duration-[200ms] hover:shadow-glow-sm max-[860px]:static",
   tocTitle:
-    "mb-2.5 mt-0 text-[0.84rem] uppercase tracking-[0.08em] text-ink",
-  tocList: "m-0 list-none p-0",
-  tocItem: "my-[7px]",
-  tocItemNested: "pl-[14px]",
+    "mb-0 mt-0 border-b border-line px-4 py-[10px] text-[0.68rem] font-[760] uppercase tracking-[0.14em] text-muted",
+  tocList: "list-none",
+  tocItem: "",
+  tocItemNested: "",
   tocLink:
-    "text-[0.9rem] text-muted-strong transition-colors duration-[160ms] hover:text-accent-ink",
+    "text-[0.85rem] text-ink-soft transition-colors duration-[160ms] hover:text-accent-ink hover:no-underline",
+  tocLinkNested:
+    "text-[0.79rem] text-muted transition-colors duration-[160ms] hover:text-accent-ink hover:no-underline",
 
   relatedSection:
     "related mt-12 border-t border-line pt-[26px]",
