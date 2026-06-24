@@ -29,10 +29,10 @@ import { ui } from "../../lib/ui-classes";
       if (results) {
         results.innerHTML = matches
           .map((post) => `
-            <article class="post-item rounded-xl border border-[var(--line)] bg-[var(--paper)] transition-[border-color,box-shadow,transform] duration-[240ms] ease-[var(--ease-spring)] hover:-translate-y-[3px] hover:border-[color-mix(in_srgb,var(--accent)_46%,var(--line))] hover:shadow-[var(--glow-md)]">
+            <article class="post-item rounded-lg border border-[var(--line)] bg-[var(--paper)] transition-[border-color,box-shadow,transform] duration-[240ms] ease-[var(--ease-spring)] hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--line))] hover:shadow-[var(--glow-sm)]">
               <a class="block px-[22px] py-5 text-inherit hover:no-underline max-[640px]:p-[18px]" href="${post.url}">
                 <span class="tracking-[0.08em] text-[var(--teal)]">${post.series}</span>
-                <h2 class="mb-2 mt-0 block text-[clamp(1.22rem,2.6vw,1.56rem)] leading-[1.18] text-balance">${post.title}</h2>
+                <h2 class="mb-2 mt-0 block text-[clamp(1.28rem,2.4vw,1.7rem)] leading-[1.16] text-balance">${post.title}</h2>
                 <p class="m-0 mb-4 max-w-[760px] text-[var(--muted-strong)]">${post.description}</p>
               </a>
             </article>

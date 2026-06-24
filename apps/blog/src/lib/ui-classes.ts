@@ -20,7 +20,7 @@ export const ui = {
   tagline:
     "tagline mb-3 block text-[0.76rem] font-[760] uppercase tracking-[0.12em] text-[var(--rust)]",
   pageTitle:
-    "page-title mb-4 max-w-[820px] bg-[linear-gradient(135deg,var(--ink)_35%,color-mix(in_srgb,var(--accent)_75%,var(--ink)))] bg-clip-text text-[clamp(2.35rem,6vw,4.25rem)] leading-none tracking-[0] text-transparent [-webkit-text-fill-color:transparent] text-balance transition-[opacity,transform] delay-100 duration-[700ms] ease-[var(--ease-out-expo)] max-[640px]:text-[clamp(2.2rem,14vw,3.25rem)]",
+    "page-title mb-4 max-w-[820px] text-[clamp(2.35rem,6vw,4.25rem)] font-[760] leading-none tracking-[0] text-[var(--ink)] text-balance transition-[opacity,transform] delay-100 duration-[700ms] ease-[var(--ease-out-expo)] max-[640px]:text-[clamp(2.2rem,14vw,3.25rem)]",
   pageSubtitle:
     "m-0 max-w-[720px] wrap-anywhere text-[clamp(1rem,2vw,1.18rem)] text-[var(--muted)]",
   homeSummary:
@@ -31,7 +31,7 @@ export const ui = {
   latestStrip:
     "latest-strip relative grid grid-cols-[minmax(0,1fr)_auto] items-end gap-6 overflow-hidden border-b border-[var(--line)] py-[26px] max-[860px]:grid-cols-1",
   latestGlow:
-    "pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_0%_50%,color-mix(in_srgb,var(--accent)_5%,transparent)_0%,transparent_65%)]",
+    "pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_0%_50%,color-mix(in_srgb,var(--accent)_3%,transparent)_0%,transparent_65%)]",
   latestTitle:
     "mb-2 mt-0 max-w-[760px] text-[clamp(1.35rem,3vw,2rem)] leading-[1.12] text-balance",
   latestLink:
@@ -47,13 +47,13 @@ export const ui = {
     "m-0 text-[clamp(1.45rem,3vw,2rem)] leading-[1.12]",
   tagList: "flex flex-wrap gap-2",
   tagPill:
-    "tag rounded-full border border-[var(--line)] bg-[var(--paper)] px-2.5 py-[7px] text-[0.82rem] font-[680] leading-none text-[var(--ink-soft)] transition-[background,border-color,color,transform,box-shadow] duration-[200ms] ease-[var(--ease-spring)] hover:-translate-y-px hover:scale-[1.06] hover:border-[color-mix(in_srgb,var(--accent)_40%,var(--line))] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)] hover:shadow-[0_2px_10px_color-mix(in_srgb,var(--accent)_14%,transparent)] hover:no-underline",
+    "tag rounded-full border border-[var(--line)] bg-[var(--paper)] px-2.5 py-[7px] text-[0.82rem] font-[680] leading-none text-[var(--ink-soft)] transition-[background,border-color,color,transform,box-shadow] duration-[200ms] ease-[var(--ease-spring)] hover:-translate-y-0.5 hover:scale-[1.02] hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--line))] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-ink)] hover:shadow-[0_2px_10px_rgb(29_31_27_/_6%)] hover:no-underline",
   archiveSection: "mt-12",
   sectionHeading: "mb-[18px] flex items-end justify-between",
 
   postList: "post-list grid gap-3.5",
   postCard:
-    "post-item rounded-xl border border-[var(--line)] bg-[var(--paper)] transition-[border-color,box-shadow,transform] duration-[240ms] ease-[var(--ease-spring)] hover:-translate-y-[3px] hover:border-[color-mix(in_srgb,var(--accent)_46%,var(--line))] hover:shadow-[var(--glow-md)]",
+    "post-item rounded-lg border border-[var(--line)] bg-[var(--paper)] transition-[border-color,box-shadow,transform] duration-[240ms] ease-[var(--ease-spring)] hover:-translate-y-px hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--line))] hover:shadow-[var(--glow-sm)]",
   postCardLink:
     "block px-[22px] py-5 text-inherit hover:no-underline max-[640px]:p-[18px]",
   postTopline:
@@ -61,7 +61,7 @@ export const ui = {
   postSeries: "tracking-[0.08em] text-[var(--teal)]",
   postDate: "tracking-[0.04em]",
   postTitle:
-    "mb-2 mt-0 block text-[clamp(1.22rem,2.6vw,1.56rem)] leading-[1.18] text-balance",
+    "mb-2 mt-0 block text-[clamp(1.28rem,2.4vw,1.7rem)] leading-[1.16] text-balance",
   postDescription:
     "m-0 mb-4 max-w-[760px] text-[var(--muted-strong)]",
   postTagList: "post-tags flex flex-wrap gap-2",
@@ -71,10 +71,10 @@ export const ui = {
   postLayout:
     "post-layout grid grid-cols-[minmax(0,1fr)_260px] gap-12 max-[860px]:grid-cols-1",
   contentPanel:
-    "content min-w-0 rounded-xl border border-[var(--line)] bg-[var(--paper)] p-[clamp(22px,4vw,44px)] shadow-[0_12px_36px_rgb(23_27_33_/_5%)] max-[640px]:p-[18px]",
+    "content min-w-0 rounded-lg border border-[var(--line)] bg-[var(--paper)] p-[clamp(22px,4vw,44px)] shadow-[0_14px_36px_rgb(29_31_27_/_6%)] max-[640px]:p-[18px]",
 
   toc:
-    "toc sticky top-[84px] self-start rounded-xl border border-[var(--line)] bg-[var(--paper)] p-4 transition-shadow duration-[200ms] hover:shadow-[var(--glow-sm)] max-[860px]:static",
+    "toc sticky top-[84px] self-start rounded-lg border border-[var(--line)] bg-[var(--paper)] p-4 transition-shadow duration-[200ms] hover:shadow-[var(--glow-sm)] max-[860px]:static",
   tocTitle:
     "mb-2.5 mt-0 text-[0.84rem] uppercase tracking-[0.08em] text-[var(--ink)]",
   tocList: "m-0 list-none p-0",
@@ -88,14 +88,14 @@ export const ui = {
   relatedTitle: "mb-4 mt-0 text-[1.35rem]",
   relatedGrid: "grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3",
   relatedCard:
-    "related-card rounded-xl border border-[var(--line)] bg-[var(--paper)] p-4 text-inherit transition-[border-color,box-shadow,transform] duration-[200ms] ease-[var(--ease-spring)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--accent)_40%,var(--line))] hover:shadow-[var(--glow-sm)] hover:no-underline",
+    "related-card rounded-lg border border-[var(--line)] bg-[var(--paper)] p-4 text-inherit transition-[border-color,box-shadow,transform] duration-[200ms] ease-[var(--ease-spring)] hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--accent)_34%,var(--line))] hover:shadow-[var(--glow-sm)] hover:no-underline",
   relatedKicker:
     "mb-1.5 block text-[0.76rem] font-[760] uppercase tracking-[0.08em] text-[var(--teal)]",
   relatedMeta: "text-[var(--muted)]",
   relatedDescription: "m-0 mt-2 text-[var(--muted)]",
 
   searchBox:
-    "search-box mb-6 w-full max-w-[620px] rounded-[10px] border border-[var(--line-strong)] bg-[var(--paper)] px-3.5 py-[13px] text-[var(--ink)] shadow-[0_10px_28px_rgb(23_27_33_/_5%)] transition-[border-color,box-shadow] duration-[200ms] focus:border-[color-mix(in_srgb,var(--accent)_50%,var(--line))] focus:shadow-[var(--glow-sm)] focus:outline-none",
+    "search-box mb-6 w-full max-w-[620px] rounded-lg border border-[var(--line-strong)] bg-[var(--paper)] px-3.5 py-[13px] text-[var(--ink)] shadow-[0_10px_28px_rgb(29_31_27_/_5%)] transition-[border-color,box-shadow] duration-[200ms] focus:border-[color-mix(in_srgb,var(--accent)_42%,var(--line))] focus:shadow-[var(--glow-sm)] focus:outline-none",
 
   themeToggle:
     "theme-toggle group flex cursor-pointer items-center rounded-lg border-0 bg-transparent px-2.5 py-2 leading-none text-[var(--muted-strong)] transition-[background,color,transform] duration-[200ms] ease-[var(--ease-spring)] hover:scale-110 hover:rotate-12 hover:bg-[var(--soft)] hover:text-[var(--ink)]",
