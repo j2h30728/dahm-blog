@@ -15,3 +15,6 @@ apps/blog/public/search/pagefind
 packages/*/dist
 packages/private-wiki-index/.private-index
 *.tsbuildinfo
+.content-sync/
+.playwright-mcp/
+apps/blog/src/content/publish-manifest.json
