@@ -9,6 +9,12 @@ type PlannedAsset = ResolvedAsset & {
   status: "public";
 };
 
+interface ImageDescriptor {
+  alt: string;
+  width?: number;
+  height?: number;
+}
+
 export interface AssetRewriteOptions {
   sourcePath: string;
   vaultRoot: string;
@@ -28,12 +34,12 @@ export function rewriteAssets(body: string, options: AssetRewriteOptions): {
   const plannedAssets: PlannedAsset[] = [];
 
   let rewritten = body.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (raw, alt, target) => {
-    return rewriteAsset(raw, alt, target, options, assets, plannedAssets, errors);
+    return rewriteAsset(raw, parseImageDescriptor(alt, ""), target, options, assets, plannedAssets, errors);
   });
 
   rewritten = rewritten.replace(/!\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/g, (raw, target, alias) => {
-    const alt = alias || path.basename(target, path.extname(target));
-    return rewriteAsset(raw, alt, target, options, assets, plannedAssets, errors);
+    const defaultAlt = path.basename(target, path.extname(target));
+    return rewriteAsset(raw, parseImageDescriptor(alias, defaultAlt), target, options, assets, plannedAssets, errors);
   });
 
   assets.push(...plannedAssets);
@@ -43,7 +49,7 @@ export function rewriteAssets(body: string, options: AssetRewriteOptions): {
 
 function rewriteAsset(
   raw: string,
-  alt: string,
+  image: ImageDescriptor,
   target: string,
   options: AssetRewriteOptions,
   assets: ResolvedAsset[],
@@ -51,7 +57,7 @@ function rewriteAsset(
   errors: string[],
 ): string {
   if (/^https?:\/\//.test(target)) {
-    return raw;
+    return hasExplicitSize(image) ? renderImageElement(target, image) : raw;
   }
 
   const resolved = resolveAssetPath(target, options.sourcePath, options.vaultRoot);
@@ -89,7 +95,58 @@ function rewriteAsset(
     importPath,
     status: "public",
   });
-  return `![${alt}](${importPath})`;
+  return hasExplicitSize(image) ? renderImageElement(importPath, image) : `![${image.alt}](${importPath})`;
+}
+
+function parseImageDescriptor(label: string | undefined, defaultAlt: string): ImageDescriptor {
+  const normalized = label?.trim() ?? "";
+  if (!normalized) return { alt: defaultAlt };
+
+  const parts = normalized.split("|").map((part) => part.trim());
+  const size = parseImageSize(parts[parts.length - 1]);
+  if (!size) return { alt: normalized };
+
+  const alt = parts.slice(0, -1).join("|").trim() || defaultAlt;
+  return { alt, ...size };
+}
+
+function parseImageSize(value: string | undefined): Pick<ImageDescriptor, "width" | "height"> | null {
+  const match = value?.match(/^(\d{1,5})(?:px)?(?:\s*(?:x|×)\s*(\d{1,5})(?:px)?)?$/i);
+  if (!match) return null;
+
+  const width = toSafeDimension(match[1]);
+  const height = match[2] ? toSafeDimension(match[2]) : undefined;
+  if (!width || (match[2] && !height)) return null;
+
+  return { width, height };
+}
+
+function toSafeDimension(value: string): number | undefined {
+  const dimension = Number(value);
+  return Number.isInteger(dimension) && dimension > 0 && dimension <= 10000 ? dimension : undefined;
+}
+
+function hasExplicitSize(image: ImageDescriptor): boolean {
+  return image.width !== undefined || image.height !== undefined;
+}
+
+function renderImageElement(src: string, image: ImageDescriptor): string {
+  const attributes = [
+    `src="${escapeAttribute(src)}"`,
+    `alt="${escapeAttribute(image.alt)}"`,
+    image.width ? `width="${image.width}"` : "",
+    image.height ? `height="${image.height}"` : "",
+  ].filter(Boolean);
+
+  return `<img ${attributes.join(" ")} />`;
+}
+
+function escapeAttribute(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function isPublicAssetPath(resolved: string, options: AssetRewriteOptions): boolean {

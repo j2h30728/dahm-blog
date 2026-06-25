@@ -107,6 +107,44 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
   assert.equal(publicIndexText.includes("Embedded second post"), false);
 });
 
+test("rewrites Obsidian image size aliases to responsive image attributes", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-sized-images-"));
+  const publicRoot = path.join(root, "public");
+  const published = path.join(publicRoot, "published");
+  const assets = path.join(publicRoot, "assets");
+  const output = path.join(root, "out");
+  const postAssets = path.join(root, "post-assets");
+  mkdirSync(published, { recursive: true });
+  mkdirSync(assets, { recursive: true });
+
+  writeFileSync(path.join(assets, "photo.png"), "photo");
+  writeFileSync(path.join(assets, "frame.png"), "frame");
+  writeFileSync(path.join(assets, "manual.png"), "manual");
+  writeFileSync(
+    path.join(published, "sized.md"),
+    `---\ntitle: "Sized Images"\nslug: "sized"\ndescription: "Sized image post."\ndate: "2026-06-24"\ntags: ["images"]\nseries: "Demo"\npublished: true\n---\n\n![[../assets/photo.png|640]]\n\n![[../assets/frame.png|Frame diagram|480x270]]\n\n![Manual diagram|320](/assets/manual.png)\n`,
+  );
+
+  const result = transformVault({
+    vaultRoot: root,
+    sourceDir: published,
+    outputDir: output,
+    assetOutputDir: postAssets,
+  });
+
+  assert.equal(result.errors.length, 0);
+  const outputText = readFileSync(path.join(output, "sized.mdx"), "utf8");
+  assert.match(outputText, /<img src="\.\.\/post-assets\/sized\/photo\.png" alt="photo" width="640" \/>/);
+  assert.match(
+    outputText,
+    /<img src="\.\.\/post-assets\/sized\/frame\.png" alt="Frame diagram" width="480" height="270" \/>/,
+  );
+  assert.match(outputText, /<img src="\.\.\/post-assets\/sized\/manual\.png" alt="Manual diagram" width="320" \/>/);
+  assert.equal(existsSync(path.join(postAssets, "sized", "photo.png")), true);
+  assert.equal(existsSync(path.join(postAssets, "sized", "frame.png")), true);
+  assert.equal(existsSync(path.join(postAssets, "sized", "manual.png")), true);
+});
+
 test("fails closed when a public note references private notes or assets", () => {
   const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-private-"));
   const published = path.join(root, "published");
