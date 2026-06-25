@@ -58,19 +58,19 @@ export const ui = {
   sectionMeta:
     "m-0 font-mono text-[0.8rem] font-[640] uppercase tracking-[0] text-muted tabular-nums",
 
-  postList: "post-list grid gap-3.5",
+  postList: "post-list border-y border-line",
   postCard:
-    "post-item glass-surface overflow-hidden rounded-[var(--radius-card)] border border-card-border transition-[background,border-color,box-shadow,transform] duration-[240ms] ease-spring hover:-translate-y-px hover:border-card-border-strong hover:bg-[var(--color-glass-hover)] hover:shadow-glass-md",
+    "post-item border-b border-line last:border-b-0",
   postCardLink:
-    "block px-[var(--space-6)] py-[var(--space-5)] text-inherit hover:no-underline max-[640px]:p-[18px]",
+    "block py-[var(--space-5)] text-inherit transition-[color,background] duration-[160ms] hover:text-ink hover:no-underline max-[640px]:py-[var(--space-4)]",
   postTopline:
-    "mb-[9px] flex flex-wrap items-center justify-between gap-[var(--space-2)] font-mono text-[0.8rem] font-[640] uppercase tracking-[0] text-muted max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-[3px]",
-  postSeries: "tracking-[0] text-teal",
+    "mb-[7px] flex flex-wrap items-center gap-[var(--space-2)] font-mono text-[0.78rem] font-[640] uppercase tracking-[0] text-muted max-[640px]:gap-[3px]",
+  postSeries: "tracking-[0] text-muted",
   postDate: "tracking-[0] tabular-nums",
   postTitle:
-    "mb-2 mt-0 block text-[clamp(1.08rem,1.8vw,1.32rem)] leading-[1.22] text-balance",
+    "mb-1.5 mt-0 block text-[clamp(1.08rem,1.8vw,1.28rem)] leading-[1.26] text-balance",
   postDescription:
-    "m-0 mb-4 max-w-[760px] text-muted-strong",
+    "m-0 max-w-[760px] text-muted-strong",
   postTagList: "post-tags flex flex-wrap gap-2",
 
   meta:

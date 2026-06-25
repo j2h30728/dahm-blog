@@ -16,6 +16,7 @@ const {
     <meta name="color-scheme" content="light dark" />
     <meta name="description" content={description} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title="Dahm RSS Feed" href="/rss.xml" />
     <title>{title}</title>
     <script is:inline>
       const _s = localStorage.getItem('theme');
@@ -34,8 +35,7 @@ const {
         <div class={ui.navLinks}>
           <a class={ui.navLink} href="/about/">About</a>
           <a class={ui.navLink} href="/posts/">Posts</a>
-          <a class={ui.navLink} href="/tags/">Tags</a>
-          <a class={ui.navLink} href="/search/">Search</a>
+          <a class={ui.navLink} href="/rss.xml">RSS</a>
           <ThemeToggle />
         </div>
       </nav>

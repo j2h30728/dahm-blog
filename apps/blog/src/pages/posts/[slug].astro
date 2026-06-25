@@ -29,7 +29,6 @@ const previewPayloadJson = JSON.stringify(getLinkPreviewPayload()).replace(/</g,
     <h1 class={ui.pageTitle}>{post.data.title}</h1>
     <div class={ui.meta}>
       <time datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time>
-      {post.data.tags.map((tag) => <a class={ui.tagPill} href={`/tags/${tag}/`}>{tag}</a>)}
     </div>
     <div class={ui.postLayout}>
       <div class={ui.contentPanel}>
