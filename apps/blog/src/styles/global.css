@@ -172,6 +172,15 @@ input:focus-visible {
 .content p,
 .content li {
   color: var(--color-ink-soft);
+  line-height: 1.82;
+}
+
+.content p {
+  margin: 1.05rem 0;
+}
+
+.content li + li {
+  margin-top: 0.28rem;
 }
 
 .content a {
@@ -299,9 +308,20 @@ input:focus-visible {
   border-left-color: var(--color-accent);
 }
 
+.toc li.is-active {
+  border-left-color: var(--color-accent);
+}
+
 .toc a {
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
   display: block;
   padding: 4px 14px;
+}
+
+.toc a[aria-current="location"] {
+  background: color-mix(in srgb, var(--color-accent) 9%, transparent);
+  color: var(--color-accent-ink);
+  font-weight: 680;
 }
 
 .toc .depth-3 > a {

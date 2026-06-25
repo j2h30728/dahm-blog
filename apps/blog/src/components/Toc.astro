@@ -12,15 +12,83 @@ const eligible = headings.filter((heading) => heading.depth === 2 || heading.dep
 ---
 {
   eligible.length > 0 && (
-    <nav class={ui.toc} aria-labelledby="toc-title">
+    <nav class={ui.toc} aria-labelledby="toc-title" data-toc>
       <h2 class={ui.tocTitle} id="toc-title">Contents</h2>
       <ol class={ui.tocList}>
         {eligible.map((heading) => (
           <li class:list={[ui.tocItem, heading.depth === 3 && ui.tocItemNested, `depth-${heading.depth}`]}>
-            <a class={heading.depth === 3 ? ui.tocLinkNested : ui.tocLink} href={`#${heading.slug}`}>{heading.text}</a>
+            <a
+              class={heading.depth === 3 ? ui.tocLinkNested : ui.tocLink}
+              data-toc-link
+              data-heading-id={heading.slug}
+              href={`#${heading.slug}`}
+            >
+              {heading.text}
+            </a>
           </li>
         ))}
       </ol>
     </nav>
   )
 }
+
+<script>
+  const links = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-toc-link]"));
+
+  if (links.length > 0) {
+    const getLinkId = (link: HTMLAnchorElement) => link.dataset.headingId ?? link.getAttribute("href")?.slice(1) ?? "";
+    const headings = links
+      .map((link) => document.getElementById(getLinkId(link)))
+      .filter((heading): heading is HTMLElement => Boolean(heading));
+    let activeId = "";
+    let ticking = false;
+
+    const setActive = (id: string) => {
+      if (id === activeId) return;
+      activeId = id;
+
+      links.forEach((link) => {
+        const isActive = getLinkId(link) === id;
+        if (isActive) {
+          link.setAttribute("aria-current", "location");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+        link.closest("li")?.classList.toggle("is-active", isActive);
+      });
+    };
+
+    const activateClosestHeading = () => {
+      const activationLine = Math.min(window.innerHeight * 0.28, 160);
+      let current = headings[0];
+
+      for (const heading of headings) {
+        if (heading.getBoundingClientRect().top > activationLine) break;
+        current = heading;
+      }
+
+      if (current) setActive(current.id);
+    };
+
+    const scheduleActivation = () => {
+      if (ticking) return;
+      ticking = true;
+
+      requestAnimationFrame(() => {
+        activateClosestHeading();
+        ticking = false;
+      });
+    };
+
+    links.forEach((link) => {
+      link.addEventListener("click", () => {
+        setActive(getLinkId(link));
+      });
+    });
+
+    activateClosestHeading();
+    window.addEventListener("scroll", scheduleActivation, { passive: true });
+    window.addEventListener("hashchange", scheduleActivation);
+    window.addEventListener("resize", scheduleActivation, { passive: true });
+  }
+</script>
