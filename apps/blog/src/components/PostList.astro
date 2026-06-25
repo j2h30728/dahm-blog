@@ -6,16 +6,18 @@ const { posts } = Astro.props as { posts: Post[] };
 ---
 <div class={ui.postList}>
   {
-    posts.map((post) => (
+    posts.map((post, index) => (
       <article class={ui.postCard}>
         <a class={ui.postCardLink} href={`/posts/${post.data.slug}/`}>
-          <div class={ui.postTopline}>
-            <span class={ui.postSeries}>{post.data.series}</span>
-            <span aria-hidden="true">/</span>
-            <time class={ui.postDate} datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time>
+          <span class={ui.postIndex}>{String(index + 1).padStart(2, "0")}</span>
+          <div class={ui.postBody}>
+            <div class={ui.postTopline}>
+              <span class={ui.postSeries}>{post.data.series}</span>
+            </div>
+            <h2 class={ui.postTitle}>{post.data.title}</h2>
+            <p class={ui.postDescription}>{post.data.description}</p>
           </div>
-          <h2 class={ui.postTitle}>{post.data.title}</h2>
-          <p class={ui.postDescription}>{post.data.description}</p>
+          <time class={ui.postDate} datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time>
         </a>
       </article>
     ))
