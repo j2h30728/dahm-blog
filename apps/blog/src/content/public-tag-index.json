@@ -1,0 +1,77 @@
+{
+  "generatedAt": "2026-06-25T09:37:02.559Z",
+  "tags": [
+    {
+      "tag": "codegen",
+      "slugs": [
+        "openapi-generator-boundaries"
+      ]
+    },
+    {
+      "tag": "design-system",
+      "slugs": [
+        "rsc-dot-notation-reexport"
+      ]
+    },
+    {
+      "tag": "frontend",
+      "slugs": [
+        "openapi-generator-boundaries"
+      ]
+    },
+    {
+      "tag": "nextjs",
+      "slugs": [
+        "rsc-dot-notation-reexport"
+      ]
+    },
+    {
+      "tag": "obsidian",
+      "slugs": [
+        "obsidian-feature-showcase"
+      ]
+    },
+    {
+      "tag": "obsidian/showcase",
+      "slugs": [
+        "obsidian-feature-showcase"
+      ]
+    },
+    {
+      "tag": "openapi",
+      "slugs": [
+        "openapi-generator-boundaries"
+      ]
+    },
+    {
+      "tag": "publishing",
+      "slugs": [
+        "obsidian-feature-showcase"
+      ]
+    },
+    {
+      "tag": "react",
+      "slugs": [
+        "rsc-dot-notation-reexport"
+      ]
+    },
+    {
+      "tag": "rsc",
+      "slugs": [
+        "rsc-dot-notation-reexport"
+      ]
+    },
+    {
+      "tag": "showcase",
+      "slugs": [
+        "obsidian-feature-showcase"
+      ]
+    },
+    {
+      "tag": "typescript",
+      "slugs": [
+        "openapi-generator-boundaries"
+      ]
+    }
+  ]
+}

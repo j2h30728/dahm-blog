@@ -1,23 +1,18 @@
 ---
 import type { Backlink } from "../lib/public-link-index";
-import { ui } from "../lib/ui-classes";
 
 const { backlinks } = Astro.props as { backlinks: Backlink[] };
+const primaryBacklink = backlinks[0];
+const extraCount = Math.max(0, backlinks.length - 1);
 ---
 {
-  backlinks.length > 0 && (
-    <section class={`${ui.relatedSection} backlinks`} aria-labelledby="backlinks-title">
-      <h2 class={ui.relatedTitle} id="backlinks-title">Backlinks</h2>
-      <div class={ui.relatedGrid}>
-        {backlinks.map(({ source, edge }) => (
-          <a class={`${ui.relatedCard} backlink-card`} href={source.href}>
-            <span class={ui.relatedKicker}>{edge.kind === "none" ? "Mentioned by" : `${edge.kind} reference`}</span>
-            <strong class={ui.postTitle}>{source.title}</strong>
-            <small class={`${ui.relatedMeta} mt-1 block`}>{edge.label}</small>
-            <p class={ui.relatedDescription}>{source.description}</p>
-          </a>
-        ))}
-      </div>
+  primaryBacklink && (
+    <section class="backlinks-compact" aria-labelledby="backlinks-title">
+      <h2 class="backlinks-compact-title" id="backlinks-title">Backlinks</h2>
+      <a class="backlinks-compact-link" href={primaryBacklink.source.href}>
+        <span class="backlinks-compact-source">{primaryBacklink.source.title}</span>
+        {extraCount > 0 && <small class="backlinks-compact-count">+{extraCount}</small>}
+      </a>
     </section>
   )
 }

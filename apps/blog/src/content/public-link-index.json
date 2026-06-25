@@ -1,6 +1,67 @@
 {
-  "generatedAt": "2026-06-25T01:52:48.416Z",
+  "generatedAt": "2026-06-25T09:37:02.558Z",
   "nodes": [
+    {
+      "slug": "obsidian-feature-showcase",
+      "title": "Obsidian 기능 쇼케이스",
+      "description": "웹에서 지원하는 Obsidian 작성 문법을 한 글에서 확인하는 샘플.",
+      "excerpt": "Obsidian에서 쓰던 문장 안 하이라이트는 <mark이렇게 표시됩니다</mark. 인라인 태그도 함께 수집됩니다. obsidian/showcase",
+      "tags": [
+        "obsidian",
+        "showcase",
+        "publishing",
+        "obsidian/showcase"
+      ],
+      "aliases": [
+        "Obsidian Showcase",
+        "기능 데모"
+      ],
+      "href": "/posts/obsidian-feature-showcase/",
+      "headings": [
+        {
+          "depth": 2,
+          "text": "한 번에 보는 작성 문법",
+          "id": "한-번에-보는-작성-문법"
+        },
+        {
+          "depth": 2,
+          "text": "콜아웃과 태스크",
+          "id": "콜아웃과-태스크"
+        },
+        {
+          "depth": 2,
+          "text": "공개 노트 임베드",
+          "id": "공개-노트-임베드"
+        },
+        {
+          "depth": 2,
+          "text": "이미지와 미디어",
+          "id": "이미지와-미디어"
+        },
+        {
+          "depth": 2,
+          "text": "표와 코드",
+          "id": "표와-코드"
+        }
+      ],
+      "properties": [
+        {
+          "name": "featured",
+          "type": "checkbox",
+          "value": true
+        },
+        {
+          "name": "rating",
+          "type": "number",
+          "value": 5
+        },
+        {
+          "name": "reviewed",
+          "type": "date",
+          "value": "2026-06-25"
+        }
+      ]
+    },
     {
       "slug": "openapi-generator-boundaries",
       "title": "OpenAPI Generator를 붙이며 나눈 경계",
@@ -12,6 +73,7 @@
         "codegen",
         "frontend"
       ],
+      "aliases": [],
       "href": "/posts/openapi-generator-boundaries/",
       "headings": [
         {
@@ -69,7 +131,8 @@
           "text": "마무리",
           "id": "마무리"
         }
-      ]
+      ],
+      "properties": []
     },
     {
       "slug": "rsc-dot-notation-reexport",
@@ -82,6 +145,7 @@
         "react",
         "design-system"
       ],
+      "aliases": [],
       "href": "/posts/rsc-dot-notation-reexport/",
       "headings": [
         {
@@ -174,8 +238,44 @@
           "text": "참고 자료",
           "id": "참고-자료"
         }
-      ]
+      ],
+      "properties": []
     }
   ],
-  "edges": []
+  "edges": [
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "obsidian-feature-showcase",
+      "kind": "heading",
+      "targetAnchor": "#콜아웃과-태스크",
+      "label": "콜아웃 섹션"
+    },
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "obsidian-feature-showcase",
+      "kind": "block",
+      "targetAnchor": "#block-showcase-block",
+      "label": "블록 링크"
+    },
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "openapi-generator-boundaries",
+      "kind": "none",
+      "label": "OpenAPI Generator 글"
+    },
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "openapi-generator-boundaries",
+      "kind": "heading",
+      "targetAnchor": "#cli로-만들기",
+      "label": "CLI 섹션"
+    },
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "openapi-generator-boundaries",
+      "kind": "heading",
+      "targetAnchor": "#api-타입을-옮겨-적는-비용",
+      "label": "API 타입 섹션"
+    }
+  ]
 }

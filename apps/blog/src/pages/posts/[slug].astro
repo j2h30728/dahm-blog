@@ -122,4 +122,67 @@ const previewPayloadJson = JSON.stringify(getLinkPreviewPayload()).replace(/</g,
       });
     })();
   </script>
+  <script is:inline>
+    (() => {
+      const codeBlocks = document.querySelectorAll(".content pre");
+      if (codeBlocks.length === 0) return;
+
+      async function copyText(text) {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.append(textarea);
+        textarea.select();
+        const copied = document.execCommand("copy");
+        textarea.remove();
+        if (!copied) throw new Error("Copy command failed");
+      }
+
+      function setButtonState(button, state) {
+        button.dataset.state = state;
+        button.setAttribute("aria-label", state === "copied" ? "복사됨" : state === "failed" ? "복사 실패" : "코드 복사");
+        button.title = state === "copied" ? "복사됨" : state === "failed" ? "복사 실패" : "코드 복사";
+
+        if (state !== "idle") {
+          window.setTimeout(() => setButtonState(button, "idle"), 1400);
+        }
+      }
+
+      codeBlocks.forEach((pre) => {
+        if (pre.closest(".code-block-frame")) return;
+
+        const code = pre.querySelector("code");
+        if (!code) return;
+
+        const frame = document.createElement("div");
+        frame.className = "code-block-frame";
+        pre.parentNode?.insertBefore(frame, pre);
+        frame.append(pre);
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "code-copy-button";
+        button.dataset.state = "idle";
+        button.setAttribute("aria-label", "코드 복사");
+        button.title = "코드 복사";
+        frame.append(button);
+
+        button.addEventListener("click", async () => {
+          try {
+            await copyText(code.textContent ?? "");
+            setButtonState(button, "copied");
+          } catch {
+            setButtonState(button, "failed");
+          }
+        });
+      });
+    })();
+  </script>
 </BaseLayout>

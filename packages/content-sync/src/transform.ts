@@ -3,6 +3,7 @@ import path from "node:path";
 import { rewriteAssets } from "./assets.js";
 import { parseNote, stringifyFrontmatter } from "./frontmatter.js";
 import { createNoteIndex, rewriteWikilinks, type NoteIndexEntry } from "./obsidian-links.js";
+import { normalizeObsidianSyntax, type ObsidianSyntaxResult } from "./obsidian-syntax.js";
 import {
   asBoolean,
   asNumber,
@@ -13,12 +14,33 @@ import {
   type HeadingNode,
   type ManifestEntry,
   type ParsedNote,
+  type PublicGraphIndex,
   type PublicLinkIndex,
+  type PublicProperty,
+  type PublicTagIndex,
   type PublishManifest,
   type ResolvedAsset,
   type TransformOptions,
 } from "./schema.js";
 import { checksum, isWithin, slugify, walkFiles } from "./utils.js";
+
+const RESERVED_PROPERTY_NAMES = new Set([
+  "title",
+  "slug",
+  "description",
+  "date",
+  "updated",
+  "tags",
+  "series",
+  "seriesOrder",
+  "published",
+  "archived",
+  "state",
+  "aliases",
+  "alias",
+  "cssclasses",
+  "cssclass",
+]);
 
 interface TransformNoteResult {
   entry: ManifestEntry;
@@ -59,31 +81,40 @@ export function transformVault(options: TransformOptions): PublishManifest {
   const sourceFiles = walkFiles(vaultRoot);
   const parsedNotes = sourceFiles.map((file) => parseNote(file, readFileSync(file, "utf8")));
   const prevalidated = parsedNotes.map((note) => {
+    const syntax = normalizeObsidianSyntax(note.body);
     const title = asString(note.frontmatter.title) ?? path.basename(note.sourcePath, path.extname(note.sourcePath));
     const description = asString(note.frontmatter.description) ?? "";
     const slug = asString(note.frontmatter.slug) ?? slugify(title);
     const published = asBoolean(note.frontmatter.published) === true;
-    const tags = asStringArray(note.frontmatter.tags) ?? [];
+    const tags = mergeTags(asStringArray(note.frontmatter.tags) ?? [], syntax.tags);
+    const aliases = collectAliases(note.frontmatter);
+    const cssclasses = collectCssClasses(note.frontmatter);
+    const properties = collectPublicProperties(note.frontmatter);
     const isInPublishedRoot = isWithin(sourceDir, note.sourcePath);
     return {
       note,
+      syntax,
       slug,
       title,
       description,
-      excerpt: extractExcerpt(note.body),
+      excerpt: extractExcerpt(syntax.body),
       tags,
-      headings: extractHeadings(note.body),
-      blockAnchors: extractBlockAnchors(note.body),
-      duplicateBlockIds: extractDuplicateBlockIds(note.body),
+      aliases,
+      cssclasses,
+      properties,
+      headings: extractHeadings(syntax.body),
+      blockAnchors: extractBlockAnchors(syntax.body),
+      duplicateBlockIds: extractDuplicateBlockIds(syntax.body),
       isPublic: published && isInPublishedRoot,
     };
   });
   const noteIndex = createNoteIndex(
-    prevalidated.map<NoteIndexEntry>(({ note, slug, title, description, headings, blockAnchors, isPublic }) => ({
+    prevalidated.map<NoteIndexEntry>(({ note, slug, title, description, aliases, headings, blockAnchors, isPublic }) => ({
       sourcePath: note.sourcePath,
       slug,
       title,
       description,
+      aliases,
       headings,
       blockAnchors,
       isPublic,
@@ -104,8 +135,13 @@ export function transformVault(options: TransformOptions): PublishManifest {
 
     const result = transformNote({
       note: item.note,
+      syntax: item.syntax,
       slug: item.slug,
       title: item.title,
+      tags: item.tags,
+      aliases: item.aliases,
+      cssclasses: item.cssclasses,
+      properties: item.properties,
       duplicateBlockIds: item.duplicateBlockIds,
       noteIndex,
       options: {
@@ -144,7 +180,11 @@ export function transformVault(options: TransformOptions): PublishManifest {
   };
 
   if (errors.length > 0 && !options.preview) {
-    cleanupGeneratedOutputs(outputDir, assetOutputDir, options.publicLinkIndexPath);
+    cleanupGeneratedOutputs(outputDir, assetOutputDir, [
+      options.publicLinkIndexPath,
+      options.publicGraphIndexPath,
+      options.publicTagIndexPath,
+    ]);
     writeManifest(manifest, options.manifestPath);
     throw new Error(`Content sync failed with ${errors.length} blocking error(s).`);
   }
@@ -155,8 +195,18 @@ export function transformVault(options: TransformOptions): PublishManifest {
     if (options.publicLinkIndexPath && errors.length === 0) {
       writePublicLinkIndex(buildPublicLinkIndex(exportedPosts, prevalidated), options.publicLinkIndexPath);
     }
+    if (options.publicGraphIndexPath && errors.length === 0) {
+      writePublicGraphIndex(buildPublicGraphIndex(exportedPosts, prevalidated), options.publicGraphIndexPath);
+    }
+    if (options.publicTagIndexPath && errors.length === 0) {
+      writePublicTagIndex(buildPublicTagIndex(exportedPosts, prevalidated), options.publicTagIndexPath);
+    }
   } catch (error) {
-    cleanupGeneratedOutputs(outputDir, assetOutputDir, options.publicLinkIndexPath);
+    cleanupGeneratedOutputs(outputDir, assetOutputDir, [
+      options.publicLinkIndexPath,
+      options.publicGraphIndexPath,
+      options.publicTagIndexPath,
+    ]);
     removeFile(options.manifestPath);
     throw error;
   }
@@ -175,10 +225,22 @@ function writePublicLinkIndex(publicLinkIndex: PublicLinkIndex, publicLinkIndexP
   writeFileSync(publicLinkIndexPath, `${JSON.stringify(publicLinkIndex, null, 2)}\n`);
 }
 
-function cleanupGeneratedOutputs(outputDir: string, assetOutputDir: string, publicLinkIndexPath?: string): void {
+function writePublicGraphIndex(publicGraphIndex: PublicGraphIndex, publicGraphIndexPath: string): void {
+  mkdirSync(path.dirname(publicGraphIndexPath), { recursive: true });
+  writeFileSync(publicGraphIndexPath, `${JSON.stringify(publicGraphIndex, null, 2)}\n`);
+}
+
+function writePublicTagIndex(publicTagIndex: PublicTagIndex, publicTagIndexPath: string): void {
+  mkdirSync(path.dirname(publicTagIndexPath), { recursive: true });
+  writeFileSync(publicTagIndexPath, `${JSON.stringify(publicTagIndex, null, 2)}\n`);
+}
+
+function cleanupGeneratedOutputs(outputDir: string, assetOutputDir: string, publicArtifactPaths: Array<string | undefined> = []): void {
   rmSync(outputDir, { recursive: true, force: true });
   rmSync(assetOutputDir, { recursive: true, force: true });
-  removeFile(publicLinkIndexPath);
+  for (const artifactPath of publicArtifactPaths) {
+    removeFile(artifactPath);
+  }
 }
 
 function removeFile(filePath?: string): void {
@@ -232,8 +294,13 @@ function commitGeneratedOutputs(pendingWrites: PendingPostWrite[], outputDir: st
 
 function transformNote(input: {
   note: ParsedNote;
+  syntax: ObsidianSyntaxResult;
   slug: string;
   title: string;
+  tags: string[];
+  aliases: string[];
+  cssclasses: string[];
+  properties: PublicProperty[];
   duplicateBlockIds: string[];
   noteIndex: ReturnType<typeof createNoteIndex>;
   options: {
@@ -268,7 +335,17 @@ function transformNote(input: {
     };
   }
 
-  const modelResult = createContentModel(note, slug, state, input.hasDuplicateSlug);
+  const modelResult = createContentModel({
+    note,
+    syntax: input.syntax,
+    slug,
+    state,
+    tags: input.tags,
+    aliases: input.aliases,
+    cssclasses: input.cssclasses,
+    properties: input.properties,
+    hasDuplicateSlug: input.hasDuplicateSlug,
+  });
   warnings.push(...modelResult.warnings);
   errors.push(...modelResult.errors);
   for (const id of input.duplicateBlockIds) {
@@ -278,6 +355,7 @@ function transformNote(input: {
   const linkResult = rewriteWikilinks(modelResult.value?.body ?? note.body, input.noteIndex, {
     sourceSlug: slug,
     sourceTitle: input.title,
+    sourcePath: note.sourcePath,
   });
   if (modelResult.value) {
     modelResult.value.outboundLinks = linkResult.references;
@@ -320,7 +398,7 @@ function transformNote(input: {
     seriesOrder: modelResult.value?.seriesOrder,
     published: state === "published",
   });
-  const outputText = `${frontmatter}${normalizeCallouts(normalizeBlockAnchors(assetResult.body)).trimEnd()}\n`;
+  const outputText = `${frontmatter}${normalizeBlockAnchors(assetResult.body).trimEnd()}\n`;
   const outputPath = path.join(input.options.outputDir, `${slug}.mdx`);
 
   return {
@@ -340,32 +418,37 @@ function transformNote(input: {
   };
 }
 
-function createContentModel(
-  note: ParsedNote,
-  slug: string,
-  state: ContentModel["state"],
-  hasDuplicateSlug: boolean,
-): {
+function createContentModel(input: {
+  note: ParsedNote;
+  syntax: ObsidianSyntaxResult;
+  slug: string;
+  state: ContentModel["state"];
+  tags: string[];
+  aliases: string[];
+  cssclasses: string[];
+  properties: PublicProperty[];
+  hasDuplicateSlug: boolean;
+}): {
   value?: ContentModel;
   warnings: string[];
   errors: string[];
 } {
   const warnings: string[] = [];
   const errors: string[] = [];
+  const { note, syntax, slug, state } = input;
   const title = asString(note.frontmatter.title);
   const description = asString(note.frontmatter.description);
   const date = asString(note.frontmatter.date);
   const updated = asString(note.frontmatter.updated);
-  const tags = asStringArray(note.frontmatter.tags);
   const series = asString(note.frontmatter.series);
   const seriesOrder = asNumber(note.frontmatter.seriesOrder);
 
   if (!title) errors.push("Missing required frontmatter: title");
   if (!description) errors.push("Missing required frontmatter: description");
   if (!date || Number.isNaN(Date.parse(date))) errors.push("Missing or invalid required frontmatter: date");
-  if (!tags || tags.length === 0) errors.push("Missing or invalid required frontmatter: tags");
+  if (input.tags.length === 0) errors.push("Missing or invalid required frontmatter: tags");
   if (!series) errors.push("Missing required frontmatter: series");
-  if (hasDuplicateSlug) errors.push(`Duplicate slug: ${slug}`);
+  if (input.hasDuplicateSlug) errors.push(`Duplicate slug: ${slug}`);
   if (!updated) warnings.push("Missing optional frontmatter: updated");
 
   if (errors.length > 0) {
@@ -380,13 +463,19 @@ function createContentModel(
       description: description!,
       date: date!,
       updated,
-      tags: tags!,
+      tags: input.tags,
+      aliases: input.aliases,
+      cssclasses: input.cssclasses,
+      properties: input.properties,
       series: series!,
       seriesOrder,
-      headings: extractHeadings(note.body),
+      headings: extractHeadings(syntax.body),
       outboundLinks: [],
       assets: [],
-      body: note.body,
+      embeds: [],
+      tasks: syntax.tasks,
+      callouts: syntax.callouts,
+      body: syntax.body,
       state,
     },
     warnings,
@@ -490,6 +579,83 @@ function collectBlockAnchors(body: string): { anchors: BlockAnchor[]; duplicates
   return { anchors, duplicates };
 }
 
+function mergeTags(...tagGroups: string[][]): string[] {
+  const tags = new Set<string>();
+  for (const group of tagGroups) {
+    for (const tag of group) {
+      const normalized = normalizeTag(tag);
+      if (normalized) tags.add(normalized);
+    }
+  }
+  return Array.from(tags);
+}
+
+function normalizeTag(tag: string): string {
+  return tag.replace(/^#+/, "").trim();
+}
+
+function collectAliases(frontmatter: Record<string, unknown>): string[] {
+  return normalizeStringList(frontmatter.aliases ?? frontmatter.alias);
+}
+
+function collectCssClasses(frontmatter: Record<string, unknown>): string[] {
+  return normalizeStringList(frontmatter.cssclasses ?? frontmatter.cssclass);
+}
+
+function normalizeStringList(value: unknown): string[] {
+  return Array.from(new Set(asStringArray(value) ?? [])).sort((a, b) => a.localeCompare(b));
+}
+
+function collectPublicProperties(frontmatter: Record<string, unknown>): PublicProperty[] {
+  return Object.entries(frontmatter)
+    .filter(([name]) => !isReservedProperty(name) && !isSensitivePropertyName(name))
+    .map(([name, value]) => toPublicProperty(name, value))
+    .filter((property): property is PublicProperty => property !== null)
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function toPublicProperty(name: string, value: unknown): PublicProperty | null {
+  if (typeof value === "string") {
+    if (value.trim().length === 0 || isSensitivePropertyValue(value)) return null;
+    return { name, type: inferStringPropertyType(value), value };
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return { name, type: "number", value };
+  }
+  if (typeof value === "boolean") {
+    return { name, type: "checkbox", value };
+  }
+  if (value instanceof Date) {
+    return { name, type: "datetime", value: value.toISOString() };
+  }
+  if (Array.isArray(value) && value.every((item) => typeof item === "string" && !isSensitivePropertyValue(item))) {
+    return {
+      name,
+      type: "list",
+      value: value.map((item) => item.trim()).filter(Boolean),
+    };
+  }
+  return null;
+}
+
+function inferStringPropertyType(value: string): PublicProperty["type"] {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return "date";
+  if (!Number.isNaN(Date.parse(value)) && /[T:]/.test(value)) return "datetime";
+  return "text";
+}
+
+function isReservedProperty(name: string): boolean {
+  return RESERVED_PROPERTY_NAMES.has(name);
+}
+
+function isSensitivePropertyName(name: string): boolean {
+  return /(private|secret|token|password|source|path|vault|raw|replacement|context)/i.test(name);
+}
+
+function isSensitivePropertyValue(value: string): boolean {
+  return /(content\/private|\/private\/|file:\/\/|obsidian:\/\/)/i.test(value);
+}
+
 function buildPublicLinkIndex(
   exportedPosts: ManifestEntry[],
   notes: Array<{
@@ -498,6 +664,8 @@ function buildPublicLinkIndex(
     description: string;
     excerpt: string;
     tags: string[];
+    aliases: string[];
+    properties: PublicProperty[];
     headings: HeadingNode[];
     isPublic: boolean;
   }>,
@@ -511,12 +679,47 @@ function buildPublicLinkIndex(
       description: note.description,
       excerpt: note.excerpt,
       tags: note.tags,
+      aliases: note.aliases,
       href: `/posts/${note.slug}/`,
       headings: note.headings,
+      properties: note.properties,
     }))
     .sort((a, b) => a.slug.localeCompare(b.slug));
 
-  const edges = exportedPosts
+  return {
+    generatedAt: new Date().toISOString(),
+    nodes,
+    edges: buildPublicLinkEdges(exportedPosts),
+  };
+}
+
+function buildPublicGraphIndex(
+  exportedPosts: ManifestEntry[],
+  notes: Array<{
+    slug: string;
+    title: string;
+    tags: string[];
+    isPublic: boolean;
+  }>,
+): PublicGraphIndex {
+  const exportedSlugs = new Set(exportedPosts.map((post) => post.slug).filter((slug): slug is string => Boolean(slug)));
+  return {
+    generatedAt: new Date().toISOString(),
+    nodes: notes
+      .filter((note) => note.isPublic && exportedSlugs.has(note.slug))
+      .map((note) => ({
+        slug: note.slug,
+        title: note.title,
+        href: `/posts/${note.slug}/`,
+        tags: note.tags,
+      }))
+      .sort((a, b) => a.slug.localeCompare(b.slug)),
+    edges: buildPublicLinkEdges(exportedPosts),
+  };
+}
+
+function buildPublicLinkEdges(exportedPosts: ManifestEntry[]): PublicLinkIndex["edges"] {
+  return exportedPosts
     .flatMap((post) =>
       post.rewrittenLinks
         .filter((reference) => reference.status === "public" && reference.targetSlug && post.slug && reference.role !== "embed")
@@ -537,11 +740,32 @@ function buildPublicLinkIndex(
       return a.order - b.order;
     })
     .map(({ order: _order, ...edge }) => edge);
+}
+
+function buildPublicTagIndex(
+  exportedPosts: ManifestEntry[],
+  notes: Array<{
+    slug: string;
+    tags: string[];
+    isPublic: boolean;
+  }>,
+): PublicTagIndex {
+  const exportedSlugs = new Set(exportedPosts.map((post) => post.slug).filter((slug): slug is string => Boolean(slug)));
+  const tagMap = new Map<string, Set<string>>();
+  for (const note of notes) {
+    if (!note.isPublic || !exportedSlugs.has(note.slug)) continue;
+    for (const tag of note.tags) {
+      const slugs = tagMap.get(tag) ?? new Set<string>();
+      slugs.add(note.slug);
+      tagMap.set(tag, slugs);
+    }
+  }
 
   return {
     generatedAt: new Date().toISOString(),
-    nodes,
-    edges,
+    tags: Array.from(tagMap.entries())
+      .map(([tag, slugs]) => ({ tag, slugs: Array.from(slugs).sort((a, b) => a.localeCompare(b)) }))
+      .sort((a, b) => a.tag.localeCompare(b.tag)),
   };
 }
 
@@ -586,14 +810,6 @@ function toPlainPreviewText(value: string): string {
     .replace(/[`*_~>#]/g, "")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function normalizeCallouts(body: string): string {
-  return body.replace(/^>\s*\[!(\w+)\]\s*(.*)$/gm, (_, type, title) => {
-    const label = String(type).replace(/^\w/, (char) => char.toUpperCase());
-    const suffix = title ? ` ${title}` : "";
-    return `> **${label}:**${suffix}`;
-  });
 }
 
 function findDuplicateSlugs(slugs: string[]): Set<string> {

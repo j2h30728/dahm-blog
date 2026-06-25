@@ -2,6 +2,8 @@ export type NoteState = "draft" | "published" | "archived";
 export type ResolutionStatus = "public" | "private" | "missing";
 export type ReferenceFragmentKind = "none" | "heading" | "block";
 export type ReferenceRole = "link" | "embed";
+export type ParityClass = "exact" | "candidate" | "approximate" | "unsupported";
+export type EmbedKind = "image" | "audio" | "video" | "pdf" | "file";
 
 export interface HeadingNode {
   depth: 2 | 3;
@@ -12,6 +14,38 @@ export interface HeadingNode {
 export interface BlockAnchor {
   id: string;
   anchor: string;
+}
+
+export interface PublicProperty {
+  name: string;
+  type: "text" | "list" | "number" | "checkbox" | "date" | "datetime" | "tags";
+  value: string | number | boolean | string[];
+}
+
+export interface TaskItem {
+  marker: string;
+  completed: boolean;
+  text: string;
+}
+
+export interface CalloutDescriptor {
+  type: string;
+  title: string;
+  fold?: "open" | "closed";
+}
+
+export interface EmbedDescriptor {
+  raw: string;
+  kind: EmbedKind;
+  sourcePath: string;
+  outputPath?: string;
+  importPath?: string;
+  publicPath?: string;
+  status: ResolutionStatus;
+  alt?: string;
+  width?: number;
+  height?: number;
+  fragment?: string;
 }
 
 export interface ResolvedReference {
@@ -55,11 +89,17 @@ export interface ContentModel {
   date: string;
   updated?: string;
   tags: string[];
+  aliases: string[];
+  cssclasses: string[];
+  properties: PublicProperty[];
   series: string;
   seriesOrder?: number;
   headings: HeadingNode[];
   outboundLinks: ResolvedReference[];
   assets: ResolvedAsset[];
+  embeds: EmbedDescriptor[];
+  tasks: TaskItem[];
+  callouts: CalloutDescriptor[];
   body: string;
   state: NoteState;
 }
@@ -91,8 +131,10 @@ export interface PublicLinkNode {
   description: string;
   excerpt: string;
   tags: string[];
+  aliases: string[];
   href: string;
   headings: HeadingNode[];
+  properties?: PublicProperty[];
 }
 
 export interface PublicLinkEdge {
@@ -109,6 +151,25 @@ export interface PublicLinkIndex {
   edges: PublicLinkEdge[];
 }
 
+export interface PublicGraphIndex {
+  generatedAt: string;
+  nodes: Array<{
+    slug: string;
+    title: string;
+    href: string;
+    tags: string[];
+  }>;
+  edges: PublicLinkEdge[];
+}
+
+export interface PublicTagIndex {
+  generatedAt: string;
+  tags: Array<{
+    tag: string;
+    slugs: string[];
+  }>;
+}
+
 export interface TransformOptions {
   vaultRoot: string;
   sourceDir?: string;
@@ -116,6 +177,8 @@ export interface TransformOptions {
   assetOutputDir: string;
   manifestPath?: string;
   publicLinkIndexPath?: string;
+  publicGraphIndexPath?: string;
+  publicTagIndexPath?: string;
   preview?: boolean;
 }
 

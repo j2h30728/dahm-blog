@@ -1,11 +1,16 @@
 ---
-title: "왜 RSC에서는 dot notation이 안 될까"
-slug: "rsc-dot-notation-reexport"
-description: "Next.js App Router와 RSC에서 Object.assign 기반 compound API가 깨지는 이유와 re-export namespace를 택한 배경."
-date: "2026-06-24"
-updated: "2026-06-24"
-tags: ["nextjs", "rsc", "react", "design-system"]
-series: "Frontend Architecture"
+title: 왜 RSC에서는 dot notation이 안 될까
+slug: rsc-dot-notation-reexport
+description: Next.js App Router와 RSC에서 Object.assign 기반 compound API가 깨지는 이유와
+  re-export namespace를 택한 배경.
+date: 2026-06-24
+updated: 2026-06-24
+tags:
+  - nextjs
+  - rsc
+  - react
+  - design-system
+series: Frontend Architecture
 seriesOrder: 1
 published: true
 ---
@@ -144,7 +149,7 @@ export { ListItem as Item } from './ListItem';
 Next.js는 Webpack 기반 빌드에서 `next-flight-loader`로 `'use client'` 모듈을 처리합니다. 이 로더는 모듈의 소스를 분석해 정적 export 목록을 수집하고, 서버 번들에서는 원래 구현 대신 **client reference stub**을 생성합니다.
 
 > Turbopack에서는 `ClientDirectiveTransformer`라는 Rust 네이티브 트랜스폼이 같은 역할을 하며, 정적 export 단위로 참조를 만드는 원칙은 동일합니다.
-> 
+>
 
 ESM 모듈이라면 각 export를 `registerClientReference()`로 감싸는 식입니다. (next-flight-loader/index.ts)
 

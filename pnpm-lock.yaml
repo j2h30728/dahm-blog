@@ -53,6 +53,9 @@ importers:
       tsx:
         specifier: ^4.20.3
         version: 4.22.4
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
     devDependencies:
       '@types/node':
         specifier: ^24.0.4

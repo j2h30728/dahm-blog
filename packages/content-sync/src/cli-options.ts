@@ -8,6 +8,8 @@ export interface CliArgs {
   assetOutputDir: string;
   manifestPath: string;
   publicLinkIndexPath: string;
+  publicGraphIndexPath: string;
+  publicTagIndexPath: string;
   preview: boolean;
 }
 
@@ -27,9 +29,11 @@ export function parseCliArgs(argv: string[], context: CliOptionsContext = {}): C
     vaultRoot,
     sourceDir: path.resolve(env.OBSIDIAN_PUBLIC_SOURCE ?? path.join(vaultRoot, "public/published")),
     outputDir: path.resolve(root, "apps/blog/src/content/posts"),
-    assetOutputDir: path.resolve(root, "apps/blog/src/content/post-assets"),
+    assetOutputDir: path.resolve(root, "apps/blog/public/post-assets"),
     manifestPath: path.resolve(root, ".content-sync/publish-manifest.json"),
     publicLinkIndexPath: path.resolve(root, "apps/blog/src/content/public-link-index.json"),
+    publicGraphIndexPath: path.resolve(root, "apps/blog/src/content/public-graph-index.json"),
+    publicTagIndexPath: path.resolve(root, "apps/blog/src/content/public-tag-index.json"),
     preview: false,
   };
 
@@ -57,6 +61,12 @@ export function parseCliArgs(argv: string[], context: CliOptionsContext = {}): C
       index += 1;
     } else if (arg === "--public-index" && value) {
       defaults.publicLinkIndexPath = path.resolve(value);
+      index += 1;
+    } else if (arg === "--public-graph-index" && value) {
+      defaults.publicGraphIndexPath = path.resolve(value);
+      index += 1;
+    } else if (arg === "--public-tag-index" && value) {
+      defaults.publicTagIndexPath = path.resolve(value);
       index += 1;
     } else if (arg === "--preview") {
       defaults.preview = true;

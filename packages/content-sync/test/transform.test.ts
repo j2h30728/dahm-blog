@@ -58,10 +58,10 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
   assert.match(outputText, /\[the second heading\]\(\/posts\/second\/#second-heading\)/);
   assert.match(outputText, /\[the second block\]\(\/posts\/second\/#block-second-block\)/);
   assert.match(outputText, /<aside class="note-embed"><a href="\/posts\/second\/">Embedded second post<\/a><\/aside>/);
-  assert.match(outputText, /!\[Diagram\]\(\.\.\/post-assets\/first\/diagram.svg\)/);
+  assert.match(outputText, /!\[Diagram\]\(\/post-assets\/first\/diagram.svg\)/);
   assert.match(outputText, /!\[Remote\]\(https:\/\/example.com\/remote.png\)/);
-  assert.match(outputText, /!\[Static\]\(\.\.\/post-assets\/first\/manual.png\)/);
-  assert.match(outputText, /!\[Legacy\]\(\.\.\/post-assets\/first\/image.png\)/);
+  assert.match(outputText, /!\[Static\]\(\/post-assets\/first\/manual.png\)/);
+  assert.match(outputText, /!\[Legacy\]\(\/post-assets\/first\/image.png\)/);
   assert.equal(outputText.includes("/assets/posts"), false);
   assert.match(readFileSync(path.join(output, "second.mdx"), "utf8"), /<span id="block-second-block"><\/span>/);
   assert.equal(existsSync(path.join(postAssets, "first", "diagram.svg")), true);
@@ -134,15 +134,168 @@ test("rewrites Obsidian image size aliases to responsive image attributes", () =
 
   assert.equal(result.errors.length, 0);
   const outputText = readFileSync(path.join(output, "sized.mdx"), "utf8");
-  assert.match(outputText, /<img src="\.\.\/post-assets\/sized\/photo\.png" alt="photo" width="640" \/>/);
+  assert.match(outputText, /<img src="\/post-assets\/sized\/photo\.png" alt="photo" width="640" \/>/);
   assert.match(
     outputText,
-    /<img src="\.\.\/post-assets\/sized\/frame\.png" alt="Frame diagram" width="480" height="270" \/>/,
+    /<img src="\/post-assets\/sized\/frame\.png" alt="Frame diagram" width="480" height="270" \/>/,
   );
-  assert.match(outputText, /<img src="\.\.\/post-assets\/sized\/manual\.png" alt="Manual diagram" width="320" \/>/);
+  assert.match(outputText, /<img src="\/post-assets\/sized\/manual\.png" alt="Manual diagram" width="320" \/>/);
   assert.equal(existsSync(path.join(postAssets, "sized", "photo.png")), true);
   assert.equal(existsSync(path.join(postAssets, "sized", "frame.png")), true);
   assert.equal(existsSync(path.join(postAssets, "sized", "manual.png")), true);
+});
+
+test("exports Obsidian parity syntax, aliases, media embeds, graph index, and tag index", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-obsidian-parity-"));
+  const publicRoot = path.join(root, "public");
+  const published = path.join(publicRoot, "published");
+  const assets = path.join(publicRoot, "assets");
+  const output = path.join(root, "out");
+  const postAssets = path.join(root, "post-assets");
+  const publicLinkIndex = path.join(root, "public-link-index.json");
+  const publicGraphIndex = path.join(root, "public-graph-index.json");
+  const publicTagIndex = path.join(root, "public-tag-index.json");
+  mkdirSync(published, { recursive: true });
+  mkdirSync(assets, { recursive: true });
+
+  writeFileSync(path.join(assets, "sound.mp3"), "audio");
+  writeFileSync(path.join(assets, "clip.mp4"), "video");
+  writeFileSync(path.join(assets, "manual.pdf"), "pdf");
+  writeFileSync(
+    path.join(published, "target.md"),
+    `---\ntitle: Target Note\nslug: target-note\ndescription: Target note.\ndate: 2026-06-24\ntags:\n  - target\naliases:\n  - Second Alias\n  - Twin\nseries: Demo\npublished: true\nrating: 5\nfeatured: true\nreviewed: 2026-06-25\n---\n\n## Target Heading\n\nTarget body. ^target-block\n`,
+  );
+  writeFileSync(
+    path.join(published, "source.md"),
+    `---\ntitle: Source Note\nslug: source-note\ndescription: Source note.\ndate: 2026-06-25\ntags:\n  - obsidian\nseries: Demo\npublished: true\ncssclasses:\n  - feature-note\n---\n\n%%PRIVATE COMMENT%%\n\n## Local Section\n\nThis has ==highlighted text== and an inline #nested/tag. ^local-block\n\n> [!warning]- Folded warning\n> Callout body.\n\n- [ ] Todo item\n- [?] Question item\n\nSee [[#Local Section|same heading]].\n\nSee [[^local-block|same block]].\n\nSee [[Second Alias|alias link]].\n\nSee [heading markdown link](target.md#Target%20Heading).\n\nSee [block markdown link](target.md#%5Etarget-block).\n\n![[../assets/sound.mp3|Sound file]]\n\n![[../assets/clip.mp4|Clip|640x360]]\n\n![[../assets/manual.pdf#page=2&height=420|Manual PDF]]\n`,
+  );
+
+  const result = transformVault({
+    vaultRoot: root,
+    sourceDir: published,
+    outputDir: output,
+    assetOutputDir: postAssets,
+    publicLinkIndexPath: publicLinkIndex,
+    publicGraphIndexPath: publicGraphIndex,
+    publicTagIndexPath: publicTagIndex,
+  });
+
+  assert.equal(result.errors.length, 0);
+  const outputText = readFileSync(path.join(output, "source-note.mdx"), "utf8");
+  assert.equal(outputText.includes("PRIVATE COMMENT"), false);
+  assert.match(outputText, /<mark>highlighted text<\/mark>/);
+  assert.match(outputText, /\[same heading\]\(\/posts\/source-note\/#local-section\)/);
+  assert.match(outputText, /\[same block\]\(\/posts\/source-note\/#block-local-block\)/);
+  assert.match(
+    outputText,
+    /<span class="callout-title" data-callout="warning" data-callout-fold="closed">Folded warning<\/span>/,
+  );
+  assert.match(outputText, /- \[ \] Todo item/);
+  assert.match(outputText, /- \[x\] <span class="task-marker" data-task-marker="\?"><\/span> Question item/);
+  assert.match(outputText, /\[alias link\]\(\/posts\/target-note\/\)/);
+  assert.match(outputText, /\[heading markdown link\]\(\/posts\/target-note\/#target-heading\)/);
+  assert.match(outputText, /\[block markdown link\]\(\/posts\/target-note\/#block-target-block\)/);
+  assert.match(outputText, /<audio class="media-embed media-embed-audio" controls src="\/post-assets\/source-note\/sound\.mp3">Sound file<\/audio>/);
+  assert.match(outputText, /<video class="media-embed media-embed-video" controls src="\/post-assets\/source-note\/clip\.mp4" width="640" height="360">Clip<\/video>/);
+  assert.match(
+    outputText,
+    /<iframe class="media-embed media-embed-pdf" src="\/post-assets\/source-note\/manual\.pdf#page=2&amp;height=420" title="Manual PDF" height="420"><\/iframe>/,
+  );
+  assert.match(outputText, /tags:\n  - obsidian\n  - nested\/tag/);
+  assert.equal(existsSync(path.join(postAssets, "source-note", "sound.mp3")), true);
+  assert.equal(existsSync(path.join(postAssets, "source-note", "clip.mp4")), true);
+  assert.equal(existsSync(path.join(postAssets, "source-note", "manual.pdf")), true);
+
+  const publicIndexText = readFileSync(publicLinkIndex, "utf8");
+  const publicIndex = JSON.parse(publicIndexText) as {
+    nodes: Array<{ slug: string; aliases: string[]; tags: string[]; properties: Array<{ name: string; type: string; value: unknown }> }>;
+    edges: Array<{ sourceSlug: string; targetSlug: string; kind: string; label: string }>;
+  };
+  const targetNode = publicIndex.nodes.find((node) => node.slug === "target-note");
+  assert.deepEqual(targetNode?.aliases, ["Second Alias", "Twin"]);
+  assert.deepEqual(targetNode?.properties, [
+    { name: "featured", type: "checkbox", value: true },
+    { name: "rating", type: "number", value: 5 },
+    { name: "reviewed", type: "date", value: "2026-06-25" },
+  ]);
+  assert.deepEqual(
+    publicIndex.edges.map((edge) => [edge.sourceSlug, edge.targetSlug, edge.kind, edge.label]),
+    [
+      ["source-note", "source-note", "heading", "same heading"],
+      ["source-note", "source-note", "block", "same block"],
+      ["source-note", "target-note", "none", "alias link"],
+      ["source-note", "target-note", "heading", "heading markdown link"],
+      ["source-note", "target-note", "block", "block markdown link"],
+    ],
+  );
+  assert.equal(publicIndexText.includes("sourcePath"), false);
+  assert.equal(publicIndexText.includes("replacement"), false);
+  assert.equal(publicIndexText.includes("PRIVATE COMMENT"), false);
+
+  const graphIndex = JSON.parse(readFileSync(publicGraphIndex, "utf8")) as {
+    nodes: Array<{ slug: string; title: string }>;
+    edges: Array<{ sourceSlug: string; targetSlug: string }>;
+  };
+  assert.deepEqual(
+    graphIndex.nodes.map((node) => [node.slug, node.title]),
+    [
+      ["source-note", "Source Note"],
+      ["target-note", "Target Note"],
+    ],
+  );
+  assert.deepEqual(
+    graphIndex.edges.map((edge) => [edge.sourceSlug, edge.targetSlug]),
+    [
+      ["source-note", "source-note"],
+      ["source-note", "source-note"],
+      ["source-note", "target-note"],
+      ["source-note", "target-note"],
+      ["source-note", "target-note"],
+    ],
+  );
+
+  const tagIndex = JSON.parse(readFileSync(publicTagIndex, "utf8")) as {
+    tags: Array<{ tag: string; slugs: string[] }>;
+  };
+  assert.deepEqual(tagIndex.tags, [
+    { tag: "nested/tag", slugs: ["source-note"] },
+    { tag: "obsidian", slugs: ["source-note"] },
+    { tag: "target", slugs: ["target-note"] },
+  ]);
+});
+
+test("fails closed when an Obsidian alias is ambiguous", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-alias-collision-"));
+  const published = path.join(root, "published");
+  const output = path.join(root, "out");
+  const postAssets = path.join(root, "post-assets");
+  mkdirSync(published, { recursive: true });
+
+  for (const [file, title, slug] of [
+    ["first.md", "First Target", "first-target"],
+    ["second.md", "Second Target", "second-target"],
+  ]) {
+    writeFileSync(
+      path.join(published, file),
+      `---\ntitle: "${title}"\nslug: "${slug}"\ndescription: "Collision target."\ndate: "2026-06-24"\ntags: ["test"]\naliases: ["Shared Alias"]\nseries: "Demo"\npublished: true\n---\n\nBody.\n`,
+    );
+  }
+  writeFileSync(
+    path.join(published, "source.md"),
+    `---\ntitle: "Source"\nslug: "source"\ndescription: "Source post."\ndate: "2026-06-25"\ntags: ["test"]\nseries: "Demo"\npublished: true\n---\n\nSee [[Shared Alias]].\n`,
+  );
+
+  assert.throws(
+    () =>
+      transformVault({
+        vaultRoot: root,
+        sourceDir: published,
+        outputDir: output,
+        assetOutputDir: postAssets,
+      }),
+    /blocking error/,
+  );
+  assert.equal(existsSync(path.join(output, "source.mdx")), false);
 });
 
 test("fails closed when a public note references private notes or assets", () => {

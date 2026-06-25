@@ -59,12 +59,36 @@ function parseFrontmatter(text: string): { frontmatter: Record<string, string>; 
   if (!match) return { frontmatter: {}, body: text };
 
   const frontmatter: Record<string, string> = {};
+  let currentListKey: string | null = null;
+  const listValues: string[] = [];
+
+  const flushList = () => {
+    if (currentListKey) {
+      frontmatter[currentListKey] = `[${listValues.map((item) => `"${item}"`).join(", ")}]`;
+      currentListKey = null;
+      listValues.length = 0;
+    }
+  };
+
   for (const line of match[1].split(/\r?\n/)) {
+    const listItem = /^\s*-\s*(.*)$/.exec(line);
+    if (currentListKey && listItem) {
+      listValues.push(cleanScalar(listItem[1]));
+      continue;
+    }
+
+    flushList();
+
     const pair = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
     if (pair) {
-      frontmatter[pair[1]] = pair[2].replace(/^"|"$/g, "");
+      if (pair[2].trim() === "") {
+        currentListKey = pair[1];
+      } else {
+        frontmatter[pair[1]] = cleanScalar(pair[2]);
+      }
     }
   }
+  flushList();
   return { frontmatter, body: match[2] };
 }
 
@@ -75,4 +99,8 @@ function parseArray(value = ""): string[] {
     .split(",")
     .map((item) => item.trim().replace(/^"|"$/g, ""))
     .filter(Boolean);
+}
+
+function cleanScalar(value: string): string {
+  return value.trim().replace(/^"|"$/g, "");
 }

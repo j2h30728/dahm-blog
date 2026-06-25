@@ -1,11 +1,12 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
-import type { ResolvedAsset } from "./schema.js";
+import type { EmbedKind, ResolvedAsset } from "./schema.js";
 import { isWithin, toPosixPath } from "./utils.js";
 
 type PlannedAsset = ResolvedAsset & {
   outputPath: string;
   importPath: string;
+  publicPath: string;
   status: "public";
 };
 
@@ -13,6 +14,11 @@ interface ImageDescriptor {
   alt: string;
   width?: number;
   height?: number;
+}
+
+interface ParsedAssetTarget {
+  path: string;
+  fragment?: string;
 }
 
 export interface AssetRewriteOptions {
@@ -37,8 +43,9 @@ export function rewriteAssets(body: string, options: AssetRewriteOptions): {
     return rewriteAsset(raw, parseImageDescriptor(alt, ""), target, options, assets, plannedAssets, errors);
   });
 
-  rewritten = rewritten.replace(/!\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/g, (raw, target, alias) => {
-    const defaultAlt = path.basename(target, path.extname(target));
+  rewritten = rewritten.replace(/!\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (raw, target, alias) => {
+    const parsedTarget = parseAssetTarget(target);
+    const defaultAlt = path.basename(parsedTarget.path, path.extname(parsedTarget.path));
     return rewriteAsset(raw, parseImageDescriptor(alias, defaultAlt), target, options, assets, plannedAssets, errors);
   });
 
@@ -57,10 +64,12 @@ function rewriteAsset(
   errors: string[],
 ): string {
   if (/^https?:\/\//.test(target)) {
-    return hasExplicitSize(image) ? renderImageElement(target, image) : raw;
+    return renderEmbed(target, "image", image);
   }
 
-  const resolved = resolveAssetPath(target, options.sourcePath, options.vaultRoot);
+  const parsedTarget = parseAssetTarget(target);
+  const resolved = resolveAssetPath(parsedTarget.path, options.sourcePath, options.vaultRoot);
+  const kind = getEmbedKind(resolved);
   if (isWithin(options.privateRoot, resolved)) {
     assets.push({ raw, sourcePath: resolved, status: "private" });
     errors.push(`Public note embeds private asset: ${target}`);
@@ -82,6 +91,7 @@ function rewriteAsset(
   const outputDir = path.join(options.outputRoot, options.slug);
   const outputPath = path.join(outputDir, path.basename(resolved));
   const importPath = toPosixPath(path.relative(path.dirname(options.markdownOutputPath), outputPath));
+  const publicPath = toPublicAssetPath(options.outputRoot, options.slug, path.basename(resolved));
   const conflictingAsset = plannedAssets.find((asset) => asset.outputPath === outputPath && asset.sourcePath !== resolved);
   if (conflictingAsset) {
     errors.push(`Duplicate asset output path: ${path.basename(resolved)}`);
@@ -93,9 +103,11 @@ function rewriteAsset(
     sourcePath: resolved,
     outputPath,
     importPath,
+    publicPath,
     status: "public",
   });
-  return hasExplicitSize(image) ? renderImageElement(importPath, image) : `![${image.alt}](${importPath})`;
+  const publicPathWithFragment = parsedTarget.fragment ? `${publicPath}#${parsedTarget.fragment}` : publicPath;
+  return renderEmbed(publicPathWithFragment, kind, image, parsedTarget.fragment);
 }
 
 function parseImageDescriptor(label: string | undefined, defaultAlt: string): ImageDescriptor {
@@ -141,6 +153,28 @@ function renderImageElement(src: string, image: ImageDescriptor): string {
   return `<img ${attributes.join(" ")} />`;
 }
 
+function renderEmbed(src: string, kind: EmbedKind, image: ImageDescriptor, fragment?: string): string {
+  if (kind === "image") {
+    return hasExplicitSize(image) ? renderImageElement(src, image) : `![${image.alt}](${src})`;
+  }
+  if (kind === "audio") {
+    return `<audio class="media-embed media-embed-audio" controls src="${escapeAttribute(src)}">${escapeHtml(image.alt)}</audio>`;
+  }
+  if (kind === "video") {
+    const dimensions = [
+      image.width ? `width="${image.width}"` : "",
+      image.height ? `height="${image.height}"` : "",
+    ].filter(Boolean);
+    const sizeAttributes = dimensions.length > 0 ? ` ${dimensions.join(" ")}` : "";
+    return `<video class="media-embed media-embed-video" controls src="${escapeAttribute(src)}"${sizeAttributes}>${escapeHtml(image.alt)}</video>`;
+  }
+  if (kind === "pdf") {
+    const height = parsePdfHeight(fragment) ?? image.height ?? 520;
+    return `<iframe class="media-embed media-embed-pdf" src="${escapeAttribute(src)}" title="${escapeAttribute(image.alt)}" height="${height}"></iframe>`;
+  }
+  return `<a class="file-embed" href="${escapeAttribute(src)}">${escapeHtml(image.alt)}</a>`;
+}
+
 function escapeAttribute(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -178,4 +212,49 @@ function resolveAssetPath(target: string, sourcePath: string, vaultRoot: string)
   }
 
   return relativeToNote;
+}
+
+function parseAssetTarget(target: string): ParsedAssetTarget {
+  const decoded = decodeURI(target);
+  const [pathPart, fragment] = decoded.split("#", 2);
+  return {
+    path: pathPart.split("?")[0],
+    fragment,
+  };
+}
+
+function toPublicAssetPath(outputRoot: string, slug: string, fileName: string): string {
+  const base = path.basename(outputRoot);
+  return `/${[base, slug, fileName].map((segment) => encodeURIComponent(segment)).join("/")}`;
+}
+
+function getEmbedKind(filePath: string): EmbedKind {
+  const extension = path.extname(filePath).toLowerCase();
+  if ([".apng", ".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp", ".bmp"].includes(extension)) {
+    return "image";
+  }
+  if ([".mp3", ".m4a", ".ogg", ".wav", ".flac", ".aac"].includes(extension)) {
+    return "audio";
+  }
+  if ([".mp4", ".m4v", ".mov", ".webm"].includes(extension)) {
+    return "video";
+  }
+  if (extension === ".pdf") {
+    return "pdf";
+  }
+  return "file";
+}
+
+function parsePdfHeight(fragment: string | undefined): number | undefined {
+  const match = fragment?.match(/(?:^|&)height=(\d{1,5})(?:&|$)/);
+  if (!match) return undefined;
+  const value = Number(match[1]);
+  return Number.isInteger(value) && value > 0 && value <= 10000 ? value : undefined;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }

@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-06-25T09:37:02.559Z",
+  "nodes": [
+    {
+      "slug": "obsidian-feature-showcase",
+      "title": "Obsidian 기능 쇼케이스",
+      "href": "/posts/obsidian-feature-showcase/",
+      "tags": [
+        "obsidian",
+        "showcase",
+        "publishing",
+        "obsidian/showcase"
+      ]
+    },
+    {
+      "slug": "openapi-generator-boundaries",
+      "title": "OpenAPI Generator를 붙이며 나눈 경계",
+      "href": "/posts/openapi-generator-boundaries/",
+      "tags": [
+        "openapi",
+        "typescript",
+        "codegen",
+        "frontend"
+      ]
+    },
+    {
+      "slug": "rsc-dot-notation-reexport",
+      "title": "왜 RSC에서는 dot notation이 안 될까",
+      "href": "/posts/rsc-dot-notation-reexport/",
+      "tags": [
+        "nextjs",
+        "rsc",
+        "react",
+        "design-system"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "obsidian-feature-showcase",
+      "kind": "heading",
+      "targetAnchor": "#콜아웃과-태스크",
+      "label": "콜아웃 섹션"
+    },
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "obsidian-feature-showcase",
+      "kind": "block",
+      "targetAnchor": "#block-showcase-block",
+      "label": "블록 링크"
+    },
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "openapi-generator-boundaries",
+      "kind": "none",
+      "label": "OpenAPI Generator 글"
+    },
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "openapi-generator-boundaries",
+      "kind": "heading",
+      "targetAnchor": "#cli로-만들기",
+      "label": "CLI 섹션"
+    },
+    {
+      "sourceSlug": "obsidian-feature-showcase",
+      "targetSlug": "openapi-generator-boundaries",
+      "kind": "heading",
+      "targetAnchor": "#api-타입을-옮겨-적는-비용",
+      "label": "API 타입 섹션"
+    }
+  ]
+}

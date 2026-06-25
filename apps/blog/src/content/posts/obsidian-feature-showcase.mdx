@@ -1,0 +1,81 @@
+---
+title: Obsidian 기능 쇼케이스
+slug: obsidian-feature-showcase
+description: 웹에서 지원하는 Obsidian 작성 문법을 한 글에서 확인하는 샘플.
+date: 2026-06-25
+updated: 2026-06-25
+tags:
+  - obsidian
+  - showcase
+  - publishing
+  - obsidian/showcase
+series: Building The Blog
+seriesOrder: 3
+published: true
+---
+
+
+
+
+## 한 번에 보는 작성 문법
+
+Obsidian에서 쓰던 문장 안 하이라이트는 <mark>이렇게 표시됩니다</mark>. 인라인 태그도 함께 수집됩니다. #obsidian/showcase
+
+같은 글 안의 섹션으로 이동하려면 [콜아웃 섹션](/posts/obsidian-feature-showcase/#콜아웃과-태스크)으로 연결할 수 있습니다.
+같은 문단의 블록도 [블록 링크](/posts/obsidian-feature-showcase/#block-showcase-block)로 연결됩니다. <span id="block-showcase-block"></span>
+
+다른 공개 노트는 별칭과 마크다운 링크 모두로 연결됩니다.
+
+- [OpenAPI Generator 글](/posts/openapi-generator-boundaries/)
+- [API 타입 섹션](/posts/openapi-generator-boundaries/#api-타입을-옮겨-적는-비용)
+- [CLI 섹션](/posts/openapi-generator-boundaries/#cli로-만들기)
+
+## 콜아웃과 태스크
+
+> <span class="callout-title" data-callout="tip" data-callout-fold="open">열려 있는 팁</span>
+> 접힌 상태를 포함한 Obsidian callout 문법을 웹에서 읽을 수 있는 형태로 보여줍니다.
+
+> <span class="callout-title" data-callout="warning" data-callout-fold="closed">닫힌 경고</span>
+> 접힌 상태 표시는 정적 읽기 화면에서 상태 라벨로 드러납니다.
+
+- [ ] 아직 하지 않은 항목
+- [x] 완료한 항목
+- [x] <span class="task-marker" data-task-marker="?"></span> 확인이 필요한 항목
+- [x] <span class="task-marker" data-task-marker="!"></span> 주의가 필요한 항목
+
+## 공개 노트 임베드
+
+아래는 공개 노트를 안전한 링크 카드 형태로 임베드한 예시입니다.
+
+<aside class="note-embed"><a href="/posts/openapi-generator-boundaries/">OpenAPI Generator embed</a></aside>
+
+## 이미지와 미디어
+
+이미지는 Obsidian 크기 alias를 그대로 사용합니다.
+
+<img src="/post-assets/obsidian-feature-showcase/pipeline.svg" alt="Pipeline diagram" width="720" height="360" />
+
+<img src="/post-assets/obsidian-feature-showcase/pipeline-thumb.png" alt="Pipeline thumbnail" width="320" />
+
+오디오, 영상, PDF도 공개 assets일 때 읽기 전용으로 임베드됩니다.
+
+<audio class="media-embed media-embed-audio" controls src="/post-assets/obsidian-feature-showcase/showcase-tone.wav">Short tone</audio>
+
+<video class="media-embed media-embed-video" controls src="/post-assets/obsidian-feature-showcase/showcase-video.mp4" width="640" height="360">Showcase video</video>
+
+<iframe class="media-embed media-embed-pdf" src="/post-assets/obsidian-feature-showcase/showcase-guide.pdf#page=1&amp;height=420" title="Showcase guide" height="420"></iframe>
+
+## 표와 코드
+
+| 문법 | 웹 출력 |
+| --- | --- |
+| `\[\[note\]\]` | 공개 글 링크 |
+| `\[\[note#Heading\]\]` | 공개 heading anchor |
+| `\[\[note^block\]\]` | 공개 block anchor |
+| `==highlight==` | mark 스타일 |
+
+```ts
+const source = "Obsidian";
+const target = "Astro";
+console.log(`${source} -> ${target}`);
+```
