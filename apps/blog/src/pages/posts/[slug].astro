@@ -25,7 +25,7 @@ const previewPayloadJson = JSON.stringify(getLinkPreviewPayload()).replace(/</g,
 ---
 <BaseLayout title={post.data.title} description={post.data.description}>
   <article>
-    <p class={ui.tagline}>{post.data.series}</p>
+    <p class={ui.tagline}><span class="typewriter">{post.data.series}</span></p>
     <h1 class={ui.pageTitle}>{post.data.title}</h1>
     <div class={ui.meta}>
       <time datetime={post.data.date.toISOString()}>{post.data.date.toLocaleDateString("en", { year: "numeric", month: "short", day: "numeric" })}</time>

@@ -4,12 +4,12 @@ import ThemeToggle from "../components/ThemeToggle.astro";
 import { ui } from "../lib/ui-classes";
 
 const {
-  title = "Personal Tech Blog",
-  description = "Notes and technical essays.",
+  title = "Dahm",
+  description = "담의 글과 기록을 모아둔 공간입니다.",
 } = Astro.props as { title?: string; description?: string };
 ---
 <!doctype html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -29,12 +29,13 @@ const {
       <nav class={ui.nav} aria-label="Primary">
         <a class={ui.brand} href="/">
           <span class={ui.brandMark} aria-hidden="true"></span>
-          Personal Tech Blog
+          Dahm
         </a>
         <div class={ui.navLinks}>
-          <a class={ui.navLink} href="/search/">Search</a>
+          <a class={ui.navLink} href="/about/">About</a>
+          <a class={ui.navLink} href="/posts/">Posts</a>
           <a class={ui.navLink} href="/tags/">Tags</a>
-          <a class={ui.navLink} href="/series/">Series</a>
+          <a class={ui.navLink} href="/search/">Search</a>
           <ThemeToggle />
         </div>
       </nav>
@@ -43,4 +44,26 @@ const {
       <slot />
     </main>
   </body>
+  <script is:inline>
+    (() => {
+      const el = document.querySelector('.typewriter');
+      if (!el) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        el.classList.add('done');
+        return;
+      }
+      const text = el.textContent.trim();
+      el.textContent = '';
+      let i = 0;
+      function type() {
+        if (i < text.length) {
+          el.textContent += text[i++];
+          setTimeout(type, 58);
+        } else {
+          el.classList.add('done');
+        }
+      }
+      setTimeout(type, 350);
+    })();
+  </script>
 </html>

@@ -54,4 +54,51 @@ import { ui } from "../../lib/ui-classes";
     }
     render("");
   </script>
+<script is:inline>
+  (() => {
+    const input = document.getElementById('search');
+    if (!input || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const hints = [
+      'Search posts...',
+      "Try 'typescript'...",
+      "Try 'openapi'...",
+      "Try 'frontend'...",
+      "Try 'react'...",
+    ];
+
+    let hintIdx = 0;
+    let charIdx = 0;
+    let deleting = false;
+    let timer;
+
+    function tick() {
+      const current = hints[hintIdx];
+      if (!deleting) {
+        charIdx++;
+        input.placeholder = current.slice(0, charIdx);
+        if (charIdx === current.length) {
+          deleting = true;
+          timer = setTimeout(tick, 1800);
+          return;
+        }
+        timer = setTimeout(tick, 62);
+      } else {
+        charIdx--;
+        input.placeholder = current.slice(0, charIdx);
+        if (charIdx === 0) {
+          deleting = false;
+          hintIdx = (hintIdx + 1) % hints.length;
+          timer = setTimeout(tick, 380);
+          return;
+        }
+        timer = setTimeout(tick, 32);
+      }
+    }
+
+    input.placeholder = '';
+    timer = setTimeout(tick, 700);
+    input.addEventListener('focus', () => clearTimeout(timer));
+  })();
+</script>
 </BaseLayout>
