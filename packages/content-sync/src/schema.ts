@@ -170,6 +170,41 @@ export interface PublicTagIndex {
   }>;
 }
 
+export interface PublicPostIndexEntry {
+  slug: string;
+  href: string;
+  title: string;
+  description: string;
+  excerpt: string;
+  date: string;
+  updated?: string;
+  tags: string[];
+  series: string;
+  seriesSlug: string;
+  seriesHref: string;
+  seriesOrder?: number;
+  headings: HeadingNode[];
+}
+
+export interface PublicPostIndex {
+  generatedAt: string;
+  posts: PublicPostIndexEntry[];
+}
+
+export interface PublicSearchIndexDocument {
+  title: string;
+  description: string;
+  tags: string[];
+  series: string;
+  url: string;
+  searchText: string;
+}
+
+export interface PublicSearchIndex {
+  generatedAt: string;
+  documents: PublicSearchIndexDocument[];
+}
+
 export interface TransformOptions {
   vaultRoot: string;
   sourceDir?: string;
@@ -179,6 +214,10 @@ export interface TransformOptions {
   publicLinkIndexPath?: string;
   publicGraphIndexPath?: string;
   publicTagIndexPath?: string;
+  publicPostIndexPath?: string;
+  searchIndexPath?: string;
+  postModuleMapPath?: string;
+  jsxAttributes?: boolean;
   preview?: boolean;
 }
 

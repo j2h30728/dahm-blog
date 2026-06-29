@@ -16,6 +16,8 @@ import {
   type ParsedNote,
   type PublicGraphIndex,
   type PublicLinkIndex,
+  type PublicPostIndex,
+  type PublicSearchIndex,
   type PublicProperty,
   type PublicTagIndex,
   type PublishManifest,
@@ -85,6 +87,10 @@ export function transformVault(options: TransformOptions): PublishManifest {
     const title = asString(note.frontmatter.title) ?? path.basename(note.sourcePath, path.extname(note.sourcePath));
     const description = asString(note.frontmatter.description) ?? "";
     const slug = asString(note.frontmatter.slug) ?? slugify(title);
+    const date = asString(note.frontmatter.date);
+    const updated = asString(note.frontmatter.updated);
+    const series = asString(note.frontmatter.series);
+    const seriesOrder = asNumber(note.frontmatter.seriesOrder);
     const published = asBoolean(note.frontmatter.published) === true;
     const tags = mergeTags(asStringArray(note.frontmatter.tags) ?? [], syntax.tags);
     const aliases = collectAliases(note.frontmatter);
@@ -97,8 +103,12 @@ export function transformVault(options: TransformOptions): PublishManifest {
       slug,
       title,
       description,
+      date,
+      updated,
       excerpt: extractExcerpt(syntax.body),
       tags,
+      series,
+      seriesOrder,
       aliases,
       cssclasses,
       properties,
@@ -149,6 +159,7 @@ export function transformVault(options: TransformOptions): PublishManifest {
         outputDir,
         assetOutputDir,
         privateRoot,
+        jsxAttributes: options.jsxAttributes,
       },
       hasDuplicateSlug: duplicateSlugs.has(item.slug),
       preview: options.preview === true,
@@ -184,6 +195,9 @@ export function transformVault(options: TransformOptions): PublishManifest {
       options.publicLinkIndexPath,
       options.publicGraphIndexPath,
       options.publicTagIndexPath,
+      options.publicPostIndexPath,
+      options.searchIndexPath,
+      options.postModuleMapPath,
     ]);
     writeManifest(manifest, options.manifestPath);
     throw new Error(`Content sync failed with ${errors.length} blocking error(s).`);
@@ -201,11 +215,23 @@ export function transformVault(options: TransformOptions): PublishManifest {
     if (options.publicTagIndexPath && errors.length === 0) {
       writePublicTagIndex(buildPublicTagIndex(exportedPosts, prevalidated), options.publicTagIndexPath);
     }
+    if (options.publicPostIndexPath && errors.length === 0) {
+      writePublicPostIndex(buildPublicPostIndex(exportedPosts, prevalidated), options.publicPostIndexPath);
+    }
+    if (options.searchIndexPath && errors.length === 0) {
+      writePublicSearchIndex(buildPublicSearchIndex(exportedPosts, prevalidated), options.searchIndexPath);
+    }
+    if (options.postModuleMapPath && errors.length === 0) {
+      writePostModuleMap(buildPostModuleMap(exportedPosts, options.postModuleMapPath), options.postModuleMapPath);
+    }
   } catch (error) {
     cleanupGeneratedOutputs(outputDir, assetOutputDir, [
       options.publicLinkIndexPath,
       options.publicGraphIndexPath,
       options.publicTagIndexPath,
+      options.publicPostIndexPath,
+      options.searchIndexPath,
+      options.postModuleMapPath,
     ]);
     removeFile(options.manifestPath);
     throw error;
@@ -233,6 +259,21 @@ function writePublicGraphIndex(publicGraphIndex: PublicGraphIndex, publicGraphIn
 function writePublicTagIndex(publicTagIndex: PublicTagIndex, publicTagIndexPath: string): void {
   mkdirSync(path.dirname(publicTagIndexPath), { recursive: true });
   writeFileSync(publicTagIndexPath, `${JSON.stringify(publicTagIndex, null, 2)}\n`);
+}
+
+function writePublicPostIndex(publicPostIndex: PublicPostIndex, publicPostIndexPath: string): void {
+  mkdirSync(path.dirname(publicPostIndexPath), { recursive: true });
+  writeFileSync(publicPostIndexPath, `${JSON.stringify(publicPostIndex, null, 2)}\n`);
+}
+
+function writePublicSearchIndex(publicSearchIndex: PublicSearchIndex, searchIndexPath: string): void {
+  mkdirSync(path.dirname(searchIndexPath), { recursive: true });
+  writeFileSync(searchIndexPath, `${JSON.stringify(publicSearchIndex.documents, null, 2)}\n`);
+}
+
+function writePostModuleMap(moduleMapSource: string, moduleMapPath: string): void {
+  mkdirSync(path.dirname(moduleMapPath), { recursive: true });
+  writeFileSync(moduleMapPath, moduleMapSource);
 }
 
 function cleanupGeneratedOutputs(outputDir: string, assetOutputDir: string, publicArtifactPaths: Array<string | undefined> = []): void {
@@ -308,6 +349,7 @@ function transformNote(input: {
     outputDir: string;
     assetOutputDir: string;
     privateRoot: string;
+    jsxAttributes?: boolean;
   };
   hasDuplicateSlug: boolean;
   preview: boolean;
@@ -398,7 +440,10 @@ function transformNote(input: {
     seriesOrder: modelResult.value?.seriesOrder,
     published: state === "published",
   });
-  const outputText = `${frontmatter}${normalizeBlockAnchors(assetResult.body).trimEnd()}\n`;
+  const normalizedBody = normalizeOutputBody(assetResult.body, {
+    jsxAttributes: input.options.jsxAttributes === true,
+  });
+  const outputText = `${frontmatter}${normalizedBody.trimEnd()}\n`;
   const outputPath = path.join(input.options.outputDir, `${slug}.mdx`);
 
   return {
@@ -549,6 +594,29 @@ function normalizeBlockAnchors(body: string): string {
   });
 
   return rewritten.join("\n");
+}
+
+function normalizeOutputBody(body: string, options: { jsxAttributes: boolean }): string {
+  const blockAnchorBody = normalizeBlockAnchors(body);
+  if (!options.jsxAttributes) return blockAnchorBody;
+  return normalizeJsxAttributes(blockAnchorBody);
+}
+
+function normalizeJsxAttributes(body: string): string {
+  let inFence = false;
+
+  return body
+    .split(/\r?\n/)
+    .map((line) => {
+      if (/^\s*```/.test(line)) {
+        inFence = !inFence;
+        return line;
+      }
+      if (inFence) return line;
+
+      return line.replace(/\bclass=/g, "className=").replace(/\bfor=/g, "htmlFor=");
+    })
+    .join("\n");
 }
 
 function collectBlockAnchors(body: string): { anchors: BlockAnchor[]; duplicates: Set<string> } {
@@ -767,6 +835,123 @@ function buildPublicTagIndex(
       .map(([tag, slugs]) => ({ tag, slugs: Array.from(slugs).sort((a, b) => a.localeCompare(b)) }))
       .sort((a, b) => a.tag.localeCompare(b.tag)),
   };
+}
+
+function buildPublicPostIndex(
+  exportedPosts: ManifestEntry[],
+  notes: Array<{
+    slug: string;
+    title: string;
+    description: string;
+    excerpt: string;
+    date?: string;
+    updated?: string;
+    tags: string[];
+    series?: string;
+    seriesOrder?: number;
+    headings: HeadingNode[];
+    isPublic: boolean;
+  }>,
+): PublicPostIndex {
+  const exportedSlugs = new Set(exportedPosts.map((post) => post.slug).filter((slug): slug is string => Boolean(slug)));
+  return {
+    generatedAt: new Date().toISOString(),
+    posts: notes
+      .filter((note) => note.isPublic && exportedSlugs.has(note.slug) && note.date && note.series)
+      .map((note) => {
+        const seriesSlug = slugify(note.series!);
+        return {
+          slug: note.slug,
+          href: `/posts/${note.slug}/`,
+          title: note.title,
+          description: note.description,
+          excerpt: note.excerpt,
+          date: note.date!,
+          updated: note.updated,
+          tags: note.tags,
+          series: note.series!,
+          seriesSlug,
+          seriesHref: `/series/${seriesSlug}/`,
+          seriesOrder: note.seriesOrder,
+          headings: note.headings,
+        };
+      })
+      .sort((a, b) => {
+        const dateDiff = Date.parse(b.date) - Date.parse(a.date);
+        if (dateDiff !== 0) return dateDiff;
+        return a.title.localeCompare(b.title);
+      }),
+  };
+}
+
+function buildPublicSearchIndex(
+  exportedPosts: ManifestEntry[],
+  notes: Array<{
+    slug: string;
+    title: string;
+    description: string;
+    excerpt: string;
+    tags: string[];
+    series?: string;
+    syntax: ObsidianSyntaxResult;
+    isPublic: boolean;
+  }>,
+): PublicSearchIndex {
+  const exportedSlugs = new Set(exportedPosts.map((post) => post.slug).filter((slug): slug is string => Boolean(slug)));
+  return {
+    generatedAt: new Date().toISOString(),
+    documents: notes
+      .filter((note) => note.isPublic && exportedSlugs.has(note.slug) && note.series)
+      .map((note) => {
+        const plainBody = toPlainPreviewText(note.syntax.body);
+        return {
+          title: note.title,
+          description: note.description,
+          tags: note.tags,
+          series: note.series!,
+          url: `/posts/${note.slug}/`,
+          searchText: [note.title, note.description, note.series, note.tags.join(" "), note.excerpt, plainBody]
+            .join(" ")
+            .toLowerCase(),
+        };
+      })
+      .sort((a, b) => a.url.localeCompare(b.url)),
+  };
+}
+
+function buildPostModuleMap(exportedPosts: ManifestEntry[], moduleMapPath: string): string {
+  const entries = exportedPosts
+    .map((post) => {
+      if (!post.slug || !post.outputPath) return null;
+      const importPath = formatModuleImportPath(path.relative(path.dirname(moduleMapPath), post.outputPath));
+      return { slug: post.slug, importPath };
+    })
+    .filter((entry): entry is { slug: string; importPath: string } => entry !== null)
+    .sort((a, b) => a.slug.localeCompare(b.slug));
+
+  const lines = entries.map(
+    ({ slug, importPath }) => `  ${JSON.stringify(slug)}: () => import(${JSON.stringify(importPath)}),`,
+  );
+
+  return [
+    "import type { ComponentType } from \"react\";",
+    "",
+    "export type PostModule = {",
+    "  default: ComponentType;",
+    "};",
+    "",
+    "export const postModules: Record<string, () => Promise<PostModule>> = {",
+    ...lines,
+    "};",
+    "",
+    `export const postModuleSlugs = ${JSON.stringify(entries.map((entry) => entry.slug))} as const;`,
+    "",
+  ].join("\n");
+}
+
+function formatModuleImportPath(relativePath: string): string {
+  const normalized = relativePath.split(path.sep).join("/");
+  return normalized.startsWith(".") ? normalized : `./${normalized}`;
 }
 
 function extractExcerpt(body: string): string {

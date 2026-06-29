@@ -12,6 +12,8 @@ apps/blog/dist
 apps/blog/.astro
 apps/blog/public/search/index.json
 apps/blog/public/search/pagefind
+apps/next-blog/.next
+apps/next-blog/out
 packages/*/dist
 packages/private-wiki-index/.private-index
 *.tsbuildinfo

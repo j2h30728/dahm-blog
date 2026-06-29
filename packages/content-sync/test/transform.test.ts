@@ -13,6 +13,9 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
   const output = path.join(root, "out");
   const postAssets = path.join(root, "post-assets");
   const publicLinkIndex = path.join(root, "public-link-index.json");
+  const publicPostIndex = path.join(root, "public-post-index.json");
+  const searchIndex = path.join(root, "search", "index.json");
+  const postModuleMap = path.join(root, "post-modules.generated.ts");
   mkdirSync(published, { recursive: true });
   mkdirSync(assets, { recursive: true });
 
@@ -36,6 +39,9 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
     assetOutputDir: postAssets,
     manifestPath: path.join(root, "manifest.json"),
     publicLinkIndexPath: publicLinkIndex,
+    publicPostIndexPath: publicPostIndex,
+    searchIndexPath: searchIndex,
+    postModuleMapPath: postModuleMap,
   });
   const second = transformVault({
     vaultRoot: root,
@@ -44,6 +50,9 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
     assetOutputDir: postAssets,
     manifestPath: path.join(root, "manifest.json"),
     publicLinkIndexPath: publicLinkIndex,
+    publicPostIndexPath: publicPostIndex,
+    searchIndexPath: searchIndex,
+    postModuleMapPath: postModuleMap,
   });
 
   assert.equal(first.exportedPosts.length, 2);
@@ -105,6 +114,47 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
   assert.equal(publicIndexText.includes("replacement"), false);
   assert.equal(publicIndexText.includes("sourceContext"), false);
   assert.equal(publicIndexText.includes("Embedded second post"), false);
+
+  const postIndex = JSON.parse(readFileSync(publicPostIndex, "utf8")) as {
+    posts: Array<{
+      slug: string;
+      href: string;
+      title: string;
+      series: string;
+      seriesSlug: string;
+      seriesHref: string;
+      headings: Array<{ id: string; text: string }>;
+    }>;
+  };
+  assert.deepEqual(
+    postIndex.posts.map((post) => [post.slug, post.href, post.series, post.seriesSlug, post.seriesHref]),
+    [
+      ["second", "/posts/second/", "Demo", "demo", "/series/demo/"],
+      ["first", "/posts/first/", "Demo", "demo", "/series/demo/"],
+    ],
+  );
+  assert.deepEqual(postIndex.posts.find((post) => post.slug === "first")?.headings, [
+    { depth: 2, id: "first-heading", text: "First heading" },
+  ]);
+
+  const searchDocuments = JSON.parse(readFileSync(searchIndex, "utf8")) as Array<{
+    title: string;
+    url: string;
+    searchText: string;
+  }>;
+  assert.deepEqual(
+    searchDocuments.map((document) => [document.title, document.url]),
+    [
+      ["First", "/posts/first/"],
+      ["Second", "/posts/second/"],
+    ],
+  );
+  assert.match(searchDocuments[0]?.searchText ?? "", /the second post/);
+  assert.equal(readFileSync(searchIndex, "utf8").includes("content/private"), false);
+
+  const moduleMap = readFileSync(postModuleMap, "utf8");
+  assert.match(moduleMap, /"first": \(\) => import\("\.\/out\/first\.mdx"\)/);
+  assert.match(moduleMap, /"second": \(\) => import\("\.\/out\/second\.mdx"\)/);
 });
 
 test("rewrites Obsidian image size aliases to responsive image attributes", () => {
@@ -143,6 +193,34 @@ test("rewrites Obsidian image size aliases to responsive image attributes", () =
   assert.equal(existsSync(path.join(postAssets, "sized", "photo.png")), true);
   assert.equal(existsSync(path.join(postAssets, "sized", "frame.png")), true);
   assert.equal(existsSync(path.join(postAssets, "sized", "manual.png")), true);
+});
+
+test("can emit JSX-compatible attributes for Next MDX mirrors", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "content-sync-jsx-attributes-"));
+  const publicRoot = path.join(root, "public");
+  const published = path.join(publicRoot, "published");
+  const output = path.join(root, "out");
+  const postAssets = path.join(root, "post-assets");
+  mkdirSync(published, { recursive: true });
+
+  writeFileSync(
+    path.join(published, "jsx.md"),
+    `---\ntitle: "JSX Attributes"\nslug: "jsx-attributes"\ndescription: "JSX attribute post."\ndate: "2026-06-24"\ntags: ["next"]\nseries: "Demo"\npublished: true\n---\n\n> [!tip]\n> Tip body.\n\n<label for="email" class="field-label">Email</label>\n\n\`\`\`html\n<span class="sample">Code fence stays literal</span>\n\`\`\`\n`,
+  );
+
+  const result = transformVault({
+    vaultRoot: root,
+    sourceDir: published,
+    outputDir: output,
+    assetOutputDir: postAssets,
+    jsxAttributes: true,
+  });
+
+  assert.equal(result.errors.length, 0);
+  const outputText = readFileSync(path.join(output, "jsx-attributes.mdx"), "utf8");
+  assert.match(outputText, /<span className="callout-title" data-callout="tip">Tip<\/span>/);
+  assert.match(outputText, /<label htmlFor="email" className="field-label">Email<\/label>/);
+  assert.match(outputText, /<span class="sample">Code fence stays literal<\/span>/);
 });
 
 test("exports Obsidian parity syntax, aliases, media embeds, graph index, and tag index", () => {
