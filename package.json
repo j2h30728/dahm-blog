@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@11.8.0",
+  "packageManager": "pnpm@10.23.0",
   "scripts": {
     "dev": "pnpm sync:content && pnpm --filter @dahm-blog/blog dev",
     "sync:content": "pnpm --filter @dahm-blog/content-sync sync",

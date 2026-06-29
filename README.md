@@ -57,18 +57,18 @@ Obsidian/
 If local Corepack has pnpm signature issues, run the pinned pnpm version through npm:
 
 ```bash
-npm exec --yes pnpm@11.8.0 -- install
-npm exec --yes pnpm@11.8.0 -- test
-npm exec --yes pnpm@11.8.0 -- build
+npm exec --yes pnpm@10.23.0 -- install
+npm exec --yes pnpm@10.23.0 -- test
+npm exec --yes pnpm@10.23.0 -- build
 ```
 
 ## Volta
 
-This project pins Node 24 LTS with Volta and uses `packageManager: pnpm@11.8.0`.
+This project pins Node 24 LTS with Volta and uses `packageManager: pnpm@10.23.0`.
 
 ```bash
 volta install node@24.17.0
-volta install pnpm@11.8.0
+volta install pnpm@10.23.0
 ```
 
 If `pnpm` still resolves to an nvm/Corepack path, put Volta before nvm in your shell:
