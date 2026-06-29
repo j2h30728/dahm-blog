@@ -2,5 +2,12 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm build:blog",
   "outputDirectory": "apps/blog/dist",
-  "framework": "astro"
+  "framework": "astro",
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/posts/",
+      "permanent": false
+    }
+  ]
 }

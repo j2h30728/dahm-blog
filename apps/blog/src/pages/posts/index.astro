@@ -1,20 +1,10 @@
 ---
-import PostList from "../../components/PostList.astro";
+import PostsSection from "../../components/PostsSection.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getPublishedPosts } from "../../lib/posts";
-import { ui } from "../../lib/ui-classes";
 
 const posts = await getPublishedPosts();
 ---
 <BaseLayout title="Posts | Dahm" description="담의 글 목록입니다.">
-  <section id="posts" class={ui.pageSection} aria-labelledby="posts-title">
-    <div class={ui.sectionHeading}>
-      <div>
-        <p class={ui.tagline}>Posts</p>
-        <h1 class={ui.sectionTitle} id="posts-title">Posts</h1>
-      </div>
-      <p class={ui.sectionMeta}>{posts.length} posts</p>
-    </div>
-    <PostList posts={posts} />
-  </section>
+  <PostsSection posts={posts} />
 </BaseLayout>
