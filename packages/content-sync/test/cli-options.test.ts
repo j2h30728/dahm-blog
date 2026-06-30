@@ -12,15 +12,20 @@ function createWorkspace(): string {
   return root;
 }
 
-test("defaults the diagnostic manifest to ignored operational state", () => {
+test("defaults public blog artifacts to the Next app", () => {
   const root = createWorkspace();
   const args = parseCliArgs([], { cwd: root, env: {} });
 
+  assert.equal(args.outputDir, path.join(root, "apps/blog/src/content/posts"));
   assert.equal(args.assetOutputDir, path.join(root, "apps/blog/public/post-assets"));
   assert.equal(args.manifestPath, path.join(root, ".content-sync/publish-manifest.json"));
   assert.equal(args.publicLinkIndexPath, path.join(root, "apps/blog/src/content/public-link-index.json"));
   assert.equal(args.publicGraphIndexPath, path.join(root, "apps/blog/src/content/public-graph-index.json"));
   assert.equal(args.publicTagIndexPath, path.join(root, "apps/blog/src/content/public-tag-index.json"));
+  assert.equal(args.publicPostIndexPath, path.join(root, "apps/blog/src/content/public-post-index.json"));
+  assert.equal(args.searchIndexPath, path.join(root, "apps/blog/public/search/index.json"));
+  assert.equal(args.postModuleMapPath, path.join(root, "apps/blog/src/content/post-module-map.ts"));
+  assert.equal(args.jsxAttributes, true);
 });
 
 test("allows explicit manifest path override", () => {
@@ -41,7 +46,7 @@ test("allows explicit public graph and tag index path overrides", () => {
   assert.equal(args.publicTagIndexPath, tagPath);
 });
 
-test("allows explicit Next mirror artifact path overrides", () => {
+test("allows explicit public blog artifact path overrides", () => {
   const root = createWorkspace();
   const postIndexPath = path.join(root, "tmp/public-post-index.json");
   const searchIndexPath = path.join(root, "tmp/search/index.json");
@@ -72,21 +77,21 @@ test("resolves relative explicit paths from the workspace root", () => {
   const args = parseCliArgs(
     [
       "--out",
-      "apps/next-blog/src/content/posts",
+      "apps/blog/src/content/posts",
       "--assets",
-      "apps/next-blog/public/post-assets",
+      "apps/blog/public/post-assets",
       "--manifest",
-      ".content-sync/next-publish-manifest.json",
+      ".content-sync/custom-publish-manifest.json",
       "--post-module-map",
-      "apps/next-blog/src/content/post-module-map.ts",
+      "apps/blog/src/content/post-module-map.ts",
     ],
     { cwd: packageCwd, env: {} },
   );
 
-  assert.equal(args.outputDir, path.join(root, "apps/next-blog/src/content/posts"));
-  assert.equal(args.assetOutputDir, path.join(root, "apps/next-blog/public/post-assets"));
-  assert.equal(args.manifestPath, path.join(root, ".content-sync/next-publish-manifest.json"));
-  assert.equal(args.postModuleMapPath, path.join(root, "apps/next-blog/src/content/post-module-map.ts"));
+  assert.equal(args.outputDir, path.join(root, "apps/blog/src/content/posts"));
+  assert.equal(args.assetOutputDir, path.join(root, "apps/blog/public/post-assets"));
+  assert.equal(args.manifestPath, path.join(root, ".content-sync/custom-publish-manifest.json"));
+  assert.equal(args.postModuleMapPath, path.join(root, "apps/blog/src/content/post-module-map.ts"));
 });
 
 test("keeps environment source explicit when vault changes later", () => {

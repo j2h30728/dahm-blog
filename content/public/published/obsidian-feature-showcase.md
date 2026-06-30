@@ -82,6 +82,6 @@ Obsidian에서 쓰던 문장 안 하이라이트는 ==이렇게 표시됩니다=
 
 ```ts
 const source = "Obsidian";
-const target = "Astro";
+const target = "Next.js";
 console.log(`${source} -> ${target}`);
 ```

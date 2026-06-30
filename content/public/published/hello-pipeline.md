@@ -4,7 +4,7 @@ slug: "hello-pipeline"
 description: "A first post exported from an Obsidian-first workflow."
 date: "2026-06-23"
 updated: "2026-06-23"
-tags: ["astro", "obsidian", "publishing"]
+tags: ["nextjs", "obsidian", "publishing"]
 series: "Building The Blog"
 seriesOrder: 1
 published: true

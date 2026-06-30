@@ -1,5 +1,5 @@
-import linkIndexJson from "../content/public-link-index.json";
 import graphIndexJson from "../content/public-graph-index.json";
+import linkIndexJson from "../content/public-link-index.json";
 import tagIndexJson from "../content/public-tag-index.json";
 
 interface PublicLinkNode {
@@ -85,19 +85,10 @@ export function getLinkPreviewPayload(): Record<
   );
 }
 
-export function getPublicLinkNode(slug: string): PublicLinkNode | undefined {
-  return nodesBySlug.get(slug);
-}
-
 export function getPublicGraph(): PublicGraphIndex {
   return graphIndex;
 }
 
 export function getPublicTagIndex(): PublicTagIndex {
   return tagIndex;
-}
-
-export function getPostsForTag(tag: string): PublicLinkNode[] {
-  const slugs = tagIndex.tags.find((entry) => entry.tag === tag)?.slugs ?? [];
-  return slugs.map((slug) => nodesBySlug.get(slug)).filter((node): node is PublicLinkNode => node !== undefined);
 }

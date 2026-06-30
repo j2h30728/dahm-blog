@@ -41,10 +41,10 @@ export function parseCliArgs(argv: string[], context: CliOptionsContext = {}): C
     publicLinkIndexPath: path.resolve(root, "apps/blog/src/content/public-link-index.json"),
     publicGraphIndexPath: path.resolve(root, "apps/blog/src/content/public-graph-index.json"),
     publicTagIndexPath: path.resolve(root, "apps/blog/src/content/public-tag-index.json"),
-    publicPostIndexPath: undefined,
-    searchIndexPath: undefined,
-    postModuleMapPath: undefined,
-    jsxAttributes: false,
+    publicPostIndexPath: path.resolve(root, "apps/blog/src/content/public-post-index.json"),
+    searchIndexPath: path.resolve(root, "apps/blog/public/search/index.json"),
+    postModuleMapPath: path.resolve(root, "apps/blog/src/content/post-module-map.ts"),
+    jsxAttributes: true,
     preview: false,
   };
 

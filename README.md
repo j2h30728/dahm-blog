@@ -1,17 +1,18 @@
 # Personal Tech Blog Stack
 
-Astro-based personal tech blog scaffold with an Obsidian-first publishing pipeline and a separate private wiki index.
+Next.js App Router personal tech blog with an Obsidian-first publishing pipeline and a separate private wiki index.
 
 ## Architecture
 
 ```text
-Obsidian vault -> validated content model -> publish manifest -> exported public bundle -> Astro render
+Obsidian vault -> validated content model -> publish manifest -> generated MDX/indexes -> Next.js static export
 ```
 
 - Public writing starts in `content/public/published`.
 - Production export requires both the `published/` source folder and `published: true` frontmatter.
 - Public output is generated into `apps/blog/src/content/posts`.
-- Public assets are copied into `apps/blog/public/assets/posts`.
+- Public assets are copied into `apps/blog/public/post-assets`.
+- Next.js builds the static site into `apps/blog/out`.
 - Private notes live under `content/private`.
 - Private wiki index output stays under `packages/private-wiki-index/.private-index`.
 

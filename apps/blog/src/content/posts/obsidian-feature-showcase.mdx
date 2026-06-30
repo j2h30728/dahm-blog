@@ -32,22 +32,22 @@ Obsidian에서 쓰던 문장 안 하이라이트는 <mark>이렇게 표시됩니
 
 ## 콜아웃과 태스크
 
-> <span class="callout-title" data-callout="tip" data-callout-fold="open">열려 있는 팁</span>
+> <span className="callout-title" data-callout="tip" data-callout-fold="open">열려 있는 팁</span>
 > 접힌 상태를 포함한 Obsidian callout 문법을 웹에서 읽을 수 있는 형태로 보여줍니다.
 
-> <span class="callout-title" data-callout="warning" data-callout-fold="closed">닫힌 경고</span>
+> <span className="callout-title" data-callout="warning" data-callout-fold="closed">닫힌 경고</span>
 > 접힌 상태 표시는 정적 읽기 화면에서 상태 라벨로 드러납니다.
 
 - [ ] 아직 하지 않은 항목
 - [x] 완료한 항목
-- [x] <span class="task-marker" data-task-marker="?"></span> 확인이 필요한 항목
-- [x] <span class="task-marker" data-task-marker="!"></span> 주의가 필요한 항목
+- [x] <span className="task-marker" data-task-marker="?"></span> 확인이 필요한 항목
+- [x] <span className="task-marker" data-task-marker="!"></span> 주의가 필요한 항목
 
 ## 공개 노트 임베드
 
 아래는 공개 노트를 안전한 링크 카드 형태로 임베드한 예시입니다.
 
-<aside class="note-embed"><a href="/posts/openapi-generator-boundaries/">OpenAPI Generator embed</a></aside>
+<aside className="note-embed"><a href="/posts/openapi-generator-boundaries/">OpenAPI Generator embed</a></aside>
 
 ## 이미지와 미디어
 
@@ -59,11 +59,11 @@ Obsidian에서 쓰던 문장 안 하이라이트는 <mark>이렇게 표시됩니
 
 오디오, 영상, PDF도 공개 assets일 때 읽기 전용으로 임베드됩니다.
 
-<audio class="media-embed media-embed-audio" controls src="/post-assets/obsidian-feature-showcase/showcase-tone.wav">Short tone</audio>
+<audio className="media-embed media-embed-audio" controls src="/post-assets/obsidian-feature-showcase/showcase-tone.wav">Short tone</audio>
 
-<video class="media-embed media-embed-video" controls src="/post-assets/obsidian-feature-showcase/showcase-video.mp4" width="640" height="360">Showcase video</video>
+<video className="media-embed media-embed-video" controls src="/post-assets/obsidian-feature-showcase/showcase-video.mp4" width="640" height="360">Showcase video</video>
 
-<iframe class="media-embed media-embed-pdf" src="/post-assets/obsidian-feature-showcase/showcase-guide.pdf#page=1&amp;height=420" title="Showcase guide" height="420"></iframe>
+<iframe className="media-embed media-embed-pdf" src="/post-assets/obsidian-feature-showcase/showcase-guide.pdf#page=1&amp;height=420" title="Showcase guide" height="420"></iframe>
 
 ## 표와 코드
 
@@ -76,6 +76,6 @@ Obsidian에서 쓰던 문장 안 하이라이트는 <mark>이렇게 표시됩니
 
 ```ts
 const source = "Obsidian";
-const target = "Astro";
+const target = "Next.js";
 console.log(`${source} -> ${target}`);
 ```
