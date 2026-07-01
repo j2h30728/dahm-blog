@@ -19,6 +19,7 @@ Obsidian vault -> validated content model -> publish manifest -> generated MDX/i
 ## Commands
 
 ```bash
+pnpm check:env
 pnpm install
 pnpm sync:content
 pnpm index:private
@@ -28,7 +29,9 @@ pnpm build
 
 ## Obsidian Vault
 
-By default, the repository-local `content` directory is treated as the vault. To use a real Obsidian vault, point the CLI at it with environment variables:
+By default, the repository-local `content` directory is treated as the vault. Root scripts such as `pnpm dev`, `pnpm sync:content`, and `pnpm build` pin that local vault with `--vault content` so shell-level Obsidian environment variables cannot accidentally rewrite generated blog artifacts.
+
+To use a real Obsidian vault directly, point the content-sync package CLI at it with environment variables:
 
 ```bash
 export OBSIDIAN_VAULT_PATH="/path/to/Obsidian"
@@ -37,12 +40,11 @@ export OBSIDIAN_PRIVATE_INCLUDE="private"
 export OBSIDIAN_PRIVATE_EXCLUDE="public"
 ```
 
-Then the normal commands use that vault:
+Then run the package-level sync command so those environment variables are honored:
 
 ```bash
-pnpm sync:content
+pnpm --filter @dahm-blog/content-sync sync
 pnpm index:private
-pnpm dev
 ```
 
 Recommended vault folders:
@@ -55,24 +57,35 @@ Obsidian/
   private/
 ```
 
-If local Corepack has pnpm signature issues, run the pinned pnpm version through npm:
+## Local Toolchain
+
+This project pins Node 24.17.0 and pnpm 10.34.4 in `package.json`, `.nvmrc`,
+and `.node-version`. The install path also runs `pnpm check:env`, so the
+project fails fast when Node or the package manager drifts.
+
+For nvm-compatible shells:
 
 ```bash
-npm exec --yes pnpm@10.34.4 -- install
-npm exec --yes pnpm@10.34.4 -- test
-npm exec --yes pnpm@10.34.4 -- build
+nvm use
 ```
 
-## Volta
-
-This project pins Node 24 LTS with Volta and uses `packageManager: pnpm@10.34.4`.
+For Corepack:
 
 ```bash
+corepack enable
+corepack prepare pnpm@10.34.4 --activate
+```
+
+For Volta, enable pnpm support before installing the pinned package manager:
+
+```bash
+export VOLTA_FEATURE_PNPM=1
 volta install node@24.17.0
 volta install pnpm@10.34.4
 ```
 
-If `pnpm` still resolves to an nvm/Corepack path, put Volta before nvm in your shell:
+If `pnpm` still resolves to an nvm/Corepack path instead of Volta, put Volta
+before nvm in your shell:
 
 ```bash
 export VOLTA_HOME="$HOME/.volta"
@@ -82,9 +95,20 @@ export PATH="$VOLTA_HOME/bin:$PATH"
 Then open a new terminal and verify:
 
 ```bash
+which node
 which pnpm
-pnpm --version
 node --version
+pnpm --version
+pnpm check:env
+```
+
+If local Corepack has pnpm signature issues, run the pinned pnpm version
+through npm after switching to Node 24:
+
+```bash
+npm exec --yes pnpm@10.34.4 -- install
+npm exec --yes pnpm@10.34.4 -- test
+npm exec --yes pnpm@10.34.4 -- build
 ```
 
 ## Public Blog MVP

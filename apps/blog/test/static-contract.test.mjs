@@ -12,6 +12,7 @@ test("uses the Next blog as the default public app", () => {
   const vercelConfig = JSON.parse(readFileSync(path.join(workspaceRoot, "vercel.json"), "utf8"));
 
   assert.equal(rootPackage.scripts.dev, "pnpm sync:content && pnpm --filter @dahm-blog/blog dev");
+  assert.equal(rootPackage.scripts["sync:content"], "pnpm --filter @dahm-blog/content-sync sync -- --vault content");
   assert.equal(rootPackage.scripts["build:blog"], "pnpm sync:content && pnpm --filter @dahm-blog/blog build");
   assert.equal(rootPackage.scripts.build, "pnpm --filter @dahm-blog/content-sync build && pnpm sync:content && pnpm --filter @dahm-blog/private-wiki-index build && pnpm index:private && pnpm --filter @dahm-blog/blog build");
   assert.equal(rootPackage.scripts["sync:next-content"], undefined);

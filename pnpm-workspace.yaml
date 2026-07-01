@@ -1,8 +1,11 @@
 packages:
   - "apps/*"
   - "packages/*"
+managePackageManagerVersions: true
+packageManagerStrictVersion: true
 allowBuilds:
   esbuild: true
   sharp: true
+minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - vscode-languageserver-protocol@3.18.1
