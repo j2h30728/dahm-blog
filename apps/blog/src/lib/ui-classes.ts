@@ -106,7 +106,7 @@ export const ui = {
   filterPill:
     "inline-flex cursor-pointer items-center gap-1.5 rounded-[var(--radius-pill)] border border-card-border bg-transparent px-2.5 py-[7px] font-mono text-[0.8rem] font-[640] leading-none text-ink-soft transition-[background,border-color,color,transform,box-shadow] duration-[160ms] ease-spring hover:-translate-y-0.5 hover:border-card-border-strong hover:bg-[var(--color-glass-hover)] hover:text-accent-ink hover:shadow-glass-sm",
   filterPillActive:
-    "border-accent-blend bg-accent-soft text-accent-ink shadow-glass-sm",
+    "border-accent bg-[color-mix(in_srgb,var(--color-accent)_7%,transparent)] text-accent-ink shadow-[0_0_0_2px_color-mix(in_srgb,var(--color-accent)_18%,transparent)] hover:border-accent hover:bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] hover:text-accent-ink hover:shadow-[0_0_0_2px_color-mix(in_srgb,var(--color-accent)_22%,transparent)]",
   filterCount:
     "text-[0.74rem] text-muted",
   emptyState:

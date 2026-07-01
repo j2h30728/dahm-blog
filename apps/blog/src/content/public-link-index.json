@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-01T07:05:26.228Z",
+  "generatedAt": "2026-07-01T13:09:06.605Z",
   "nodes": [
     {
       "slug": "content-boundaries",
@@ -67,8 +67,8 @@
         "obsidian/showcase"
       ],
       "aliases": [
-        "Obsidian Showcase",
-        "기능 데모"
+        "기능 데모",
+        "Obsidian Showcase"
       ],
       "href": "/posts/obsidian-feature-showcase/",
       "headings": [

@@ -94,28 +94,36 @@ function FilterGroup({
   onSelect: (value: string) => void;
   selected: string;
 }) {
+  const allSelected = selected.length === 0;
+
   return (
     <div className={ui.filterGroup}>
       <p className={ui.filterLabel}>{label}</p>
-      <div className={ui.filterList}>
+      <div aria-label={label} className={ui.filterList} role="group">
         <button
-          className={`${ui.filterPill} ${selected.length === 0 ? ui.filterPillActive : ""}`.trim()}
+          aria-pressed={allSelected}
+          className={`${ui.filterPill} ${allSelected ? ui.filterPillActive : ""}`.trim()}
           onClick={() => onSelect("")}
           type="button"
         >
           All
         </button>
-        {entries.map((entry) => (
-          <button
-            className={`${ui.filterPill} ${selected === entry.name ? ui.filterPillActive : ""}`.trim()}
-            key={entry.name}
-            onClick={() => onSelect(entry.name)}
-            type="button"
-          >
-            {entry.name}
-            <span className={ui.filterCount}>{entry.count}</span>
-          </button>
-        ))}
+        {entries.map((entry) => {
+          const isSelected = selected === entry.name;
+
+          return (
+            <button
+              aria-pressed={isSelected}
+              className={`${ui.filterPill} ${isSelected ? ui.filterPillActive : ""}`.trim()}
+              key={entry.name}
+              onClick={() => onSelect(entry.name)}
+              type="button"
+            >
+              {entry.name}
+              <span className={ui.filterCount}>{entry.count}</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

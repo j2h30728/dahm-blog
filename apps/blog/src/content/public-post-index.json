@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-01T07:05:26.229Z",
+  "generatedAt": "2026-07-01T13:09:06.606Z",
   "posts": [
     {
       "slug": "obsidian-feature-showcase",
@@ -45,113 +45,6 @@
           "depth": 2,
           "text": "표와 코드",
           "id": "표와-코드"
-        }
-      ]
-    },
-    {
-      "slug": "content-boundaries",
-      "href": "/posts/content-boundaries/",
-      "title": "Content Boundaries",
-      "description": "How public and private notes stay separated.",
-      "excerpt": "The export step accepts only notes in the published folder with published: true.",
-      "date": "2026-06-24",
-      "updated": "2026-06-24",
-      "topic": "blog",
-      "tags": [
-        "architecture",
-        "privacy"
-      ],
-      "series": "Building The Blog",
-      "seriesSlug": "building-the-blog",
-      "seriesHref": "/series/building-the-blog/",
-      "seriesOrder": 2,
-      "headings": [
-        {
-          "depth": 2,
-          "text": "Public allowlist",
-          "id": "public-allowlist"
-        },
-        {
-          "depth": 2,
-          "text": "Private blocklist is not enough",
-          "id": "private-blocklist-is-not-enough"
-        }
-      ]
-    },
-    {
-      "slug": "openapi-generator-boundaries",
-      "href": "/posts/openapi-generator-boundaries/",
-      "title": "OpenAPI Generator를 붙이며 나눈 경계",
-      "description": "Swagger/OpenAPI 기반 타입 생성에서 라이브러리에 맡길 일과 프론트엔드가 직접 해석해야 할 일을 나눈 기록.",
-      "excerpt": "스웨거를 보며 API 타입을 사람이 직접 옮겨 적고 있었다. 백엔드 API가 바뀌면 TypeScript 타입을 수정하고, Zod 스키마를 맞추고, 에러 코드를 확인하고, endpoint 상수를 다시 정리해야 했다. 수작업에 의존하면 변경 누락이나 타입 불일치가 생기기 쉽다. OpenAPI generator를 붙이면 해결될",
-      "date": "2026-06-24",
-      "updated": "2026-06-24",
-      "topic": "frontend",
-      "tags": [
-        "openapi",
-        "typescript",
-        "codegen",
-        "frontend"
-      ],
-      "series": "Frontend Architecture",
-      "seriesSlug": "frontend-architecture",
-      "seriesHref": "/series/frontend-architecture/",
-      "seriesOrder": 2,
-      "headings": [
-        {
-          "depth": 2,
-          "text": "API 타입을 옮겨 적는 비용",
-          "id": "api-타입을-옮겨-적는-비용"
-        },
-        {
-          "depth": 2,
-          "text": "라이브러리에 맡길 일과 직접 다룰 일",
-          "id": "라이브러리에-맡길-일과-직접-다룰-일"
-        },
-        {
-          "depth": 2,
-          "text": "CLI로 만들기",
-          "id": "cli로-만들기"
-        },
-        {
-          "depth": 3,
-          "text": "모듈 책임 구조",
-          "id": "모듈-책임-구조"
-        },
-        {
-          "depth": 3,
-          "text": "열어둔 지점과 닫아둔 지점",
-          "id": "열어둔-지점과-닫아둔-지점"
-        },
-        {
-          "depth": 2,
-          "text": "에러 코드는 response examples에서 읽기",
-          "id": "에러-코드는-response-examples에서-읽기"
-        },
-        {
-          "depth": 2,
-          "text": "generated와 entity를 분리하기",
-          "id": "generated와-entity를-분리하기"
-        },
-        {
-          "depth": 2,
-          "text": "AI Skill은 선택지로만 두기",
-          "id": "ai-skill은-선택지로만-두기"
-        },
-        {
-          "depth": 2,
-          "text": "실제 실행 흐름",
-          "id": "실제-실행-흐름"
-        },
-        {
-          "depth": 2,
-          "text": "구현하며 확인한 제약",
-          "id": "구현하며-확인한-제약"
-        },
-        {
-          "depth": 2,
-          "text": "마무리",
-          "id": "마무리"
         }
       ]
     },
@@ -264,6 +157,113 @@
           "depth": 2,
           "text": "참고 자료",
           "id": "참고-자료"
+        }
+      ]
+    },
+    {
+      "slug": "content-boundaries",
+      "href": "/posts/content-boundaries/",
+      "title": "Content Boundaries",
+      "description": "How public and private notes stay separated.",
+      "excerpt": "The export step accepts only notes in the published folder with published: true.",
+      "date": "2026-06-24",
+      "updated": "2026-06-24",
+      "topic": "blog",
+      "tags": [
+        "architecture",
+        "privacy"
+      ],
+      "series": "Building The Blog",
+      "seriesSlug": "building-the-blog",
+      "seriesHref": "/series/building-the-blog/",
+      "seriesOrder": 2,
+      "headings": [
+        {
+          "depth": 2,
+          "text": "Public allowlist",
+          "id": "public-allowlist"
+        },
+        {
+          "depth": 2,
+          "text": "Private blocklist is not enough",
+          "id": "private-blocklist-is-not-enough"
+        }
+      ]
+    },
+    {
+      "slug": "openapi-generator-boundaries",
+      "href": "/posts/openapi-generator-boundaries/",
+      "title": "OpenAPI Generator를 붙이며 나눈 경계",
+      "description": "Swagger/OpenAPI 기반 타입 생성에서 라이브러리에 맡길 일과 프론트엔드가 직접 해석해야 할 일을 나눈 기록.",
+      "excerpt": "스웨거를 보며 API 타입을 사람이 직접 옮겨 적고 있었다. 백엔드 API가 바뀌면 TypeScript 타입을 수정하고, Zod 스키마를 맞추고, 에러 코드를 확인하고, endpoint 상수를 다시 정리해야 했다. 수작업에 의존하면 변경 누락이나 타입 불일치가 생기기 쉽다. OpenAPI generator를 붙이면 해결될",
+      "date": "2026-06-24",
+      "updated": "2026-06-24",
+      "topic": "frontend",
+      "tags": [
+        "openapi",
+        "typescript",
+        "codegen",
+        "frontend"
+      ],
+      "series": "Frontend Architecture",
+      "seriesSlug": "frontend-architecture",
+      "seriesHref": "/series/frontend-architecture/",
+      "seriesOrder": 2,
+      "headings": [
+        {
+          "depth": 2,
+          "text": "API 타입을 옮겨 적는 비용",
+          "id": "api-타입을-옮겨-적는-비용"
+        },
+        {
+          "depth": 2,
+          "text": "라이브러리에 맡길 일과 직접 다룰 일",
+          "id": "라이브러리에-맡길-일과-직접-다룰-일"
+        },
+        {
+          "depth": 2,
+          "text": "CLI로 만들기",
+          "id": "cli로-만들기"
+        },
+        {
+          "depth": 3,
+          "text": "모듈 책임 구조",
+          "id": "모듈-책임-구조"
+        },
+        {
+          "depth": 3,
+          "text": "열어둔 지점과 닫아둔 지점",
+          "id": "열어둔-지점과-닫아둔-지점"
+        },
+        {
+          "depth": 2,
+          "text": "에러 코드는 response examples에서 읽기",
+          "id": "에러-코드는-response-examples에서-읽기"
+        },
+        {
+          "depth": 2,
+          "text": "generated와 entity를 분리하기",
+          "id": "generated와-entity를-분리하기"
+        },
+        {
+          "depth": 2,
+          "text": "AI Skill은 선택지로만 두기",
+          "id": "ai-skill은-선택지로만-두기"
+        },
+        {
+          "depth": 2,
+          "text": "실제 실행 흐름",
+          "id": "실제-실행-흐름"
+        },
+        {
+          "depth": 2,
+          "text": "구현하며 확인한 제약",
+          "id": "구현하며-확인한-제약"
+        },
+        {
+          "depth": 2,
+          "text": "마무리",
+          "id": "마무리"
         }
       ]
     },
