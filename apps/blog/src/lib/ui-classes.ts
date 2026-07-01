@@ -2,17 +2,29 @@ export const ui = {
   siteHeader:
     "sticky top-0 z-10 border-b border-header-border bg-header-bg backdrop-blur-[18px]",
   nav:
-    "mx-auto flex max-w-[980px] items-center justify-between gap-[var(--space-6)] px-[var(--space-6)] py-[var(--space-4)] max-[640px]:gap-[var(--space-2)] max-[640px]:px-[18px] max-[640px]:py-2.5",
+    "relative mx-auto flex max-w-[980px] items-center justify-between gap-[var(--space-6)] px-[var(--space-6)] py-[var(--space-4)] max-[640px]:flex-wrap max-[640px]:gap-x-[var(--space-2)] max-[640px]:gap-y-1 max-[640px]:px-[18px] max-[640px]:py-2.5",
   brand:
     "inline-flex shrink-0 items-center gap-[var(--space-2)] text-ink font-[780] tracking-[0] transition-opacity duration-[160ms] hover:opacity-80",
   brandMark:
     "inline-block h-3 w-3 rounded-[var(--radius-pill)] bg-accent shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-accent)_14%,transparent)]",
   navLinks:
-    "flex min-w-0 items-center justify-end gap-[var(--space-1)] overflow-x-auto text-[0.92rem] max-[640px]:gap-0.5 max-[640px]:text-[0.86rem]",
+    "flex min-w-0 flex-1 items-center justify-end gap-[var(--space-1)] overflow-x-auto text-[0.92rem] max-[640px]:gap-0.5 max-[640px]:overflow-visible max-[640px]:text-[0.86rem]",
+  navActions:
+    "flex shrink-0 items-center justify-end gap-[var(--space-1)] max-[640px]:min-w-0 max-[640px]:basis-full max-[640px]:gap-1",
   navLink:
     "relative shrink-0 rounded-[var(--radius-sm)] px-2.5 py-2 text-muted-strong transition-[background,color] duration-[160ms] after:absolute after:inset-x-2.5 after:bottom-1 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-[1px] after:bg-accent after:transition-transform after:duration-[220ms] after:ease-out-expo after:content-[''] hover:bg-accent-soft hover:text-accent-ink hover:no-underline hover:after:scale-x-100 max-[640px]:px-1.5 max-[640px]:py-1.5 max-[640px]:after:inset-x-1.5",
   navLinkActive:
     "text-accent-ink after:scale-x-100",
+  navSearchForm:
+    "flex min-w-0 shrink-0 items-center justify-end overflow-hidden transition-[width,opacity,margin,transform] duration-[260ms] ease-out-expo motion-reduce:transition-none",
+  navSearchFormOpen:
+    "ml-1 w-[clamp(128px,22vw,220px)] opacity-100 max-[760px]:w-[116px] max-[640px]:ml-0 max-[640px]:flex-1 max-[640px]:w-auto max-[640px]:translate-y-0",
+  navSearchFormClosed:
+    "ml-0 w-0 opacity-0 pointer-events-none max-[640px]:translate-y-[-4px]",
+  navSearchField:
+    "h-10 w-full min-w-0 rounded-[var(--radius-sm)] border border-card-border bg-[var(--color-glass)] px-3 text-[0.92rem] text-ink transition-[background,border-color,box-shadow] duration-[180ms] focus:border-accent-blend focus:bg-[var(--color-glass-hover)] focus:shadow-glass-sm focus:outline-none max-[640px]:h-9 max-[640px]:px-2 max-[640px]:text-[0.82rem]",
+  navIconButton:
+    "group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 text-muted-strong transition-[background,border-color,color] duration-[200ms] hover:border-card-border hover:bg-soft hover:text-ink max-[640px]:h-9 max-[640px]:w-9",
   shell:
     "mx-auto max-w-[980px] px-6 pb-[72px] pt-14 max-[640px]:px-[18px] max-[640px]:pb-12 max-[640px]:pt-[38px]",
   siteFooter:
@@ -73,6 +85,12 @@ export const ui = {
     "m-0 font-mono text-[0.8rem] font-[640] uppercase tracking-[0] text-muted tabular-nums",
   archiveTools:
     "mb-7 border-y border-line py-5",
+  activeSearch:
+    "mb-5 flex min-w-0 flex-wrap items-center gap-2",
+  activeSearchLabel:
+    "max-w-full wrap-anywhere rounded-[var(--radius-pill)] border border-accent-blend bg-accent-soft px-2.5 py-[7px] font-mono text-[0.8rem] font-[640] leading-snug text-accent-ink",
+  activeSearchClear:
+    "rounded-[var(--radius-pill)] border border-card-border px-2.5 py-[7px] font-mono text-[0.8rem] font-[640] leading-none text-muted transition-[background,border-color,color] duration-[160ms] hover:border-card-border-strong hover:bg-[var(--color-glass-hover)] hover:text-accent-ink hover:no-underline",
   searchLabel:
     "sr-only",
   filterGrid:
@@ -164,7 +182,7 @@ export const ui = {
     "search-box glass-surface mb-5 w-full max-w-[620px] rounded-[var(--radius-card)] border border-card-border px-3.5 py-[13px] text-ink transition-[background,border-color,box-shadow] duration-[200ms] focus:border-accent-blend focus:bg-[var(--color-glass-hover)] focus:shadow-glass-md focus:outline-none",
 
   themeToggle:
-    "theme-toggle group flex shrink-0 cursor-pointer items-center rounded-[var(--radius-sm)] border-0 bg-transparent px-2.5 py-2 leading-none text-muted-strong transition-[background,color,transform] duration-[200ms] ease-spring hover:scale-110 hover:rotate-12 hover:bg-soft hover:text-ink max-[640px]:px-2 max-[640px]:py-1.5",
+    "theme-toggle group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 leading-none text-muted-strong transition-[background,border-color,color] duration-[200ms] hover:border-card-border hover:bg-soft hover:text-ink max-[640px]:h-9 max-[640px]:w-9",
   themeToggleLightIcon: "hidden group-data-[current=light]:flex",
   themeToggleDarkIcon: "hidden group-data-[current=dark]:flex",
 } as const;

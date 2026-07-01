@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Post } from "../lib/posts";
 import { ui } from "../lib/ui-classes";
 import { PostList } from "./PostList";
@@ -18,6 +18,10 @@ interface PostArchiveProps {
 export function PostArchive({ posts, topics }: PostArchiveProps) {
   const [query, setQuery] = useState("");
   const [selectedTopic, setSelectedTopic] = useState("");
+
+  useEffect(() => {
+    setQuery(new URLSearchParams(window.location.search).get("q")?.trim() ?? "");
+  }, []);
 
   const normalizedQuery = query.trim().toLowerCase();
   const filteredPosts = useMemo(
@@ -51,17 +55,14 @@ export function PostArchive({ posts, topics }: PostArchiveProps) {
       </div>
 
       <div className={ui.archiveTools}>
-        <label className={ui.searchLabel} htmlFor="post-search">
-          Search posts
-        </label>
-        <input
-          className={ui.searchBox}
-          id="post-search"
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search posts"
-          type="search"
-          value={query}
-        />
+        {query.length > 0 ? (
+          <div className={ui.activeSearch}>
+            <span className={ui.activeSearchLabel}>Search: {query}</span>
+            <a className={ui.activeSearchClear} href="/posts/">
+              Clear
+            </a>
+          </div>
+        ) : null}
 
         <div className={ui.filterGrid}>
           <FilterGroup
