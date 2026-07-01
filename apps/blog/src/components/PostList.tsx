@@ -19,6 +19,15 @@ export function PostList({ posts }: PostListProps) {
               </div>
               <h2 className={ui.postTitle}>{post.title}</h2>
               <p className={ui.postDescription}>{post.description}</p>
+              {post.tags.length > 0 ? (
+                <div aria-label="Tags" className={ui.postTagList}>
+                  {post.tags.slice(0, 4).map((tag) => (
+                    <span className={ui.postTag} key={tag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <time className={ui.postDate} dateTime={new Date(post.date).toISOString()}>
               {formatPostDate(post.date)}

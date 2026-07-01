@@ -82,6 +82,19 @@ export function getSeriesEntryBySlug(seriesSlug: string): { name: string; posts:
   };
 }
 
+export function getTagEntries(posts: Post[]): Array<{ count: number; name: string }> {
+  const entries = new Map<string, number>();
+  for (const post of posts) {
+    for (const tag of post.tags) {
+      entries.set(tag, (entries.get(tag) ?? 0) + 1);
+    }
+  }
+
+  return [...entries.entries()]
+    .map(([name, count]) => ({ count, name }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
 export function formatPostDate(value: string): string {
   return new Date(value).toLocaleDateString("en", {
     year: "numeric",
