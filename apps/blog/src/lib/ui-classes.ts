@@ -26,9 +26,9 @@ export const ui = {
   navIconButton:
     "group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 text-muted-strong transition-[background,border-color,color] duration-[200ms] hover:border-card-border hover:bg-soft hover:text-ink max-[640px]:h-9 max-[640px]:w-9",
   shell:
-    "mx-auto max-w-[980px] px-6 pb-[72px] pt-14 max-[640px]:px-[18px] max-[640px]:pb-12 max-[640px]:pt-[38px]",
+    "mx-auto w-full max-w-[980px] flex-1 px-6 pb-[72px] pt-14 max-[640px]:px-[18px] max-[640px]:pb-12 max-[640px]:pt-[38px]",
   siteFooter:
-    "border-t border-line",
+    "shrink-0 border-t border-line",
   footerInner:
     "mx-auto grid max-w-[980px] grid-cols-[minmax(0,1fr)_auto] items-start gap-[var(--space-6)] px-6 py-8 text-[0.9rem] max-[640px]:grid-cols-1 max-[640px]:gap-[var(--space-3)] max-[640px]:px-[18px] max-[640px]:py-6",
   footerBrand:

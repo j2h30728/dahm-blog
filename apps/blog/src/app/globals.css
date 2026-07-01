@@ -77,8 +77,10 @@ body {
   margin: 0;
   background: var(--body-gradient), var(--color-canvas);
   color: var(--color-ink);
+  display: flex;
+  flex-direction: column;
   line-height: 1.65;
-  min-height: 100vh;
+  min-height: 100dvh;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
