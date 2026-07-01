@@ -22,26 +22,12 @@ export default function TagsPage() {
         <p className={ui.sectionMeta}>{tags.length} tags</p>
       </div>
 
-      <div className={ui.seriesList}>
+      <div aria-label="Tags" className={ui.tagList}>
         {tags.map((entry) => (
-          <article className={ui.seriesCard} key={entry.slug}>
-            <Link className={ui.seriesCardLink} href={`/tags/${entry.slug}/`}>
-              <div className={ui.seriesBody}>
-                <div className={ui.seriesTopline}>
-                  <span>{entry.count} posts</span>
-                </div>
-                <h2 className={ui.seriesTitle}>{entry.name}</h2>
-                <div className={ui.seriesPreviewList}>
-                  {entry.posts.slice(0, 3).map((post) => (
-                    <span className={ui.seriesPreviewItem} key={post.slug}>
-                      {post.title}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <span className={ui.seriesAction}>Open</span>
-            </Link>
-          </article>
+          <Link className={ui.tagPill} href={`/tags/${entry.slug}/`} key={entry.slug}>
+            {entry.name}
+            <span className={ui.tagCount}>{entry.count}</span>
+          </Link>
         ))}
       </div>
     </section>
