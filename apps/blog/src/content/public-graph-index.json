@@ -1,6 +1,25 @@
 {
-  "generatedAt": "2026-06-29T02:20:35.527Z",
+  "generatedAt": "2026-07-01T02:32:37.163Z",
   "nodes": [
+    {
+      "slug": "content-boundaries",
+      "title": "Content Boundaries",
+      "href": "/posts/content-boundaries/",
+      "tags": [
+        "architecture",
+        "privacy"
+      ]
+    },
+    {
+      "slug": "hello-pipeline",
+      "title": "Hello Publishing Pipeline",
+      "href": "/posts/hello-pipeline/",
+      "tags": [
+        "nextjs",
+        "obsidian",
+        "publishing"
+      ]
+    },
     {
       "slug": "obsidian-feature-showcase",
       "title": "Obsidian 기능 쇼케이스",
@@ -36,6 +55,26 @@
     }
   ],
   "edges": [
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "none",
+      "label": "content boundaries"
+    },
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "heading",
+      "targetAnchor": "#public-allowlist",
+      "label": "the public allowlist"
+    },
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "block",
+      "targetAnchor": "#block-allowlist-rule",
+      "label": "the allowlist rule"
+    },
     {
       "sourceSlug": "obsidian-feature-showcase",
       "targetSlug": "obsidian-feature-showcase",

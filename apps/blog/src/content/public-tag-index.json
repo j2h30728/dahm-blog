@@ -1,6 +1,12 @@
 {
-  "generatedAt": "2026-06-29T02:20:35.527Z",
+  "generatedAt": "2026-07-01T02:32:37.163Z",
   "tags": [
+    {
+      "tag": "architecture",
+      "slugs": [
+        "content-boundaries"
+      ]
+    },
     {
       "tag": "codegen",
       "slugs": [
@@ -22,12 +28,14 @@
     {
       "tag": "nextjs",
       "slugs": [
+        "hello-pipeline",
         "rsc-dot-notation-reexport"
       ]
     },
     {
       "tag": "obsidian",
       "slugs": [
+        "hello-pipeline",
         "obsidian-feature-showcase"
       ]
     },
@@ -44,8 +52,15 @@
       ]
     },
     {
+      "tag": "privacy",
+      "slugs": [
+        "content-boundaries"
+      ]
+    },
+    {
       "tag": "publishing",
       "slugs": [
+        "hello-pipeline",
         "obsidian-feature-showcase"
       ]
     },

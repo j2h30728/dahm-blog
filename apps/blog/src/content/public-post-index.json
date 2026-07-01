@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-29T14:05:27.676Z",
+  "generatedAt": "2026-07-01T02:32:37.163Z",
   "posts": [
     {
       "slug": "obsidian-feature-showcase",
@@ -44,6 +44,35 @@
           "depth": 2,
           "text": "표와 코드",
           "id": "표와-코드"
+        }
+      ]
+    },
+    {
+      "slug": "content-boundaries",
+      "href": "/posts/content-boundaries/",
+      "title": "Content Boundaries",
+      "description": "How public and private notes stay separated.",
+      "excerpt": "The export step accepts only notes in the published folder with published: true.",
+      "date": "2026-06-24",
+      "updated": "2026-06-24",
+      "tags": [
+        "architecture",
+        "privacy"
+      ],
+      "series": "Building The Blog",
+      "seriesSlug": "building-the-blog",
+      "seriesHref": "/series/building-the-blog/",
+      "seriesOrder": 2,
+      "headings": [
+        {
+          "depth": 2,
+          "text": "Public allowlist",
+          "id": "public-allowlist"
+        },
+        {
+          "depth": 2,
+          "text": "Private blocklist is not enough",
+          "id": "private-blocklist-is-not-enough"
         }
       ]
     },
@@ -231,6 +260,36 @@
           "depth": 2,
           "text": "참고 자료",
           "id": "참고-자료"
+        }
+      ]
+    },
+    {
+      "slug": "hello-pipeline",
+      "href": "/posts/hello-pipeline/",
+      "title": "Hello Publishing Pipeline",
+      "description": "A first post exported from an Obsidian-first workflow.",
+      "excerpt": "This note starts in Obsidian and is exported into the public blog.",
+      "date": "2026-06-23",
+      "updated": "2026-06-23",
+      "tags": [
+        "nextjs",
+        "obsidian",
+        "publishing"
+      ],
+      "series": "Building The Blog",
+      "seriesSlug": "building-the-blog",
+      "seriesHref": "/series/building-the-blog/",
+      "seriesOrder": 1,
+      "headings": [
+        {
+          "depth": 2,
+          "text": "Why this pipeline exists",
+          "id": "why-this-pipeline-exists"
+        },
+        {
+          "depth": 3,
+          "text": "What stays private",
+          "id": "what-stays-private"
         }
       ]
     }

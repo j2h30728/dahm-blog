@@ -1,6 +1,57 @@
 {
-  "generatedAt": "2026-06-29T02:20:35.527Z",
+  "generatedAt": "2026-07-01T02:32:37.163Z",
   "nodes": [
+    {
+      "slug": "content-boundaries",
+      "title": "Content Boundaries",
+      "description": "How public and private notes stay separated.",
+      "excerpt": "The export step accepts only notes in the published folder with published: true.",
+      "tags": [
+        "architecture",
+        "privacy"
+      ],
+      "aliases": [],
+      "href": "/posts/content-boundaries/",
+      "headings": [
+        {
+          "depth": 2,
+          "text": "Public allowlist",
+          "id": "public-allowlist"
+        },
+        {
+          "depth": 2,
+          "text": "Private blocklist is not enough",
+          "id": "private-blocklist-is-not-enough"
+        }
+      ],
+      "properties": []
+    },
+    {
+      "slug": "hello-pipeline",
+      "title": "Hello Publishing Pipeline",
+      "description": "A first post exported from an Obsidian-first workflow.",
+      "excerpt": "This note starts in Obsidian and is exported into the public blog.",
+      "tags": [
+        "nextjs",
+        "obsidian",
+        "publishing"
+      ],
+      "aliases": [],
+      "href": "/posts/hello-pipeline/",
+      "headings": [
+        {
+          "depth": 2,
+          "text": "Why this pipeline exists",
+          "id": "why-this-pipeline-exists"
+        },
+        {
+          "depth": 3,
+          "text": "What stays private",
+          "id": "what-stays-private"
+        }
+      ],
+      "properties": []
+    },
     {
       "slug": "obsidian-feature-showcase",
       "title": "Obsidian 기능 쇼케이스",
@@ -243,6 +294,26 @@
     }
   ],
   "edges": [
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "none",
+      "label": "content boundaries"
+    },
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "heading",
+      "targetAnchor": "#public-allowlist",
+      "label": "the public allowlist"
+    },
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "block",
+      "targetAnchor": "#block-allowlist-rule",
+      "label": "the allowlist rule"
+    },
     {
       "sourceSlug": "obsidian-feature-showcase",
       "targetSlug": "obsidian-feature-showcase",
