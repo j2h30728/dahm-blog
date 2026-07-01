@@ -12,7 +12,17 @@ export const ui = {
   navLink:
     "relative rounded-[var(--radius-sm)] px-2.5 py-2 text-muted-strong transition-[background,color] duration-[160ms] after:absolute after:inset-x-2.5 after:bottom-1 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-[1px] after:bg-accent after:transition-transform after:duration-[220ms] after:ease-out-expo after:content-[''] hover:bg-accent-soft hover:text-accent-ink hover:no-underline hover:after:scale-x-100 max-[640px]:px-2",
   shell:
-    "mx-auto max-w-[980px] px-6 pb-[88px] pt-14 max-[640px]:px-[18px] max-[640px]:pb-16 max-[640px]:pt-[38px]",
+    "mx-auto max-w-[980px] px-6 pb-[72px] pt-14 max-[640px]:px-[18px] max-[640px]:pb-12 max-[640px]:pt-[38px]",
+  siteFooter:
+    "border-t border-line",
+  footerInner:
+    "mx-auto flex max-w-[980px] items-center justify-between gap-[var(--space-4)] px-6 py-8 text-[0.9rem] max-[640px]:px-[18px] max-[640px]:py-6",
+  footerBrand:
+    "font-[720] text-muted-strong",
+  footerLinks:
+    "flex items-center gap-[var(--space-2)]",
+  footerLink:
+    "rounded-[var(--radius-sm)] px-2.5 py-2 font-mono text-[0.8rem] font-[680] uppercase tracking-[0] text-muted transition-[background,color] duration-[160ms] hover:bg-accent-soft hover:text-accent-ink hover:no-underline",
 
   homeIntro:
     "home-intro grid scroll-mt-28 grid-cols-[minmax(0,1fr)_auto] gap-[var(--space-6)] border-b border-line pb-[34px] pt-2.5 transition-[opacity,transform,filter] duration-[600ms] ease-out-expo max-[860px]:grid-cols-1",

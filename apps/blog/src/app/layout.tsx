@@ -19,7 +19,9 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
@@ -40,14 +42,21 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <Link className={ui.navLink} href="/posts/">
                 Posts
               </Link>
-              <Link className={ui.navLink} href="/rss.xml">
-                RSS
-              </Link>
               <ThemeToggle />
             </div>
           </nav>
         </header>
         <main className={ui.shell}>{children}</main>
+        <footer className={ui.siteFooter}>
+          <div className={ui.footerInner}>
+            <span className={ui.footerBrand}>DAHN</span>
+            <nav aria-label="Footer" className={ui.footerLinks}>
+              <Link className={ui.footerLink} href="/rss.xml">
+                RSS
+              </Link>
+            </nav>
+          </div>
+        </footer>
         <script dangerouslySetInnerHTML={{ __html: typewriterScript }} />
       </body>
     </html>
