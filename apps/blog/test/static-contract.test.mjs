@@ -23,7 +23,7 @@ test("uses the Next blog as the default public app", () => {
   assert.equal(appPackage.name, "@dahm-blog/blog");
   assert.equal(vercelConfig.framework, "nextjs");
   assert.equal(vercelConfig.buildCommand, "pnpm build:blog");
-  assert.equal(vercelConfig.outputDirectory, "apps/blog/out");
+  assert.equal(vercelConfig.outputDirectory, "apps/blog/.next");
 });
 
 test("declares the public blog routes in App Router", () => {
