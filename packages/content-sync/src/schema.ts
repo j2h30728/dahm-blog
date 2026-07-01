@@ -88,6 +88,7 @@ export interface ContentModel {
   description: string;
   date: string;
   updated?: string;
+  topic: string;
   tags: string[];
   aliases: string[];
   cssclasses: string[];
@@ -130,6 +131,7 @@ export interface PublicLinkNode {
   title: string;
   description: string;
   excerpt: string;
+  topic: string;
   tags: string[];
   aliases: string[];
   href: string;
@@ -157,6 +159,7 @@ export interface PublicGraphIndex {
     slug: string;
     title: string;
     href: string;
+    topic: string;
     tags: string[];
   }>;
   edges: PublicLinkEdge[];
@@ -178,6 +181,7 @@ export interface PublicPostIndexEntry {
   excerpt: string;
   date: string;
   updated?: string;
+  topic: string;
   tags: string[];
   series: string;
   seriesSlug: string;
@@ -194,6 +198,7 @@ export interface PublicPostIndex {
 export interface PublicSearchIndexDocument {
   title: string;
   description: string;
+  topic: string;
   tags: string[];
   series: string;
   url: string;

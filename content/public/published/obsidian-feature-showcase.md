@@ -8,6 +8,7 @@ tags:
   - obsidian
   - showcase
   - publishing
+topic: "obsidian"
 aliases:
   - "Obsidian Showcase"
   - "기능 데모"

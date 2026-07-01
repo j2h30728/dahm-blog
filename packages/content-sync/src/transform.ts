@@ -32,6 +32,8 @@ const RESERVED_PROPERTY_NAMES = new Set([
   "description",
   "date",
   "updated",
+  "topic",
+  "category",
   "tags",
   "series",
   "seriesOrder",
@@ -93,6 +95,7 @@ export function transformVault(options: TransformOptions): PublishManifest {
     const seriesOrder = asNumber(note.frontmatter.seriesOrder);
     const published = asBoolean(note.frontmatter.published) === true;
     const tags = mergeTags(asStringArray(note.frontmatter.tags) ?? [], syntax.tags);
+    const topic = resolveTopic(note.frontmatter, tags);
     const aliases = collectAliases(note.frontmatter);
     const cssclasses = collectCssClasses(note.frontmatter);
     const properties = collectPublicProperties(note.frontmatter);
@@ -105,6 +108,7 @@ export function transformVault(options: TransformOptions): PublishManifest {
       description,
       date,
       updated,
+      topic,
       excerpt: extractExcerpt(syntax.body),
       tags,
       series,
@@ -149,6 +153,7 @@ export function transformVault(options: TransformOptions): PublishManifest {
       slug: item.slug,
       title: item.title,
       tags: item.tags,
+      topic: item.topic,
       aliases: item.aliases,
       cssclasses: item.cssclasses,
       properties: item.properties,
@@ -339,6 +344,7 @@ function transformNote(input: {
   slug: string;
   title: string;
   tags: string[];
+  topic: string;
   aliases: string[];
   cssclasses: string[];
   properties: PublicProperty[];
@@ -383,6 +389,7 @@ function transformNote(input: {
     slug,
     state,
     tags: input.tags,
+    topic: input.topic,
     aliases: input.aliases,
     cssclasses: input.cssclasses,
     properties: input.properties,
@@ -436,6 +443,7 @@ function transformNote(input: {
     date: modelResult.value?.date,
     updated: modelResult.value?.updated,
     tags: modelResult.value?.tags ?? [],
+    topic: modelResult.value?.topic,
     series: modelResult.value?.series,
     seriesOrder: modelResult.value?.seriesOrder,
     published: state === "published",
@@ -469,6 +477,7 @@ function createContentModel(input: {
   slug: string;
   state: ContentModel["state"];
   tags: string[];
+  topic: string;
   aliases: string[];
   cssclasses: string[];
   properties: PublicProperty[];
@@ -487,11 +496,13 @@ function createContentModel(input: {
   const updated = asString(note.frontmatter.updated);
   const series = asString(note.frontmatter.series);
   const seriesOrder = asNumber(note.frontmatter.seriesOrder);
+  const topic = input.topic;
 
   if (!title) errors.push("Missing required frontmatter: title");
   if (!description) errors.push("Missing required frontmatter: description");
   if (!date || Number.isNaN(Date.parse(date))) errors.push("Missing or invalid required frontmatter: date");
   if (input.tags.length === 0) errors.push("Missing or invalid required frontmatter: tags");
+  if (!topic) warnings.push("Missing optional frontmatter: topic; using general");
   if (!series) errors.push("Missing required frontmatter: series");
   if (input.hasDuplicateSlug) errors.push(`Duplicate slug: ${slug}`);
   if (!updated) warnings.push("Missing optional frontmatter: updated");
@@ -508,6 +519,7 @@ function createContentModel(input: {
       description: description!,
       date: date!,
       updated,
+      topic: topic || "general",
       tags: input.tags,
       aliases: input.aliases,
       cssclasses: input.cssclasses,
@@ -658,6 +670,10 @@ function mergeTags(...tagGroups: string[][]): string[] {
   return Array.from(tags);
 }
 
+function resolveTopic(frontmatter: Record<string, unknown>, tags: string[]): string {
+  return asString(frontmatter.topic) ?? asString(frontmatter.category) ?? tags[0] ?? "general";
+}
+
 function normalizeTag(tag: string): string {
   return tag.replace(/^#+/, "").trim();
 }
@@ -731,6 +747,7 @@ function buildPublicLinkIndex(
     title: string;
     description: string;
     excerpt: string;
+    topic: string;
     tags: string[];
     aliases: string[];
     properties: PublicProperty[];
@@ -746,6 +763,7 @@ function buildPublicLinkIndex(
       title: note.title,
       description: note.description,
       excerpt: note.excerpt,
+      topic: note.topic,
       tags: note.tags,
       aliases: note.aliases,
       href: `/posts/${note.slug}/`,
@@ -766,6 +784,7 @@ function buildPublicGraphIndex(
   notes: Array<{
     slug: string;
     title: string;
+    topic: string;
     tags: string[];
     isPublic: boolean;
   }>,
@@ -779,6 +798,7 @@ function buildPublicGraphIndex(
         slug: note.slug,
         title: note.title,
         href: `/posts/${note.slug}/`,
+        topic: note.topic,
         tags: note.tags,
       }))
       .sort((a, b) => a.slug.localeCompare(b.slug)),
@@ -846,6 +866,7 @@ function buildPublicPostIndex(
     excerpt: string;
     date?: string;
     updated?: string;
+    topic: string;
     tags: string[];
     series?: string;
     seriesOrder?: number;
@@ -868,6 +889,7 @@ function buildPublicPostIndex(
           excerpt: note.excerpt,
           date: note.date!,
           updated: note.updated,
+          topic: note.topic,
           tags: note.tags,
           series: note.series!,
           seriesSlug,
@@ -891,6 +913,7 @@ function buildPublicSearchIndex(
     title: string;
     description: string;
     excerpt: string;
+    topic: string;
     tags: string[];
     series?: string;
     syntax: ObsidianSyntaxResult;
@@ -907,10 +930,11 @@ function buildPublicSearchIndex(
         return {
           title: note.title,
           description: note.description,
+          topic: note.topic,
           tags: note.tags,
           series: note.series!,
           url: `/posts/${note.slug}/`,
-          searchText: [note.title, note.description, note.series, note.tags.join(" "), note.excerpt, plainBody]
+          searchText: [note.title, note.description, note.topic, note.series, note.tags.join(" "), note.excerpt, plainBody]
             .join(" ")
             .toLowerCase(),
         };

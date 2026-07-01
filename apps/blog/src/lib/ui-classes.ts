@@ -76,7 +76,7 @@ export const ui = {
   searchLabel:
     "sr-only",
   filterGrid:
-    "grid grid-cols-2 gap-5 max-[720px]:grid-cols-1",
+    "grid grid-cols-1 gap-5",
   filterGroup:
     "min-w-0",
   filterLabel:

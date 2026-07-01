@@ -8,19 +8,16 @@ import { PostList } from "./PostList";
 interface ArchiveEntry {
   count: number;
   name: string;
-  slug?: string;
 }
 
 interface PostArchiveProps {
   posts: Post[];
-  series: ArchiveEntry[];
-  tags: ArchiveEntry[];
+  topics: ArchiveEntry[];
 }
 
-export function PostArchive({ posts, series, tags }: PostArchiveProps) {
+export function PostArchive({ posts, topics }: PostArchiveProps) {
   const [query, setQuery] = useState("");
-  const [selectedSeries, setSelectedSeries] = useState("");
-  const [selectedTag, setSelectedTag] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState("");
 
   const normalizedQuery = query.trim().toLowerCase();
   const filteredPosts = useMemo(
@@ -28,18 +25,17 @@ export function PostArchive({ posts, series, tags }: PostArchiveProps) {
       posts.filter((post) => {
         const matchesQuery =
           normalizedQuery.length === 0 ||
-          [post.title, post.description, post.excerpt, post.series, ...post.tags]
+          [post.title, post.description, post.excerpt, post.topic, post.series, ...post.tags]
             .join(" ")
             .toLowerCase()
             .includes(normalizedQuery);
-        const matchesSeries = selectedSeries.length === 0 || post.series === selectedSeries;
-        const matchesTag = selectedTag.length === 0 || post.tags.includes(selectedTag);
-        return matchesQuery && matchesSeries && matchesTag;
+        const matchesTopic = selectedTopic.length === 0 || post.topic === selectedTopic;
+        return matchesQuery && matchesTopic;
       }),
-    [normalizedQuery, posts, selectedSeries, selectedTag],
+    [normalizedQuery, posts, selectedTopic],
   );
 
-  const hasFilter = normalizedQuery.length > 0 || selectedSeries.length > 0 || selectedTag.length > 0;
+  const hasFilter = normalizedQuery.length > 0 || selectedTopic.length > 0;
   const meta = hasFilter ? `${filteredPosts.length} / ${posts.length} posts` : `${posts.length} posts`;
 
   return (
@@ -69,12 +65,11 @@ export function PostArchive({ posts, series, tags }: PostArchiveProps) {
 
         <div className={ui.filterGrid}>
           <FilterGroup
-            entries={series}
-            label="Series"
-            onSelect={setSelectedSeries}
-            selected={selectedSeries}
+            entries={topics}
+            label="Topics"
+            onSelect={setSelectedTopic}
+            selected={selectedTopic}
           />
-          <FilterGroup entries={tags} label="Tags" onSelect={setSelectedTag} selected={selectedTag} />
         </div>
       </div>
 

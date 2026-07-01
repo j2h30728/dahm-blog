@@ -5,6 +5,7 @@ description: "A first post exported from an Obsidian-first workflow."
 date: "2026-06-23"
 updated: "2026-06-23"
 tags: ["nextjs", "obsidian", "publishing"]
+topic: "blog"
 series: "Building The Blog"
 seriesOrder: 1
 published: true

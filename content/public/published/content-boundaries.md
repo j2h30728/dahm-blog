@@ -5,6 +5,7 @@ description: "How public and private notes stay separated."
 date: "2026-06-24"
 updated: "2026-06-24"
 tags: ["architecture", "privacy"]
+topic: "blog"
 series: "Building The Blog"
 seriesOrder: 2
 published: true

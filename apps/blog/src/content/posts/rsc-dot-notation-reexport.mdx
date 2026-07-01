@@ -10,6 +10,7 @@ tags:
   - rsc
   - react
   - design-system
+topic: frontend
 series: Frontend Architecture
 seriesOrder: 1
 published: true

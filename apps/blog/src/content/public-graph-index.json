@@ -1,10 +1,11 @@
 {
-  "generatedAt": "2026-07-01T04:36:32.466Z",
+  "generatedAt": "2026-07-01T07:05:26.228Z",
   "nodes": [
     {
       "slug": "content-boundaries",
       "title": "Content Boundaries",
       "href": "/posts/content-boundaries/",
+      "topic": "blog",
       "tags": [
         "architecture",
         "privacy"
@@ -14,6 +15,7 @@
       "slug": "hello-pipeline",
       "title": "Hello Publishing Pipeline",
       "href": "/posts/hello-pipeline/",
+      "topic": "blog",
       "tags": [
         "nextjs",
         "obsidian",
@@ -24,6 +26,7 @@
       "slug": "obsidian-feature-showcase",
       "title": "Obsidian 기능 쇼케이스",
       "href": "/posts/obsidian-feature-showcase/",
+      "topic": "obsidian",
       "tags": [
         "obsidian",
         "showcase",
@@ -35,6 +38,7 @@
       "slug": "openapi-generator-boundaries",
       "title": "OpenAPI Generator를 붙이며 나눈 경계",
       "href": "/posts/openapi-generator-boundaries/",
+      "topic": "frontend",
       "tags": [
         "openapi",
         "typescript",
@@ -46,6 +50,7 @@
       "slug": "rsc-dot-notation-reexport",
       "title": "왜 RSC에서는 dot notation이 안 될까",
       "href": "/posts/rsc-dot-notation-reexport/",
+      "topic": "frontend",
       "tags": [
         "nextjs",
         "rsc",

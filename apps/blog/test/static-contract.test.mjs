@@ -34,6 +34,8 @@ test("declares the public blog routes in App Router", () => {
     "src/app/posts/[slug]/page.tsx",
     "src/app/series/page.tsx",
     "src/app/series/[series]/page.tsx",
+    "src/app/tags/page.tsx",
+    "src/app/tags/[tag]/page.tsx",
     "src/app/rss.xml/route.ts",
   ];
 

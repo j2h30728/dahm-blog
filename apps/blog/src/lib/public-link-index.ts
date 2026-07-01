@@ -7,6 +7,7 @@ interface PublicLinkNode {
   title: string;
   description: string;
   excerpt: string;
+  topic: string;
   tags: string[];
   aliases?: string[];
   href: string;
@@ -35,6 +36,7 @@ interface PublicGraphIndex {
     slug: string;
     title: string;
     href: string;
+    topic: string;
     tags: string[];
   }>;
   edges: PublicLinkEdge[];

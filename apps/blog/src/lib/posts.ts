@@ -1,5 +1,6 @@
 import postIndexJson from "../content/public-post-index.json";
 import { postModules, postModuleSlugs } from "../content/post-module-map";
+import { slugify } from "./slug";
 
 export interface Heading {
   depth: number;
@@ -15,6 +16,7 @@ export interface Post {
   excerpt: string;
   date: string;
   updated?: string;
+  topic: string;
   tags: string[];
   series: string;
   seriesSlug: string;
@@ -82,12 +84,36 @@ export function getSeriesEntryBySlug(seriesSlug: string): { name: string; posts:
   };
 }
 
-export function getTagEntries(posts: Post[]): Array<{ count: number; name: string }> {
-  const entries = new Map<string, number>();
+export function getTagPosts(posts: Post[], tag: string): Post[] {
+  return posts.filter((post) => post.tags.includes(tag)).sort(comparePostsByDateDesc);
+}
+
+export function getTagEntries(posts: Post[]): Array<{ count: number; name: string; posts: Post[]; slug: string }> {
+  const entries = new Map<string, Post[]>();
   for (const post of posts) {
     for (const tag of post.tags) {
-      entries.set(tag, (entries.get(tag) ?? 0) + 1);
+      entries.set(tag, [...(entries.get(tag) ?? []), post]);
     }
+  }
+
+  return [...entries.entries()]
+    .map(([name, tagPosts]) => ({
+      count: tagPosts.length,
+      name,
+      posts: getTagPosts(tagPosts, name),
+      slug: slugify(name),
+    }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+export function getTagEntryBySlug(tagSlug: string): { name: string; posts: Post[]; slug: string } | undefined {
+  return getTagEntries(getPublishedPosts()).find((entry) => entry.slug === tagSlug);
+}
+
+export function getTopicEntries(posts: Post[]): Array<{ count: number; name: string }> {
+  const entries = new Map<string, number>();
+  for (const post of posts) {
+    entries.set(post.topic, (entries.get(post.topic) ?? 0) + 1);
   }
 
   return [...entries.entries()]

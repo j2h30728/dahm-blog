@@ -9,6 +9,7 @@ const navItems = [
   { href: "/about/", label: "About", match: (pathname: string) => pathname.startsWith("/about") },
   { href: "/posts/", label: "Posts", match: (pathname: string) => pathname === "/" || pathname.startsWith("/posts") },
   { href: "/series/", label: "Series", match: (pathname: string) => pathname.startsWith("/series") },
+  { href: "/tags/", label: "Tags", match: (pathname: string) => pathname.startsWith("/tags") },
 ];
 
 export function SiteHeader() {

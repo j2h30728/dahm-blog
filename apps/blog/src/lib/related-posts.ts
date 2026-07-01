@@ -40,6 +40,11 @@ function scoreRelatedPost(current: Post, candidate: Post): RelatedPostScore {
     reasons.push("same series");
   }
 
+  if (candidate.topic === current.topic) {
+    score += 20;
+    reasons.push("same topic");
+  }
+
   const currentTags = new Set(current.tags);
   const overlappingTags = candidate.tags.filter((tag) => currentTags.has(tag));
   if (overlappingTags.length > 0) {

@@ -9,6 +9,7 @@ tags:
   - typescript
   - codegen
   - frontend
+topic: frontend
 series: Frontend Architecture
 seriesOrder: 2
 published: true

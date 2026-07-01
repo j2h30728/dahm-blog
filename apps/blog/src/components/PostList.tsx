@@ -15,6 +15,8 @@ export function PostList({ posts }: PostListProps) {
             <span className={ui.postIndex}>{String(index + 1).padStart(2, "0")}</span>
             <div className={ui.postBody}>
               <div className={ui.postTopline}>
+                <span className={ui.postSeries}>{post.topic}</span>
+                <span aria-hidden="true">/</span>
                 <span className={ui.postSeries}>{post.series}</span>
               </div>
               <h2 className={ui.postTitle}>{post.title}</h2>
