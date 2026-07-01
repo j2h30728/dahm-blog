@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { BlockAnchor, HeadingNode, ReferenceFragmentKind, ReferenceRole, ResolvedReference } from "./schema.js";
-import { slugify } from "./utils.js";
+import { slugify, slugifyHeading } from "./utils.js";
 
 export interface NoteIndexEntry {
   sourcePath: string;
@@ -240,7 +240,7 @@ function resolveTargetAnchor(
   }
 
   if (parsed.fragmentKind === "heading") {
-    const slug = slugify(parsed.fragment);
+    const slug = slugifyHeading(parsed.fragment);
     const matches = (entry.headings ?? []).filter((heading) => {
       return (
         heading.id === parsed.fragment ||

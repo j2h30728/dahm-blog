@@ -24,7 +24,7 @@ import {
   type ResolvedAsset,
   type TransformOptions,
 } from "./schema.js";
-import { checksum, isWithin, slugify, walkFiles } from "./utils.js";
+import { checksum, isWithin, slugify, slugifyHeading, walkFiles } from "./utils.js";
 
 const RESERVED_PROPERTY_NAMES = new Set([
   "title",
@@ -548,7 +548,7 @@ export function extractHeadings(body: string): HeadingNode[] {
 
     const depth = match[1].length as 2 | 3;
     const text = match[2].replace(/#+$/, "").trim();
-    const base = slugify(text);
+    const base = slugifyHeading(text);
     const count = seen.get(base) ?? 0;
     seen.set(base, count + 1);
     headings.push({

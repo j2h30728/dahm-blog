@@ -25,11 +25,11 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
   writeFileSync(path.join(assets, "posts", "legacy", "image.png"), "legacy");
   writeFileSync(
     path.join(published, "second.md"),
-    `---\ntitle: "Second"\nslug: "second"\ndescription: "Second post."\ndate: "2026-06-24"\ntags: ["test"]\nseries: "Demo"\npublished: true\n---\n\n## Second heading\n\nBody. ^second-block\n`,
+    `---\ntitle: "Second"\nslug: "second"\ndescription: "Second post."\ndate: "2026-06-24"\ntags: ["test"]\nseries: "Demo"\npublished: true\n---\n\n## Second heading\n\nBody. ^second-block\n\n## Team fix: \`Object.assign\` removal\n\nA heading with inline code.\n`,
   );
   writeFileSync(
     path.join(published, "first.md"),
-    `---\ntitle: "First"\nslug: "first"\ndescription: "First post."\ndate: "2026-06-23"\ntags: ["test", "sync"]\nseries: "Demo"\npublished: true\n---\n\n## First heading\n\nSee [[second|the second post]].\n\nSee [[second#Second heading|the second heading]].\n\nSee [[second^second-block|the second block]].\n\n![[second|Embedded second post]]\n\n![[../assets/diagram.svg|Diagram]]\n\n![Remote](https://example.com/remote.png)\n\n![Static](/assets/manual.png)\n\n![Legacy](/assets/posts/legacy/image.png)\n`,
+    `---\ntitle: "First"\nslug: "first"\ndescription: "First post."\ndate: "2026-06-23"\ntags: ["test", "sync"]\nseries: "Demo"\npublished: true\n---\n\n## First heading\n\nSee [[second|the second post]].\n\nSee [[second#Second heading|the second heading]].\n\nSee [[second#Team fix: Object.assign removal|the object heading]].\n\nSee [[second^second-block|the second block]].\n\n![[second|Embedded second post]]\n\n![[../assets/diagram.svg|Diagram]]\n\n![Remote](https://example.com/remote.png)\n\n![Static](/assets/manual.png)\n\n![Legacy](/assets/posts/legacy/image.png)\n`,
   );
 
   const first = transformVault({
@@ -65,6 +65,7 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
   const outputText = readFileSync(path.join(output, "first.mdx"), "utf8");
   assert.match(outputText, /\[the second post\]\(\/posts\/second\/\)/);
   assert.match(outputText, /\[the second heading\]\(\/posts\/second\/#second-heading\)/);
+  assert.match(outputText, /\[the object heading\]\(\/posts\/second\/#team-fix-objectassign-removal\)/);
   assert.match(outputText, /\[the second block\]\(\/posts\/second\/#block-second-block\)/);
   assert.match(outputText, /<aside class="note-embed"><a href="\/posts\/second\/">Embedded second post<\/a><\/aside>/);
   assert.match(outputText, /!\[Diagram\]\(\/post-assets\/first\/diagram.svg\)/);
@@ -107,6 +108,7 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
     [
       ["first", "second", "none", undefined, "the second post"],
       ["first", "second", "heading", "#second-heading", "the second heading"],
+      ["first", "second", "heading", "#team-fix-objectassign-removal", "the object heading"],
       ["first", "second", "block", "#block-second-block", "the second block"],
     ],
   );
@@ -135,6 +137,10 @@ test("exports published Obsidian notes with manifest, links, assets, and stable 
   );
   assert.deepEqual(postIndex.posts.find((post) => post.slug === "first")?.headings, [
     { depth: 2, id: "first-heading", text: "First heading" },
+  ]);
+  assert.deepEqual(postIndex.posts.find((post) => post.slug === "second")?.headings, [
+    { depth: 2, id: "second-heading", text: "Second heading" },
+    { depth: 2, id: "team-fix-objectassign-removal", text: "Team fix: `Object.assign` removal" },
   ]);
 
   const searchDocuments = JSON.parse(readFileSync(searchIndex, "utf8")) as Array<{

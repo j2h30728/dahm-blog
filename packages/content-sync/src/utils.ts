@@ -16,6 +16,15 @@ export function slugify(value: string): string {
     .replace(/-{2,}/g, "-");
 }
 
+export function slugifyHeading(value: string): string {
+  // Match rehype-slug/github-slugger so generated TOC anchors point at rendered headings.
+  return value
+    .normalize("NFC")
+    .toLowerCase()
+    .replace(/[^\p{Letter}\p{Number}\p{Mark} _-]+/gu, "")
+    .replace(/ /g, "-");
+}
+
 export function walkFiles(root: string, extensions = [".md", ".mdx"]): string[] {
   const files: string[] = [];
 

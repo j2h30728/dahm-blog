@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-01T02:32:37.163Z",
+  "generatedAt": "2026-07-01T04:36:32.466Z",
   "posts": [
     {
       "slug": "obsidian-feature-showcase",
@@ -44,6 +44,117 @@
           "depth": 2,
           "text": "표와 코드",
           "id": "표와-코드"
+        }
+      ]
+    },
+    {
+      "slug": "rsc-dot-notation-reexport",
+      "href": "/posts/rsc-dot-notation-reexport/",
+      "title": "왜 RSC에서는 dot notation이 안 될까",
+      "description": "Next.js App Router와 RSC에서 Object.assign 기반 compound API가 깨지는 이유와 re-export namespace를 택한 배경.",
+      "excerpt": "— Object.assign을 버리고 re-export를 택한 이유",
+      "date": "2026-06-24",
+      "updated": "2026-06-24",
+      "tags": [
+        "nextjs",
+        "rsc",
+        "react",
+        "design-system"
+      ],
+      "series": "Frontend Architecture",
+      "seriesSlug": "frontend-architecture",
+      "seriesHref": "/series/frontend-architecture/",
+      "seriesOrder": 1,
+      "headings": [
+        {
+          "depth": 2,
+          "text": "App Router에서 Compound API 깨짐",
+          "id": "app-router에서-compound-api-깨짐"
+        },
+        {
+          "depth": 3,
+          "text": "첫 번째: TypeScript 정적 에러",
+          "id": "첫-번째-typescript-정적-에러"
+        },
+        {
+          "depth": 3,
+          "text": "두 번째: 런타임 에러",
+          "id": "두-번째-런타임-에러"
+        },
+        {
+          "depth": 2,
+          "text": "팀의 해결 법: `Object.assign` 제거",
+          "id": "팀의-해결-법-objectassign-제거"
+        },
+        {
+          "depth": 2,
+          "text": "해당 방식 채택 이유",
+          "id": "해당-방식-채택-이유"
+        },
+        {
+          "depth": 2,
+          "text": "왜 re-export는 되고 `Object.assign`은 안 될까?",
+          "id": "왜-re-export는-되고-objectassign은-안-될까"
+        },
+        {
+          "depth": 2,
+          "text": "Next.js 내부에서 실제로 일어나는 일",
+          "id": "nextjs-내부에서-실제로-일어나는-일"
+        },
+        {
+          "depth": 3,
+          "text": "1. 전체 프로세스 요약",
+          "id": "1-전체-프로세스-요약"
+        },
+        {
+          "depth": 3,
+          "text": "2. `next-flight-loader`: `'use client'` 파일을 참조로 변환",
+          "id": "2-next-flight-loader-use-client-파일을-참조로-변환"
+        },
+        {
+          "depth": 3,
+          "text": "3. `manifest`: 참조를 실제 chunk로 연결하는 맵",
+          "id": "3-manifest-참조를-실제-chunk로-연결하는-맵"
+        },
+        {
+          "depth": 3,
+          "text": "4. `Flight`: 서버가 브라우저로 보내는 RSC payload",
+          "id": "4-flight-서버가-브라우저로-보내는-rsc-payload"
+        },
+        {
+          "depth": 3,
+          "text": "5. `\"You cannot dot into a client module\"`은 어디서 온걸까?",
+          "id": "5-you-cannot-dot-into-a-client-module은-어디서-온걸까"
+        },
+        {
+          "depth": 2,
+          "text": "고려했던 다른 해결 방법",
+          "id": "고려했던-다른-해결-방법"
+        },
+        {
+          "depth": 3,
+          "text": "방법 1: server/client 엔트리 분리",
+          "id": "방법-1-serverclient-엔트리-분리"
+        },
+        {
+          "depth": 3,
+          "text": "방법 2: 전체를 client 전용 API로 묶기",
+          "id": "방법-2-전체를-client-전용-api로-묶기"
+        },
+        {
+          "depth": 3,
+          "text": "팀이 택한 방식: 정적 re-export namespace",
+          "id": "팀이-택한-방식-정적-re-export-namespace"
+        },
+        {
+          "depth": 2,
+          "text": "마무리",
+          "id": "마무리"
+        },
+        {
+          "depth": 2,
+          "text": "참고 자료",
+          "id": "참고-자료"
         }
       ]
     },
@@ -149,117 +260,6 @@
           "depth": 2,
           "text": "마무리",
           "id": "마무리"
-        }
-      ]
-    },
-    {
-      "slug": "rsc-dot-notation-reexport",
-      "href": "/posts/rsc-dot-notation-reexport/",
-      "title": "왜 RSC에서는 dot notation이 안 될까",
-      "description": "Next.js App Router와 RSC에서 Object.assign 기반 compound API가 깨지는 이유와 re-export namespace를 택한 배경.",
-      "excerpt": "— Object.assign을 버리고 re-export를 택한 이유",
-      "date": "2026-06-24",
-      "updated": "2026-06-24",
-      "tags": [
-        "nextjs",
-        "rsc",
-        "react",
-        "design-system"
-      ],
-      "series": "Frontend Architecture",
-      "seriesSlug": "frontend-architecture",
-      "seriesHref": "/series/frontend-architecture/",
-      "seriesOrder": 1,
-      "headings": [
-        {
-          "depth": 2,
-          "text": "App Router에서 Compound API 깨짐",
-          "id": "app-router에서-compound-api-깨짐"
-        },
-        {
-          "depth": 3,
-          "text": "첫 번째: TypeScript 정적 에러",
-          "id": "첫-번째-typescript-정적-에러"
-        },
-        {
-          "depth": 3,
-          "text": "두 번째: 런타임 에러",
-          "id": "두-번째-런타임-에러"
-        },
-        {
-          "depth": 2,
-          "text": "팀의 해결 법: `Object.assign` 제거",
-          "id": "팀의-해결-법-object-assign-제거"
-        },
-        {
-          "depth": 2,
-          "text": "해당 방식 채택 이유",
-          "id": "해당-방식-채택-이유"
-        },
-        {
-          "depth": 2,
-          "text": "왜 re-export는 되고 `Object.assign`은 안 될까?",
-          "id": "왜-re-export는-되고-object-assign-은-안-될까"
-        },
-        {
-          "depth": 2,
-          "text": "Next.js 내부에서 실제로 일어나는 일",
-          "id": "next-js-내부에서-실제로-일어나는-일"
-        },
-        {
-          "depth": 3,
-          "text": "1. 전체 프로세스 요약",
-          "id": "1-전체-프로세스-요약"
-        },
-        {
-          "depth": 3,
-          "text": "2. `next-flight-loader`: `'use client'` 파일을 참조로 변환",
-          "id": "2-next-flight-loader-use-client-파일을-참조로-변환"
-        },
-        {
-          "depth": 3,
-          "text": "3. `manifest`: 참조를 실제 chunk로 연결하는 맵",
-          "id": "3-manifest-참조를-실제-chunk로-연결하는-맵"
-        },
-        {
-          "depth": 3,
-          "text": "4. `Flight`: 서버가 브라우저로 보내는 RSC payload",
-          "id": "4-flight-서버가-브라우저로-보내는-rsc-payload"
-        },
-        {
-          "depth": 3,
-          "text": "5. `\"You cannot dot into a client module\"`은 어디서 온걸까?",
-          "id": "5-you-cannot-dot-into-a-client-module-은-어디서-온걸까"
-        },
-        {
-          "depth": 2,
-          "text": "고려했던 다른 해결 방법",
-          "id": "고려했던-다른-해결-방법"
-        },
-        {
-          "depth": 3,
-          "text": "방법 1: server/client 엔트리 분리",
-          "id": "방법-1-server-client-엔트리-분리"
-        },
-        {
-          "depth": 3,
-          "text": "방법 2: 전체를 client 전용 API로 묶기",
-          "id": "방법-2-전체를-client-전용-api로-묶기"
-        },
-        {
-          "depth": 3,
-          "text": "팀이 택한 방식: 정적 re-export namespace",
-          "id": "팀이-택한-방식-정적-re-export-namespace"
-        },
-        {
-          "depth": 2,
-          "text": "마무리",
-          "id": "마무리"
-        },
-        {
-          "depth": 2,
-          "text": "참고 자료",
-          "id": "참고-자료"
         }
       ]
     },
