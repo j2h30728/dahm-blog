@@ -2,25 +2,29 @@ export const ui = {
   siteHeader:
     "sticky top-0 z-10 border-b border-header-border bg-header-bg backdrop-blur-[18px]",
   nav:
-    "mx-auto flex max-w-[980px] items-center justify-between gap-[var(--space-6)] px-[var(--space-6)] py-[var(--space-4)] max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-[var(--space-3)] max-[640px]:px-[18px] max-[640px]:py-3.5",
+    "mx-auto flex max-w-[980px] items-center justify-between gap-[var(--space-6)] px-[var(--space-6)] py-[var(--space-4)] max-[640px]:gap-[var(--space-2)] max-[640px]:px-[18px] max-[640px]:py-2.5",
   brand:
-    "inline-flex items-center gap-[var(--space-2)] text-ink font-[780] tracking-[0] transition-opacity duration-[160ms] hover:opacity-80",
+    "inline-flex shrink-0 items-center gap-[var(--space-2)] text-ink font-[780] tracking-[0] transition-opacity duration-[160ms] hover:opacity-80",
   brandMark:
     "inline-block h-3 w-3 rounded-[var(--radius-pill)] bg-accent shadow-[0_0_0_4px_color-mix(in_srgb,var(--color-accent)_14%,transparent)]",
   navLinks:
-    "flex items-center gap-[var(--space-1)] text-[0.92rem] max-[640px]:w-full",
+    "flex min-w-0 items-center justify-end gap-[var(--space-1)] overflow-x-auto text-[0.92rem] max-[640px]:gap-0.5 max-[640px]:text-[0.86rem]",
   navLink:
-    "relative rounded-[var(--radius-sm)] px-2.5 py-2 text-muted-strong transition-[background,color] duration-[160ms] after:absolute after:inset-x-2.5 after:bottom-1 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-[1px] after:bg-accent after:transition-transform after:duration-[220ms] after:ease-out-expo after:content-[''] hover:bg-accent-soft hover:text-accent-ink hover:no-underline hover:after:scale-x-100 max-[640px]:px-2",
+    "relative shrink-0 rounded-[var(--radius-sm)] px-2.5 py-2 text-muted-strong transition-[background,color] duration-[160ms] after:absolute after:inset-x-2.5 after:bottom-1 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-[1px] after:bg-accent after:transition-transform after:duration-[220ms] after:ease-out-expo after:content-[''] hover:bg-accent-soft hover:text-accent-ink hover:no-underline hover:after:scale-x-100 max-[640px]:px-1.5 max-[640px]:py-1.5 max-[640px]:after:inset-x-1.5",
+  navLinkActive:
+    "text-accent-ink after:scale-x-100",
   shell:
     "mx-auto max-w-[980px] px-6 pb-[72px] pt-14 max-[640px]:px-[18px] max-[640px]:pb-12 max-[640px]:pt-[38px]",
   siteFooter:
     "border-t border-line",
   footerInner:
-    "mx-auto flex max-w-[980px] items-center justify-between gap-[var(--space-4)] px-6 py-8 text-[0.9rem] max-[640px]:px-[18px] max-[640px]:py-6",
+    "mx-auto grid max-w-[980px] grid-cols-[minmax(0,1fr)_auto] items-start gap-[var(--space-6)] px-6 py-8 text-[0.9rem] max-[640px]:grid-cols-1 max-[640px]:gap-[var(--space-3)] max-[640px]:px-[18px] max-[640px]:py-6",
   footerBrand:
-    "font-[720] text-muted-strong",
+    "block font-[720] text-muted-strong",
+  footerMeta:
+    "m-0 mt-1 text-[0.88rem] text-muted",
   footerLinks:
-    "flex items-center gap-[var(--space-2)]",
+    "flex max-w-[520px] flex-wrap items-center justify-end gap-[var(--space-1)] max-[640px]:justify-start",
   footerLink:
     "rounded-[var(--radius-sm)] px-2.5 py-2 font-mono text-[0.8rem] font-[680] uppercase tracking-[0] text-muted transition-[background,color] duration-[160ms] hover:bg-accent-soft hover:text-accent-ink hover:no-underline",
 
@@ -67,6 +71,44 @@ export const ui = {
   sectionHeading: "mb-[18px] flex items-end justify-between max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-[var(--space-2)]",
   sectionMeta:
     "m-0 font-mono text-[0.8rem] font-[640] uppercase tracking-[0] text-muted tabular-nums",
+  archiveTools:
+    "mb-7 border-y border-line py-5",
+  searchLabel:
+    "sr-only",
+  filterGrid:
+    "grid grid-cols-2 gap-5 max-[720px]:grid-cols-1",
+  filterGroup:
+    "min-w-0",
+  filterLabel:
+    "m-0 mb-2 font-mono text-[0.74rem] font-[680] uppercase tracking-[0] text-muted",
+  filterList:
+    "flex flex-wrap gap-2",
+  filterPill:
+    "inline-flex cursor-pointer items-center gap-1.5 rounded-[var(--radius-pill)] border border-card-border bg-transparent px-2.5 py-[7px] font-mono text-[0.8rem] font-[640] leading-none text-ink-soft transition-[background,border-color,color,transform,box-shadow] duration-[160ms] ease-spring hover:-translate-y-0.5 hover:border-card-border-strong hover:bg-[var(--color-glass-hover)] hover:text-accent-ink hover:shadow-glass-sm",
+  filterPillActive:
+    "border-accent-blend bg-accent-soft text-accent-ink shadow-glass-sm",
+  filterCount:
+    "text-[0.74rem] text-muted",
+  emptyState:
+    "border-y border-line py-8 text-muted",
+  seriesList:
+    "border-y border-line",
+  seriesCard:
+    "border-b border-line last:border-b-0",
+  seriesCardLink:
+    "group grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 py-[var(--space-5)] text-inherit transition-[background,padding,color] duration-[180ms] hover:bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)] hover:pl-2 hover:text-ink hover:no-underline max-[640px]:grid-cols-1 max-[640px]:gap-3 max-[640px]:py-[var(--space-4)]",
+  seriesBody:
+    "min-w-0",
+  seriesTopline:
+    "mb-2 font-mono text-[0.76rem] font-[680] uppercase tracking-[0] text-muted",
+  seriesTitle:
+    "mb-3 mt-0 text-[clamp(1.08rem,1.8vw,1.32rem)] leading-[1.22] text-accent-ink text-balance",
+  seriesPreviewList:
+    "flex flex-wrap gap-2",
+  seriesPreviewItem:
+    "rounded-[var(--radius-pill)] border border-card-border px-2.5 py-[7px] text-[0.82rem] leading-none text-muted-strong",
+  seriesAction:
+    "whitespace-nowrap pt-1 font-mono text-[0.78rem] font-[680] uppercase tracking-[0] text-muted transition-colors duration-[160ms] group-hover:text-accent-ink max-[640px]:pt-0",
 
   postList: "post-list border-y border-line",
   postCard:
@@ -84,7 +126,9 @@ export const ui = {
     "mb-1.5 mt-0 block text-[clamp(1.08rem,1.8vw,1.28rem)] leading-[1.26] text-balance",
   postDescription:
     "m-0 max-w-[760px] text-muted-strong",
-  postTagList: "post-tags flex flex-wrap gap-2",
+  postTagList: "post-tags mt-3 flex flex-wrap gap-2",
+  postTag:
+    "rounded-[var(--radius-pill)] border border-card-border px-2 py-1 font-mono text-[0.72rem] font-[620] leading-none text-muted",
 
   meta:
     "meta my-3 mb-[30px] flex flex-wrap items-center gap-2 text-muted",
@@ -117,10 +161,10 @@ export const ui = {
   relatedDescription: "m-0 mt-2 text-muted",
 
   searchBox:
-    "search-box glass-surface mb-6 w-full max-w-[620px] rounded-[var(--radius-card)] border border-card-border px-3.5 py-[13px] text-ink transition-[background,border-color,box-shadow] duration-[200ms] focus:border-accent-blend focus:bg-[var(--color-glass-hover)] focus:shadow-glass-md focus:outline-none",
+    "search-box glass-surface mb-5 w-full max-w-[620px] rounded-[var(--radius-card)] border border-card-border px-3.5 py-[13px] text-ink transition-[background,border-color,box-shadow] duration-[200ms] focus:border-accent-blend focus:bg-[var(--color-glass-hover)] focus:shadow-glass-md focus:outline-none",
 
   themeToggle:
-    "theme-toggle group flex cursor-pointer items-center rounded-[var(--radius-sm)] border-0 bg-transparent px-2.5 py-2 leading-none text-muted-strong transition-[background,color,transform] duration-[200ms] ease-spring hover:scale-110 hover:rotate-12 hover:bg-soft hover:text-ink",
+    "theme-toggle group flex shrink-0 cursor-pointer items-center rounded-[var(--radius-sm)] border-0 bg-transparent px-2.5 py-2 leading-none text-muted-strong transition-[background,color,transform] duration-[200ms] ease-spring hover:scale-110 hover:rotate-12 hover:bg-soft hover:text-ink max-[640px]:px-2 max-[640px]:py-1.5",
   themeToggleLightIcon: "hidden group-data-[current=light]:flex",
   themeToggleDarkIcon: "hidden group-data-[current=dark]:flex",
 } as const;

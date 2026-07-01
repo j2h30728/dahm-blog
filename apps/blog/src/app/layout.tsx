@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import "./globals.css";
-import { ThemeToggle } from "../components/ThemeToggle";
+import { SiteHeader } from "../components/SiteHeader";
 import { ui } from "../lib/ui-classes";
 
 const siteDescription = "담의 글과 기록을 모아둔 공간입니다.";
@@ -29,31 +29,24 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
       </head>
       <body>
-        <header className={ui.siteHeader}>
-          <nav aria-label="Primary" className={ui.nav}>
-            <Link className={ui.brand} href="/">
-              <span aria-hidden="true" className={ui.brandMark} />
-              Dahm
-            </Link>
-            <div className={ui.navLinks}>
-              <Link className={ui.navLink} href="/about/">
-                About
-              </Link>
-              <Link className={ui.navLink} href="/posts/">
-                Posts
-              </Link>
-              <ThemeToggle />
-            </div>
-          </nav>
-        </header>
+        <SiteHeader />
         <main className={ui.shell}>{children}</main>
         <footer className={ui.siteFooter}>
           <div className={ui.footerInner}>
-            <span className={ui.footerBrand}>DAHN</span>
+            <div>
+              <span className={ui.footerBrand}>Dahm</span>
+              <p className={ui.footerMeta}>글과 선택의 기록.</p>
+            </div>
             <nav aria-label="Footer" className={ui.footerLinks}>
               <Link className={ui.footerLink} href="/rss.xml">
                 RSS
               </Link>
+              <a className={ui.footerLink} href="https://github.com/j2h30728">
+                GitHub
+              </a>
+              <a className={ui.footerLink} href="mailto:rachel2148072@gmail.com">
+                Email
+              </a>
             </nav>
           </div>
         </footer>
