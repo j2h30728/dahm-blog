@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import test from "node:test";
+import { pathToFileURL } from "node:url";
 
 const appRoot = path.resolve(import.meta.dirname, "..");
 const workspaceRoot = path.resolve(appRoot, "../..");
@@ -37,11 +38,76 @@ test("declares the public blog routes in App Router", () => {
     "src/app/tags/page.tsx",
     "src/app/tags/[tag]/page.tsx",
     "src/app/rss.xml/route.ts",
+    "src/app/robots.ts",
+    "src/app/sitemap.ts",
   ];
 
   for (const routeFile of routeFiles) {
     assert.equal(existsSync(path.join(appRoot, routeFile)), true, `${routeFile} should exist`);
   }
+});
+
+test("pins the SEO URL contract to the canonical posts index", () => {
+  const vercelConfig = JSON.parse(readFileSync(path.join(workspaceRoot, "vercel.json"), "utf8"));
+  const siteSource = readFileSync(path.join(appRoot, "src/lib/site.ts"), "utf8");
+  const homeSource = readFileSync(path.join(appRoot, "src/app/page.tsx"), "utf8");
+  const sitemapSource = readFileSync(path.join(appRoot, "src/app/sitemap.ts"), "utf8");
+  const headerSource = readFileSync(path.join(appRoot, "src/components/SiteHeader.tsx"), "utf8");
+
+  assert.deepEqual(vercelConfig.redirects[0], {
+    source: "/",
+    destination: "/posts/",
+    permanent: true,
+  });
+  assert.match(siteSource, /canonicalHomePath:\s*"\/posts\/"/);
+  assert.match(homeSource, /canonicalPath\(siteConfig\.canonicalHomePath\)/);
+  assert.match(sitemapSource, /pageEntry\(siteConfig\.canonicalHomePath/);
+  assert.match(headerSource, /href="\/posts\/"/);
+});
+
+test("declares production-safe SEO URL generation", () => {
+  const siteSource = readFileSync(path.join(appRoot, "src/lib/site.ts"), "utf8");
+  const rssSource = readFileSync(path.join(appRoot, "src/lib/rss.ts"), "utf8");
+  const layoutSource = readFileSync(path.join(appRoot, "src/app/layout.tsx"), "utf8");
+  const postSource = readFileSync(path.join(appRoot, "src/app/posts/[slug]/page.tsx"), "utf8");
+
+  assert.match(siteSource, /PUBLIC_SITE_URL/);
+  assert.match(siteSource, /VERCEL_ENV === "production"/);
+  assert.match(siteSource, /NODE_ENV === "production"/);
+  assert.match(siteSource, /REQUIRE_PUBLIC_SITE_URL === "true"/);
+  assert.match(siteSource, /ALLOW_LOCAL_SITE_URL === "true"/);
+  assert.doesNotMatch(`${siteSource}\n${rssSource}`, /example\.com/);
+  assert.match(layoutSource, /metadataBase: new URL\(siteUrl\)/);
+  assert.match(layoutSource, /"application\/rss\+xml": absoluteUrl\("\/rss\.xml"\)/);
+  assert.match(postSource, /type="application\/ld\+json"/);
+  assert.match(postSource, /"@type": "BlogPosting"/);
+});
+
+test("generates canonical SEO URLs with production guard", async () => {
+  const site = await import(pathToFileURL(path.join(appRoot, "src/lib/site.ts")).href);
+
+  assert.equal(site.getSiteUrl({ PUBLIC_SITE_URL: "https://dahm.example/" }), "https://dahm.example");
+  assert.equal(site.absoluteUrl("/posts", { PUBLIC_SITE_URL: "https://dahm.example/" }), "https://dahm.example/posts/");
+  assert.equal(site.absoluteUrl("/rss.xml", { PUBLIC_SITE_URL: "https://dahm.example/" }), "https://dahm.example/rss.xml");
+  assert.equal(site.canonicalPath("/posts"), "/posts/");
+  assert.equal(site.canonicalPath("/rss.xml"), "/rss.xml");
+  assert.throws(() => site.canonicalPath("/posts/?q=seo"), /must not include query strings/);
+  assert.throws(() => site.getSiteUrl({ NODE_ENV: "production" }), /PUBLIC_SITE_URL is required/);
+  assert.equal(site.getSiteUrl({ NODE_ENV: "development" }), "http://localhost:3000");
+});
+
+test("keeps source and generated post media accessible", () => {
+  const sourcePost = readFileSync(
+    path.join(workspaceRoot, "content/public/published/openapi-generator-boundaries.md"),
+    "utf8",
+  );
+  const generatedPost = readFileSync(
+    path.join(appRoot, "src/content/posts/openapi-generator-boundaries.mdx"),
+    "utf8",
+  );
+
+  assert.match(sourcePost, /<img[^>]+alt='OpenAPI generator CLI 실행 흐름'/);
+  assert.match(generatedPost, /<img[^>]+alt='OpenAPI generator CLI 실행 흐름'/);
 });
 
 test("uses generated content-sync artifacts for Next post routing", () => {

@@ -1,18 +1,17 @@
 import type { Post } from "./posts";
+import { getSiteUrl, siteConfig } from "./site";
 
-const siteDescription = "담의 글과 기록을 모아둔 공간입니다.";
-
-export function renderRssFeed(posts: Post[], siteUrl = process.env.PUBLIC_SITE_URL ?? "https://example.com"): string {
-  const baseUrl = siteUrl.replace(/\/$/, "");
+export function renderRssFeed(posts: Post[], siteUrl = getSiteUrl()): string {
+  const baseUrl = siteUrl;
   const items = posts.map((post) => renderRssItem(post, baseUrl)).join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Dahm</title>
-    <description>${escapeXml(siteDescription)}</description>
+    <title>${escapeXml(siteConfig.name)}</title>
+    <description>${escapeXml(siteConfig.description)}</description>
     <link>${escapeXml(baseUrl)}</link>
-    <language>ko</language>
+    <language>${escapeXml(siteConfig.language)}</language>
 ${items}
   </channel>
 </rss>

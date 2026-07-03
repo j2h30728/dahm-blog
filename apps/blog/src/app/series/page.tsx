@@ -1,10 +1,30 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getPublishedPosts, getSeriesEntries } from "../../lib/posts";
+import { absoluteUrl, canonicalPath, siteConfig } from "../../lib/site";
 import { ui } from "../../lib/ui-classes";
+
+const description = "담의 글을 시리즈별로 묶어 탐색하는 페이지입니다.";
 
 export const metadata: Metadata = {
   title: "Series",
+  description,
+  alternates: {
+    canonical: canonicalPath("/series/"),
+  },
+  openGraph: {
+    type: "website",
+    url: absoluteUrl("/series/"),
+    title: `${siteConfig.name} Series`,
+    description,
+    siteName: siteConfig.name,
+    locale: siteConfig.locale,
+  },
+  twitter: {
+    card: "summary",
+    title: `${siteConfig.name} Series`,
+    description,
+  },
 };
 
 export default function SeriesPage() {

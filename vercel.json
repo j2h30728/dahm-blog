@@ -7,7 +7,7 @@
     {
       "source": "/",
       "destination": "/posts/",
-      "permanent": false
+      "permanent": true
     }
   ]
 }

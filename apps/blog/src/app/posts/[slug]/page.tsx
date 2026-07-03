@@ -7,6 +7,7 @@ import { Toc } from "../../../components/Toc";
 import { allPostSlugs, formatPostDate, getPost, getPostContent, getPublishedPosts } from "../../../lib/posts";
 import { getBacklinks, getLinkPreviewPayload } from "../../../lib/public-link-index";
 import { getRelatedPosts } from "../../../lib/related-posts";
+import { absoluteUrl, canonicalPath, jsonLd, siteConfig } from "../../../lib/site";
 import { ui } from "../../../lib/ui-classes";
 
 interface PageProps {
@@ -26,9 +27,32 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const post = getPost(slug);
   if (!post) return {};
 
+  const publishedTime = new Date(post.date).toISOString();
+  const modifiedTime = new Date(post.updated ?? post.date).toISOString();
+
   return {
     title: post.title,
     description: post.description,
+    alternates: {
+      canonical: canonicalPath(post.href),
+    },
+    openGraph: {
+      type: "article",
+      url: absoluteUrl(post.href),
+      title: post.title,
+      description: post.description,
+      siteName: siteConfig.name,
+      locale: siteConfig.locale,
+      publishedTime,
+      modifiedTime,
+      authors: [siteConfig.author],
+      tags: post.tags,
+    },
+    twitter: {
+      card: "summary",
+      title: post.title,
+      description: post.description,
+    },
   };
 }
 
@@ -42,9 +66,42 @@ export default async function PostPage({ params }: PageProps) {
   const related = getRelatedPosts(post, getPublishedPosts());
   const backlinks = getBacklinks(post.slug);
   const previewPayload = getLinkPreviewPayload();
+  const postUrl = absoluteUrl(post.href);
+  const postJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description,
+    datePublished: new Date(post.date).toISOString(),
+    dateModified: new Date(post.updated ?? post.date).toISOString(),
+    author: [
+      {
+        "@type": "Person",
+        name: siteConfig.author,
+        url: siteConfig.authorUrl,
+      },
+    ],
+    publisher: {
+      "@type": "Person",
+      name: siteConfig.author,
+      url: siteConfig.authorUrl,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": postUrl,
+    },
+    url: postUrl,
+    keywords: post.tags,
+    articleSection: post.topic,
+    inLanguage: siteConfig.language,
+  };
 
   return (
     <article>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(postJsonLd) }}
+      />
       <p className={ui.tagline}>
         <span className="typewriter">{post.series}</span>
       </p>

@@ -48,7 +48,7 @@ export function SiteHeader() {
   return (
     <header className={ui.siteHeader}>
       <nav aria-label="Primary" className={ui.nav}>
-        <Link className={ui.brand} href="/">
+        <Link className={ui.brand} href="/posts/">
           <span aria-hidden="true" className={ui.brandMark} />
           Dahm
         </Link>

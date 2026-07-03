@@ -2,19 +2,53 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import "./globals.css";
 import { SiteHeader } from "../components/SiteHeader";
+import { absoluteUrl, getSiteUrl, siteConfig } from "../lib/site";
 import { ui } from "../lib/ui-classes";
 
-const siteDescription = "담의 글과 기록을 모아둔 공간입니다.";
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  applicationName: siteConfig.name,
   title: {
-    default: "Dahm",
-    template: "%s | Dahm",
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
   },
-  description: siteDescription,
+  description: siteConfig.description,
+  authors: [{ name: siteConfig.author, url: siteConfig.authorUrl }],
+  creator: siteConfig.author,
+  publisher: siteConfig.author,
   alternates: {
+    canonical: siteConfig.canonicalHomePath,
     types: {
-      "application/rss+xml": "/rss.xml",
+      "application/rss+xml": absoluteUrl("/rss.xml"),
+    },
+  },
+  icons: {
+    icon: "/favicon.svg",
+  },
+  openGraph: {
+    type: "website",
+    url: absoluteUrl(siteConfig.canonicalHomePath),
+    title: siteConfig.name,
+    description: siteConfig.description,
+    siteName: siteConfig.name,
+    locale: siteConfig.locale,
+  },
+  twitter: {
+    card: "summary",
+    title: siteConfig.name,
+    description: siteConfig.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
     },
   },
 };

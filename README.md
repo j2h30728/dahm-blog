@@ -27,6 +27,16 @@ pnpm test
 pnpm build
 ```
 
+## Deployment SEO URL
+
+Set `PUBLIC_SITE_URL` to the canonical production origin before building or deploying the public blog:
+
+```bash
+PUBLIC_SITE_URL="https://your-domain.example" pnpm build:blog
+```
+
+Production-like builds fail without this value so canonical links, RSS, robots, sitemap, Open Graph, Twitter, and JSON-LD never publish `localhost` or placeholder URLs. Vercel production deployments are detected with `VERCEL_ENV=production`. For non-Vercel production builds, set `REQUIRE_PUBLIC_SITE_URL=true`. Local-only fallback can be enabled with `ALLOW_LOCAL_SITE_URL=true` when you intentionally want `http://localhost:3000`.
+
 ## Obsidian Vault
 
 By default, the repository-local `content` directory is treated as the vault. Root scripts such as `pnpm dev`, `pnpm sync:content`, and `pnpm build` pin that local vault with `--vault content` so shell-level Obsidian environment variables cannot accidentally rewrite generated blog artifacts.
