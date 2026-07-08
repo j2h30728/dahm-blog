@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import type { EmbedKind, ResolvedAsset } from "./schema.js";
-import { isWithin, toPosixPath } from "./utils.js";
+import { escapeHtml, isWithin, toPosixPath } from "./utils.js";
 
 type PlannedAsset = ResolvedAsset & {
   outputPath: string;
@@ -250,11 +250,4 @@ function parsePdfHeight(fragment: string | undefined): number | undefined {
   if (!match) return undefined;
   const value = Number(match[1]);
   return Number.isInteger(value) && value > 0 && value <= 10000 ? value : undefined;
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }

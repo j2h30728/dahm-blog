@@ -11,7 +11,7 @@ export function slugify(value: string): string {
     .normalize("NFC")
     .toLowerCase()
     .replace(/['"]/g, "")
-    .replace(/[^a-z0-9가-힣]+/g, "-")
+    .replace(/[^\p{Letter}\p{Number}\p{Mark}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-{2,}/g, "-");
 }
@@ -52,4 +52,11 @@ export function isWithin(parent: string, child: string): boolean {
 
 export function toPosixPath(value: string): string {
   return value.split(path.sep).join("/");
+}
+
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }

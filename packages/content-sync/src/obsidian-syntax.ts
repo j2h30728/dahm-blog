@@ -1,4 +1,5 @@
 import type { CalloutDescriptor, TaskItem } from "./schema.js";
+import { escapeHtml } from "./utils.js";
 
 export interface ObsidianSyntaxResult {
   body: string;
@@ -207,13 +208,6 @@ function normalizeCalloutType(type: string): string {
 
 function toTitleCase(value: string): string {
   return value.replace(/^\w/, (char) => char.toUpperCase());
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
 }
 
 function escapeAttribute(value: string): string {

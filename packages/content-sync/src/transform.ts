@@ -83,7 +83,12 @@ export function transformVault(options: TransformOptions): PublishManifest {
   rmSync(outputDir, { recursive: true, force: true });
 
   const sourceFiles = walkFiles(vaultRoot);
-  const parsedNotes = sourceFiles.map((file) => parseNote(file, readFileSync(file, "utf8")));
+  const sourceTextByPath = new Map<string, string>();
+  const parsedNotes = sourceFiles.map((file) => {
+    const text = readFileSync(file, "utf8");
+    sourceTextByPath.set(file, text);
+    return parseNote(file, text);
+  });
   const prevalidated = parsedNotes.map((note) => {
     const syntax = normalizeObsidianSyntax(note.body);
     const title = asString(note.frontmatter.title) ?? path.basename(note.sourcePath, path.extname(note.sourcePath));
@@ -149,6 +154,7 @@ export function transformVault(options: TransformOptions): PublishManifest {
 
     const result = transformNote({
       note: item.note,
+      sourceText: sourceTextByPath.get(item.note.sourcePath) ?? "",
       syntax: item.syntax,
       slug: item.slug,
       title: item.title,
@@ -340,6 +346,7 @@ function commitGeneratedOutputs(pendingWrites: PendingPostWrite[], outputDir: st
 
 function transformNote(input: {
   note: ParsedNote;
+  sourceText: string;
   syntax: ObsidianSyntaxResult;
   slug: string;
   title: string;
@@ -362,8 +369,7 @@ function transformNote(input: {
 }): TransformNoteResult {
   const warnings: string[] = [];
   const errors: string[] = [];
-  const { note, slug } = input;
-  const sourceText = readFileSync(note.sourcePath, "utf8");
+  const { note, slug, sourceText } = input;
   const state = getState(note);
   const sourceChecksum = checksum(sourceText);
   const published = asBoolean(note.frontmatter.published) === true;

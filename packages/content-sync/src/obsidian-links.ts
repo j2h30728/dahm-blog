@@ -1,6 +1,6 @@
 import path from "node:path";
 import type { BlockAnchor, HeadingNode, ReferenceFragmentKind, ReferenceRole, ResolvedReference } from "./schema.js";
-import { slugify, slugifyHeading } from "./utils.js";
+import { escapeHtml, slugify, slugifyHeading } from "./utils.js";
 
 export interface NoteIndexEntry {
   sourcePath: string;
@@ -402,13 +402,4 @@ function isExternalOrPageLink(target: string): boolean {
     target.startsWith("#") ||
     target.startsWith("/")
   );
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
