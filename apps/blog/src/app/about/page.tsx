@@ -34,8 +34,14 @@ export default function AboutPage() {
           안녕하세요. 담입니다.
         </h1>
         <div className={ui.aboutCopy}>
-          <p>프론트엔드 개발을 하며 화면 뒤의 구조와 팀의 규칙을 함께 살핍니다.</p>
-          <p>이곳에는 일하면서 마주친 문제와 선택의 이유를 제 언어로 정리합니다.</p>
+          <p>프론트엔드 개발자 이지현입니다.</p>
+          <p>
+            사용자에게 자연스러운 화면과 오래 다루기 좋은 구조를 고민합니다.
+          </p>
+          <p>
+            이곳에는 개발하며 배운 것, 선택의 이유, 프론트엔드 설계와 작업 과정
+            등에 대한 기록을 남깁니다.
+          </p>
         </div>
       </div>
       <div aria-label="Profile links" className={ui.homeSummary}>
