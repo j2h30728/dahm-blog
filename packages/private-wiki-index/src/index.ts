@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { parse as parseYaml } from "yaml";
 import { createLocalEmbedding, type LocalEmbedding } from "./embeddings.js";
 import { isAllowedPath, resolveScope, type ScopeConfig } from "./scope.js";
 
@@ -89,22 +90,33 @@ function walkMarkdown(root: string): string[] {
 }
 
 function readdirOrFile(fullPath: string): "directory" | "file" {
-  return readdirSync(path.dirname(fullPath), { withFileTypes: true }).find((entry) => path.join(path.dirname(fullPath), entry.name) === fullPath)?.isDirectory()
-    ? "directory"
-    : "file";
+  return statSync(fullPath).isDirectory() ? "directory" : "file";
 }
 
 function parseFrontmatter(text: string): { frontmatter: Record<string, string>; body: string } {
-  const match = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/.exec(text);
+  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/.exec(text);
   if (!match) return { frontmatter: {}, body: text };
+  const parsed = parseYaml(match[1]);
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    return { frontmatter: {}, body: match[2] };
+  }
   const frontmatter: Record<string, string> = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const pair = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
-    if (pair) {
-      frontmatter[pair[1]] = pair[2].replace(/^"|"$/g, "");
-    }
+  for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+    const normalized = stringifyFrontmatterValue(value);
+    if (normalized !== undefined) frontmatter[key] = normalized;
   }
   return { frontmatter, body: match[2] };
+}
+
+function stringifyFrontmatterValue(value: unknown): string | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const items = value.map(stringifyFrontmatterValue).filter((item): item is string => Boolean(item));
+    return items.length > 0 ? items.join(", ") : undefined;
+  }
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === "object") return undefined;
+  return String(value);
 }
 
 function parseArray(value = ""): string[] {

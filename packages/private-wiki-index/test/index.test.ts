@@ -28,6 +28,28 @@ test("indexes only explicitly included private notes", () => {
   assert.doesNotMatch(readFileSync(outputPath, "utf8"), /Public/);
 });
 
+test("parses multiline YAML frontmatter tags and fields", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "private-index-multiline-"));
+  mkdirSync(path.join(root, "private"), { recursive: true });
+  const outputPath = path.join(root, ".private-index", "index.json");
+
+  writeFileSync(
+    path.join(root, "private", "multiline.md"),
+    "---\ntitle: Multiline\ntags:\n  - alpha\n  - beta\nrating: 7\n---\n\nbody text",
+  );
+
+  const index = buildPrivateIndex({
+    vaultRoot: root,
+    include: ["private"],
+    exclude: ["public"],
+    outputPath,
+  });
+
+  assert.equal(index.documents.length, 1);
+  assert.equal(index.documents[0].title, "Multiline");
+  assert.deepEqual(index.documents[0].tags, ["alpha", "beta"]);
+});
+
 test("refuses to write private index into the public blog directory", () => {
   const root = mkdtempSync(path.join(os.tmpdir(), "private-index-public-"));
   mkdirSync(path.join(root, "private"), { recursive: true });
