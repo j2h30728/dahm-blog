@@ -1,21 +1,33 @@
 import type { Post } from "./posts";
-import { getSiteUrl, siteConfig } from "./site";
+import { absoluteUrl, getSiteUrl, siteConfig } from "./site";
 
 export function renderRssFeed(posts: Post[], siteUrl = getSiteUrl()): string {
   const baseUrl = siteUrl;
   const items = posts.map((post) => renderRssItem(post, baseUrl)).join("\n");
+  const lastBuildDate = getLatestPubDate(posts);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escapeXml(siteConfig.name)}</title>
     <description>${escapeXml(siteConfig.description)}</description>
     <link>${escapeXml(baseUrl)}</link>
     <language>${escapeXml(siteConfig.language)}</language>
+    <lastBuildDate>${lastBuildDate}</lastBuildDate>
+    <atom:link href="${escapeXml(absoluteUrl("/rss.xml"))}" rel="self" type="application/rss+xml" />
 ${items}
   </channel>
 </rss>
 `;
+}
+
+function getLatestPubDate(posts: Post[]): string {
+  if (posts.length === 0) return new Date().toUTCString();
+  const latest = posts.reduce((max, post) => {
+    const time = Date.parse(post.date);
+    return time > max ? time : max;
+  }, 0);
+  return new Date(latest).toUTCString();
 }
 
 function renderRssItem(post: Post, baseUrl: string): string {
