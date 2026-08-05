@@ -1,0 +1,212 @@
+---
+title: "[React] 리액트 캘린더 만들기 (feat. date-fns)"
+slug: React-캘린더를-구현해보자-feat.-date-fns
+description: "date-fns를 사용하여 캘린더 구현하기.(부제 : 캘린더를 구현해야하는데 react-calendar는 사용하기 싫었던 이야기. )"
+date: 2024-04-07
+updated: 2026-07-13
+tags:
+  - React
+topic: React
+published: true
+---
+
+
+# [React] 리액트 캘린더 만들기 (feat. date-fns)
+
+팀프로젝트 멍스토리에서 캘린더 담당을 맡았었다.
+
+하지만, 전체적인 부분에서는 어떻게 구현할지 머릿속에 구상이 되었지만 캘린더는 한 번도 만들어 본적이 없어서 고민이었다.
+
+## 구현 전, 확인 단계
+
+캘린더를 구현하기 앞서 다른 사람들은 리액트 상에서 캘린더를 어떻게 구현하는지 구글링을 시작했다.
+
+대체로 총 3개의 방법으로 구현하는 것으로 확인했다.
+
+1. 캘린더 라이브러리(react-calendar) + 날짜 라이브러리(moment.js, date-fns)
+2. 캘린더 라이브러리(react-calendar)
+3. 날짜 라이브러리(moment, date-fns)
+4. 바닐라 자바스크립트
+
+### 캘린더 라이브러리
+
+하지만, 캘린더 라이브러리는 현재 팀프로젝트의 피그마 디자인 그대로 구현하기위해서는 라이브러리에서 클래스마다 css를 꺼내와서 섬세하게 설정해야했다.
+
+단순한 디자인이었다면 고려해볼만 하다고 생각했지만, react-calendar에서 기본적으로 사용되는  구조와 스타일링과는 달랐기에 캘린더 라이브러리 사용을 하지 않았다.
+
+### 날짜 라이브러리
+
+보편적으로 moment.js와 date-fns 라이브러리를 사용하여 Date 데이터를 포맷팅하여 사용하고있었다.
+
+Date 객체를 직접 사용하여 구현해야한다면, 내가 직접 문자열로 변환해야하는 번거로움이 존재했으며 이 캘린더 구현을 위해 그리 많은 시간 투자를 하고싶지않았다.
+
+날짜 라이브러리에서는 다양한 기능을 제공하고 있었고 이를 이용한다면 손쉽게 원하는 날짜를 계산할 수 있다는것으로 판단하여 날짜 라이브러리를 사용하기로 한다.
+
+### moment.js vs date-fns
+
+그렇다면, moment와 date-fns 중에는 어떤 것이 좋을까?
+
+아주 쉽게 고를 수 있다. 왜냐하면 [moment.js npm](https://www.npmjs.com/package/moment) 에 명시되어있기 때문이다.
+
+> **Project Status**
+>
+>
+> Moment.js is a legacy project, now in maintenance mode. In most cases, you should choose a different library.
+>
+> For more details and recommendations, please see **[Project Status](https://momentjs.com/docs/#/-project-status/)** in the docs.
+>
+> *Thank you.*
+>
+
+그리고 추가적인 글 또한 존재하기도하다.
+
+moment.js는 트리쉐이킹에서의 문제가 존재하고 있으며 불변성을 지켜주지 않기 떄문에 문제점이 많이 발생할 수 있다. 이러한 상황들과 함께 더이상 개발을 하지않는다 한다.
+
+https://8thlight.com/insights/life-after-moment-js
+
+## 구현
+
+캘린더는 아래의 기준으로 구현한다.
+
+1. 일요일이 첫 번재 요일로 시작한다.
+2. 사용자는 원하는 연도와 달을 선택할 수 있다.
+
+이를 구현하기위해 date-fns에서 가져온 메서드 들은 아래와 같다.
+
+기본적으로 날짜의 초기값은 현재 날짜로 잡는다.
+
+### 1. 주어진 날짜를 통해, 해당하는 달의 첫째 날과 마지막 날을 가져온다.
+
+이는 달력에 표시할 날짜 범위를 정하는 데 사용된다.
+
+- `startOfMonth( 캘린더에 렌더 할 날짜 )` : 주어진 날짜의 해당 월의 첫째 날을 반환
+- `endOfMonth( 캘린더에 렌더 할 날짜 )` : 주어진 날짜의 해당 월의 마지막 날을 반환
+
+### 2. 주가 일요일 시작으로, 현재 달의 첫 주의 시작과 마지막 주의 끝을 계산한다.
+
+- `startOfWeek( 첫째 주의 첫 날,  { weekStartsOn: 0 })` : 주어진 날짜의 해당 주의 첫째 날을 반환
+- `endOfWeek( 마지막째 주의 마지막 날,  { weekStartsOn: 0 })`  : 주어진 날짜의 해당 주의 마지막 날을 반환
+
+### 3-1. 달력에 날짜를 표시하기위해 계산한 기간 동안의 모든 날짜를 배열로 가져온다.
+
+- `eachDayOfInterval({ start: startOfFirstWeek, end: endOfLastWeek });` : 주어진 start 날짜부터 end 까지의 모든 날짜를 배열로 반환
+
+### 3-2. 주어진 날짜를 기준으로 연도나 월을 증감시킨다.
+
+- `addMonths( 주어진 날짜, 1 )` : 다음 달로 날짜를 이동
+- `addYears( 주어진 날짜, 1 )` : 다음  년도로 날짜를 이동
+- `subMonths( 주어진 날짜, 1 )` : 이전 달로 날짜를 이동
+- `subYears( 주어진 날짜, 1 )` : 이전 년도로 날짜를 이동
+
+### 3-3 모든 날짜 배열에서 원하는 값을 추출한다.
+
+- `format(날짜, ‘yyyy-MM-dd’)` : Date 객체 값을 2024-04-07 형태의 문자열로 변환
+- `getDay(날짜)` : 날짜에 해당되는 요일을 숫자로 반환(일요일이 0기준)
+
+
+### 4. view 구현
+메서드를 조합하여 `useCalendar` 훅으로 만들고 구현한 예시다.
+<img src='https://velog.velcdn.com/images/rachel28/post/69b69c19-d144-4dcf-913c-944eeff43f2e/image.png' width=700 />
+
+캘린더를 구현하게 된 계기는 프로젝트에 적용하기 위함이었지만, 추후에도 캘린더 구현에서 참고하기위해 따로 정리 해두었다.
+
+자세한 코드는 직접 아래의 링크를 확인하면 좋을 것 같다.
+- _캘린더 예시 코드 링크 : https://github.com/j2h30728/take_notes/tree/main/react/playground/src/pages/Calendar
+
+```tsx
+// 위의 사진에 존재하는 캘린더 컴포넌트의 날짜 표시하는 컴포넌트
+
+const CalendarBody = () => {
+  const weeks = ["일", "월", "화", "수", "목", "금", "토"];
+  const { daysInMonth, selectedDate, currentDate } = useCalendarContext();
+
+  return (
+    <Container>
+      <DayWrapper>
+        {weeks.map((week, index) => (
+          <CalendarItem $isSunday={index === 0} key={week}>
+            {week}
+          </CalendarItem>
+        ))}
+      </DayWrapper>
+      <DayWrapper>
+        {daysInMonth.map((date) => (
+          <Day
+            onClick={() => selectedDate.selectDate(date.date)}
+            $isCurrentMonth={currentDate.month === date.month}
+            $isSelectedDate={selectedDate.date === date.date}
+            $isSunday={date.dayIndexOfWeek === 0}
+            className={date.month}
+            key={date.date}>
+            <span>{date.day}</span>
+          </Day>
+        ))}
+      </DayWrapper>
+    </Container>
+  );
+};
+```
+
+위의 내용에서 캘린더 내의 날짜를 렌더하는 컴포넌트만 가져와봤다.
+
+캘린더 컴포넌트를 컴파운드 패턴으로 구현했기 때문에  `useCalendarContext`에서 `useCalendar`에서 만든 값들을 가져온다.
+
+`eachDayOfInterval` 메서드로 가져오는 해당되는 달의 전체 모든 날짜를 `daysInMonth` 배열로 가저와 map 메서드를 사용해 렌더링한다.
+
+```tsx
+// 그외 내용 생략
+
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval , format, getDay } from "date-fns";
+
+  const startCurrentMonth = startOfMonth(currentDate);
+  const endCurrentMonth = endOfMonth(currentDate);
+  const startOfFirstWeek = startOfWeek(startCurrentMonth, { weekStartsOn: 0 });
+  const endOfLastWeek = endOfWeek(endCurrentMonth, { weekStartsOn: 0 });
+
+    const days = eachDayOfInterval({
+    start: startOfFirstWeek,
+    end: endOfLastWeek,
+  });
+  
+  const daysInMonth = days.map((day) => ({
+    date: format(day, "yyyy-MM-dd"),
+    year: format(day, "yyyy"),
+    month: format(day, "MM"),
+    day: format(day, "dd"),
+    dayIndexOfWeek: getDay(day),
+  }));
+```
+
+이때 Day 컴포넌트를 감싸는 래퍼 스타일링에서 그리드를 주어 한 주에 7개씩 알맞게 위치하게했다.
+
+```tsx
+const DayWrapper = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, minmax(50px, 1fr));
+  grid-row-gap: 15px;
+`;
+```
+
+만약, 이전달의 날짜와 다음달의 날짜를 숨기고 싶다면 그 날의 달과 비교해서 다르다면 visible을 hidden 처리하면 손쉽게 구현할 수 있다.
+
+## 실제 프로젝트 상에서의 구현
+
+아래는 멍스토리에서의 캘린더페이지를 구현한 것이다.
+
+- _관련 풀리퀘스트 : https://github.com/meong-story/meong-story-FE/pull/28
+_
+
+|**피그마 디자인**|**구현한 페이지**|
+|-|-|
+|![](https://velog.velcdn.com/images/rachel28/post/662305c8-6194-440e-99a2-022f00ad799e/image.png)|![](https://velog.velcdn.com/images/rachel28/post/71179ab3-d4bd-419a-854a-03421b9b96c9/image.png)
+
+
+
+## 마무리
+
+이 글은 멍스토리 제작 도중, 블로그 회고글을 통해 피그마에 방문하신 분께서 캘린더 구현을 질문하셨던 것에서 시작했다.
+나 또한 처음에는 캘린더 구현에 막막함이있었고, 구현을 시작할 때 찾아보니 여러방법들이 존재했다.
+
+그당시 내가 구현해야하는 디자인과 구현 예상속도를 예측할 수 없었기에 더 어려웠던 것 같다.
+
+이 글은 나를 위한 기록일 수도 있지만, 캘린더라이브러리를 쓰기에는 디자인이 개성이 있으며 빠르게 구현해야하는 사람에게 도움이 되고자 글을 썼다.

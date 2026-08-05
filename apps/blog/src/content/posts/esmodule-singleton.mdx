@@ -1,0 +1,266 @@
+---
+title: ES Module은 싱글톤일까?
+slug: esmodule-singleton
+description: 싱글톤아닌거 알지만 싱글톤처럼 느껴져~
+date: 2026-03-29
+updated: 2026-07-06
+tags:
+  - ESM
+  - JavaScript
+topic: ESM
+published: true
+---
+
+
+# ES Module은 싱글톤일까?
+
+# ES Module은 싱글톤일까?
+
+싱글톤을 공부하다 ES Module의 동작방식이 유사하다는 생각이 들며 "ES Module은 싱글톤일까?" 라는 의문이 들었습니다.
+
+아래는 ES Module 코드입니다.
+
+```jsx
+// counter.js
+let count = 0;
+export function increment() { count++; }
+export function getCount() { return count; }
+```
+
+```jsx
+// a.js
+import { increment } from './counter.js';
+increment();
+```
+
+```jsx
+// b.js
+import { getCount } from './counter.js';
+console.log(getCount()); // 1 — a.js에서 바꾼 값이 여기서도 보인다
+```
+
+```jsx
+// main.js
+import './a.js';
+import './b.js';
+```
+
+`a.js`와 `b.js`는 서로를 모릅니다. 그런데 `main.js`에서 `a.js`가 먼저 평가되어 `increment()`를 호출했고, 이후 `b.js`가 같은 `counter.js`의 상태를 그대로 봅니다. `new`도 없고, `getInstance()`도 없는데, 싱글톤처럼 동작합니다.
+
+ES Module은 싱글톤 패턴이 아닙니다. 다만 런타임 메커니즘이 싱글톤과 똑같은 결과를 만들어냅니다.
+
+이 차이가 왜 중요한지를 이해하려면, 먼저 싱글톤 패턴이 무엇인지부터 짚어야 합니다.
+
+## 싱글톤 패턴이란
+
+싱글톤 패턴은 GoF(Gang of Four)가 정의한 생성 패턴 중 하나입니다.
+
+**클래스의 인스턴스가 오직 하나만 존재하도록 클래스 스스로 보장하고, 그 인스턴스에 전역적으로 접근할 수 있는 방법을 제공**합니다.
+
+JavaScript에서는 보통 아래처럼 구현합니다.
+
+```jsx
+class ConfigStore {
+  static #instance = null;
+  #config = {};
+
+  constructor() {
+    if (ConfigStore.#instance) {
+      throw new Error('ConfigStore는 하나만 존재해야 합니다. getInstance()를 사용하세요.');
+    }
+  }
+
+  static getInstance() {
+    if (!ConfigStore.#instance) {
+      ConfigStore.#instance = new ConfigStore();
+    }
+    return ConfigStore.#instance;
+  }
+
+  set(key, value) { this.#config[key] = value; }
+  get(key) { return this.#config[key]; }
+}
+
+const a = ConfigStore.getInstance();
+const b = ConfigStore.getInstance();
+console.log(a === b); // true — 항상 같은 인스턴스
+```
+
+생성자 내부의 가드 로직과 `getInstance()`가 싱글톤 패턴의 두 핵심 장치입니다. 가드 로직은 두 번째 인스턴스 생성 시도를 차단하고, `getInstance()`는 인스턴스가 없을 때만 하나를 만들고 이후에는 항상 그것을 반환합니다.
+
+> 참고로 JavaScript에는 `private constructor` 문법이 없습니다. 위 예시는 생성자 내부에서 런타임 가드로 이를 흉내낸 것입니다.
+>
+
+패턴의 의도는 명확합니다. "이 클래스의 인스턴스는 반드시 하나여야 한다"를 **하나의 실행 컨텍스트 안에서 애플리케이션 코드로 강제**하는 것입니다.
+
+---
+
+## ES Module이 싱글톤처럼 보이는 이유
+
+서두의 코드로 돌아가자면, `a.js`와 `b.js`가 상태를 공유할 수 있었던 이유는 두 가지 메커니즘이 조합된 결과입니다. 이 메커니즘을 이해하려면 ES Module이 로딩되는 과정을 먼저 봐야 합니다.
+
+ES Module의 로딩은 세 단계로 이루어집니다. 이 글에서는 설명 편의상 Construction / Instantiation / Evaluation이라는 표현을 사용하지만, ECMAScript 모듈 레코드 수준에서는 LoadRequestedModules → Link → Evaluate가 대응됩니다.
+
+- **Construction** —  파일을 fetch(호스트가 모듈을 로드)하고 파싱해 Module Record를 준비합니다.
+- **Instantiation** — 모든 모듈의 export/import 바인딩을 메모리에 연결합니다. 어떤 모듈이 무엇을 export하고 import하는지 파악해서, 모듈 간 연결을 실제로 만드는 단계입니다. 코드는 아직 실행되지 않습니다.
+- **Evaluation** — 모듈의 top-level 코드를 실제로 실행합니다.
+
+> 더 자세한 내용은 [ES modules: A cartoon deep-dive](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/)를 참고하시면 좋습니다.
+>
+
+### module map에 의한 단일 평가
+
+각 로더 컨텍스트는 내부적으로 **module map**을 유지합니다. 브라우저에서는 HTML 표준이 Document/worker의 각 environment settings object 단위로 module map을 정의하고, Node.js에서는 URL 기반 캐시가 같은 역할을 합니다.
+
+**module map (브라우저 — environment settings object 단위)**
+
+| Key (정규화된 URL + module type) | Value |
+| --- | --- |
+| ("https://example.com/counter.js", "javascript") | module script entry ① |
+| ("https://example.com/utils.js", "javascript") | module script entry ② |
+
+`a.js`와 `b.js`가 모두 `counter.js`를 import할 때, 브라우저는 module map의 module script entry를 재사용합니다. `counter.js`의 top-level 코드는 Evaluation 단계에서 딱 한 번만 실행되고, 같은 entry가 있으면 다시 평가하지 않습니다.
+
+이 단일 평가 덕분에 `let count = 0`도 한 번만 실행됩니다. `a.js`와 `b.js`가 바라보는 `count`는 같은 메모리의 같은 변수입니다.
+
+### live binding
+
+단일 평가만으로는 충분하지 않습니다. `count`가 하나라는 건 알겠는데, 왜 import한 쪽에서도 변경된 값이 보이는 걸까요? 이게 바로 Instantiation 단계가 하는 일입니다.
+
+ECMAScript 스펙 수준에서 보면, Instantiation 단계에서 Module Environment Record가 생성되고 `CreateImportBinding`을 통해 import/export 바인딩이 연결됩니다. MDN은 이를 **read-only live binding**이라고 설명합니다. export한 바인딩이 모듈 내부에서 바뀌면 import한 쪽에서도 즉시 반영됩니다.
+
+V8 엔진 구현 수준에서는 이를 **Cell 객체**로 이해할 수 있습니다. 엔진은 export한 이름마다 Cell을 힙에 하나 만들고, export 모듈과 import 모듈 양쪽이 그 Cell의 메모리 주소를 공유하도록 연결합니다. export 쪽에서 값을 바꾸면 그 주소의 Cell이 갱신되고, import 쪽은 항상 같은 주소를 보고 있으니 즉시 반영됩니다.
+
+일반 JS에서 원시값은 복사되지만, ESM에서 export된 원시값은 Cell이라는 힙 객체에 저장되어 주소가 공유됩니다. 그래서 `number`처럼 원시값이더라도 live binding이 동작합니다.
+
+```jsx
+// counter.js
+export let count = 0;
+export function increment() { count++; }
+```
+
+```jsx
+// main.js
+import { count, increment } from './counter.js';
+
+increment();
+console.log(count); // 1 — Cell의 값이 갱신되었으므로
+```
+
+CommonJS와 비교하면 차이가 명확합니다. CJS도 같은 파일을 `require()`하면 캐시된 `module.exports` 객체를 재사용하지만, ESM의 import처럼 live binding으로 연결되는 것은 아닙니다.
+
+```jsx
+// counter.cjs
+let count = 0;
+exports.count = count;       // 이 시점의 값을 복사해서 내보냄
+exports.increment = () => { count++; };
+```
+
+```jsx
+// main.cjs
+const { count, increment } = require('./counter.cjs');
+increment();
+console.log(count); // 0 — count는 복사된 값이라 원본이 바뀌어도 반영 안 됨
+```
+
+CJS는 `exports.count`에 값을 복사해서 담은 것이라 원본 `count`가 바뀌어도 반영되지 않습니다. ESM은 Cell 주소를 공유하기 때문에 반영됩니다. 차이는 "캐시 유무"가 아니라 **live binding 유무**입니다.
+
+### 두 메커니즘의 조합
+
+단일 평가 + live binding의 조합이 핵심입니다. 모듈이 한 번만 평가되니 상태도 하나만 존재하고, import는 그 상태를 live binding으로 직접 참조합니다. `getInstance()` 없이도, 생성자 가드 없이도, 어디서 import하든 항상 같은 상태를 보게 됩니다.
+
+이것이 "ES Module은 싱글톤일까"라는 생각을 들게 합니다.
+
+## 그래도 싱글톤이 아닌 이유
+
+싱글톤 패턴은 "인스턴스를 하나로 제한하겠다"는 명시적 설계 의도입니다. 클래스가 스스로 생성자 가드와 `getInstance()`를 두어 하나의 실행 컨텍스트 안에서 인스턴스 수를 애플리케이션 코드로 통제합니다. 인스턴스가 하나인 것은 코드가 그렇게 강제한 결과입니다.
+
+ES Module의 단일 인스턴스는 목적이 다릅니다. module map 캐싱과 단일 평가는 코드 캡슐화와 의존성 관리를 위한 메커니즘이지, "인스턴스를 하나로 제한하기 위한" 장치가 아닙니다. 브라우저나 Node.js 같은 호스트 환경이 같은 모듈을 두 번 로드하지 않도록 캐시하는 것이고, 그 결과로 단일 인스턴스처럼 보이는 것입니다.
+
+비유하자면, 싱글톤 패턴은 **문에 자물쇠를 건 것**이고, ES Module은 **건물 구조상 그 방으로 가는 복도가 하나뿐**이라서 결과적으로 한 사람만 들어가게 되는 것입니다. 결과는 같지만, 의도와 메커니즘이 다릅니다.
+
+## 보장이 깨지는 순간
+
+싱글톤 패턴의 생성자 가드는 하나의 실행 컨텍스트 안에서 두 번째 인스턴스 생성을 막습니다. ES Module의 단일 인스턴스도 마찬가지로 하나의 로더 컨텍스트 안에서만 보장됩니다.
+
+여기서 중요한 포인트가 있습니다. "싱글톤은 어디서나 하나인데 ESM은 아니다"가 아닙니다. 싱글톤 패턴도 별도의 realm, worker, 독립 번들 복사본이 생기면 각자의 "싱글톤"을 만들 수 있습니다. 차이는 **유일성이 어디에 의해, 어떤 경계 안에서 보장되느냐**입니다. 싱글톤은 애플리케이션 코드가 하나의 실행 컨텍스트 안에서 생성을 통제하고, ESM은 호스트 로더가 resolution 결과를 캐시하는 방식으로 재사용을 보장합니다.
+
+ES Module의 단일 평가는 **"같은 로더 컨텍스트 + 동일하게 resolve된 entry"** 라는 전제 위에서만 보장됩니다. 이 전제가 깨지면 같은 모듈이 두 번 평가되고, 독립된 상태를 가진 두 개의 인스턴스가 생깁니다.
+
+### 로더 컨텍스트가 달라질 때
+
+브라우저에서 module map은 Document/worker의 각 environment settings object 단위로 관리됩니다(HTML 표준). `<iframe>` 하나, Web Worker 하나는 각각 자신만의 module map을 갖습니다.
+
+```
+메인 페이지 (Document A) →  module map A  →  counter.js 평가 1회
+iframe       (Document B) →  module map B  →  counter.js 평가 1회 (별개)
+```
+
+두 인스턴스는 상태를 공유하지 않습니다. 핵심은 “같은 파일인가?”가 아니라 “같은 로더 컨텍스트에서 같은 항목으로 resolve되었는가?” 입니다.
+
+### resolve된 entry가 달라질 때
+
+같은 파일이라도 다른 식별자로 resolve되면 별개의 entry가 됩니다. Node.js에서 패키지가 중복 설치되어 서로 다른 경로로 resolve되는 경우가 대표적입니다.
+
+```
+node_modules/
+├── package-a/
+│   └── node_modules/
+│       └── shared-lib/   ← 경로 A로 resolve
+└── shared-lib/           ← 경로 B로 resolve
+```
+
+동적 import에서 쿼리 파라미터가 달라도 같은 상황이 생깁니다.
+
+```jsx
+const mod1 = await import('./counter.js');
+const mod2 = await import('./counter.js?v=2');
+// 다른 URL → 별개의 Module Record → 독립된 상태
+```
+
+### Next.js에서는
+
+이 전제가 달라질 수 있는 환경 중 하나가 Next.js입니다. Next.js는 단일 환경이 아니라 서버와 클라이언트가 각각 독립된 실행 환경을 갖습니다.
+
+**서버(Node.js 프로세스)**에서는 하나의 long-lived 프로세스 내부에서는 module map이 유지되어 대체로 같은 인스턴스를 공유합니다. 하지만 이게 오히려 문제가 될 수 있습니다. 모듈 레벨 상태가 요청 간에 공유되기 때문에, 특정 요청에서 상태를 바꾸면 다른 사용자의 요청에도 영향을 줍니다. 또한 멀티 서버 배포 환경에서는 서버 인스턴스 간에 인메모리 상태가 공유되지 않습니다.
+
+**클라이언트(브라우저)**에서는 클라이언트 사이드 네비게이션이면 Document가 유지되므로 module map도 유지됩니다. 하지만 새로고침이나 직접 URL 입력 같은 hard navigation이면 Document가 새로 만들어지고 module map도 초기화됩니다.
+
+Server Component와 Client Component 는 실행 환경 자체가 다릅니다. Next.js 공식 문서도 서버와 클라이언트가 isolated module systems에서 실행된다고 설명합니다. 같은 모듈을 양쪽에서 import하더라도 각각 독립된 인스턴스가 됩니다.
+
+```
+서버 환경  → Node.js의 ESM URL 캐시 → store.js 인스턴스 A
+클라이언트 →  브라우저 module map →  store.js 인스턴스 B
+```
+
+Next.js에서 모듈 레벨 상태를 싱글톤처럼 다루려면, 어느 환경에서 실행되는지를 먼저 명확히 해야 합니다. "모듈이 한 번만 평가된다"는 전제는 서버와 클라이언트 각각의 경계 안에서만, 그리고 단일 서버 인스턴스 안에서만 유효합니다.
+
+## 마무리
+
+디자인패턴 스터디에서 싱글톤 패턴을 배우면서, 자바스크립트에서는 왜 이 패턴을 지양하는지 알게 되었습니다.
+
+싱글톤은 인스턴스를 관리하는 책임까지 함께 떠안게 되면서 관심사가 섞이고, 내부 상태도 외부에서 통제하기 어려워지는 문제가 있습니다. 그래서 의도적으로 잘 쓰지 않는 패턴이라는 것도 이해하게 됐습니다.
+
+그런데 개발을 하면서 자연스럽게 사용해왔던 ES Module은, 체감상 싱글톤과 너무 비슷하게 동작했습니다.  “이거 그냥 싱글톤 아닌가?”라는 생각이 들어서, 그 차이를 정리해보고 싶었습니다.
+
+**ES Module은 싱글톤이 아닙니다. 다만 싱글톤처럼 보일 뿐입니다.**
+
+SPA 환경에서는 이 차이를 느끼기 어렵습니다. module map이 하나고, 모듈은 한 번만 평가되기 때문에 항상 같은 상태를 공유하는 것처럼 보이기 때문입니다.
+
+하지만 Next.js처럼 서버와 클라이언트가 나뉘거나, 로더 컨텍스트가 분리되는 환경에서는 이 전제가 깨집니다.
+
+당연히 하나라고 생각했던 상태가 여러 개로 나뉘면서, 예상하지 못한 버그로 이어질 수 있습니다.
+
+겉으로는 둘 다 “하나만 있는 것처럼” 보이지만 싱글톤은 애플리케이션 코드가 그 유일성을 직접 보장하는 것이고, ES Module은 로더가 같은 모듈을 재사용해 준 결과일 뿐입니다.
+
+---
+
+- [ES modules: A cartoon deep-dive](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/)
+- [ECMAScript Specification — Scripts and Modules](https://tc39.es/ecma262/multipage/ecmascript-language-scripts-and-modules.html)
+- [HTML Standard — module map](https://html.spec.whatwg.org/multipage/webappapis.html#module-map)
+- [JavaScript modules — MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
+- [import — MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import)
+- [JavaScript modules — V8](https://v8.dev/features/modules)
+- [Modules: ECMAScript modules — Node.js](https://nodejs.org/api/esm.html)
+- [Modules: CommonJS modules — Node.js](https://nodejs.org/api/modules.html#caching)
+- [Singleton Pattern — Refactoring Guru](https://refactoring.guru/design-patterns/singleton)
