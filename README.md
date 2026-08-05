@@ -39,9 +39,12 @@ Production-like builds fail without this value so canonical links, RSS, robots, 
 
 ## Obsidian Vault
 
-By default, the repository-local `content` directory is treated as the vault. Root scripts such as `pnpm dev`, `pnpm sync:content`, and `pnpm build` pin that local vault with `--vault content` so shell-level Obsidian environment variables cannot accidentally rewrite generated blog artifacts.
+Root scripts (`pnpm dev`, `pnpm sync:content`, `pnpm build`) resolve the vault in this order:
 
-To use a real Obsidian vault directly, point the content-sync package CLI at it with environment variables:
+1. `OBSIDIAN_VAULT_PATH` when set
+2. otherwise the repository-local `content` directory
+
+To use a real Obsidian vault, set the environment variables:
 
 ```bash
 export OBSIDIAN_VAULT_PATH="/path/to/Obsidian"
@@ -50,11 +53,17 @@ export OBSIDIAN_PRIVATE_INCLUDE="private"
 export OBSIDIAN_PRIVATE_EXCLUDE="public"
 ```
 
-Then run the package-level sync command so those environment variables are honored:
+Then run:
 
 ```bash
-pnpm --filter @dahm-blog/content-sync sync
+pnpm sync:content
 pnpm index:private
+```
+
+To force the local sample vault instead:
+
+```bash
+pnpm --filter @dahm-blog/content-sync sync -- --vault content
 ```
 
 Recommended vault folders:
