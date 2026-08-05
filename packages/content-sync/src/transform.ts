@@ -4,6 +4,20 @@ import { rewriteAssets } from "./assets.js";
 import { parseNote, stringifyFrontmatter } from "./frontmatter.js";
 import { createNoteIndex, rewriteWikilinks, type NoteIndexEntry } from "./obsidian-links.js";
 import { normalizeObsidianSyntax, type ObsidianSyntaxResult } from "./obsidian-syntax.js";
+
+/**
+ * Error thrown when content sync has blocking validation errors.
+ * Carries the detailed error list so the CLI can surface every error
+ * instead of just the count.
+ */
+export class ContentSyncError extends Error {
+  readonly errors: string[];
+  constructor(message: string, errors: string[]) {
+    super(message);
+    this.name = "ContentSyncError";
+    this.errors = errors;
+  }
+}
 import {
   asBoolean,
   asNumber,
@@ -211,7 +225,10 @@ export function transformVault(options: TransformOptions): PublishManifest {
       options.postModuleMapPath,
     ]);
     writeManifest(manifest, options.manifestPath);
-    throw new Error(`Content sync failed with ${errors.length} blocking error(s).`);
+    throw new ContentSyncError(
+      `Content sync failed with ${errors.length} blocking error(s).`,
+      [...errors],
+    );
   }
 
   try {
@@ -509,7 +526,7 @@ function createContentModel(input: {
   if (!date || Number.isNaN(Date.parse(date))) errors.push("Missing or invalid required frontmatter: date");
   if (input.tags.length === 0) errors.push("Missing or invalid required frontmatter: tags");
   if (!topic) warnings.push("Missing optional frontmatter: topic; using general");
-  if (!series) errors.push("Missing required frontmatter: series");
+  if (!series) warnings.push("Missing optional frontmatter: series");
   if (input.hasDuplicateSlug) errors.push(`Duplicate slug: ${slug}`);
   if (!updated) warnings.push("Missing optional frontmatter: updated");
 
@@ -530,7 +547,7 @@ function createContentModel(input: {
       aliases: input.aliases,
       cssclasses: input.cssclasses,
       properties: input.properties,
-      series: series!,
+      series,
       seriesOrder,
       headings: extractHeadings(syntax.body),
       outboundLinks: [],
@@ -884,9 +901,9 @@ function buildPublicPostIndex(
   return {
     generatedAt: new Date().toISOString(),
     posts: notes
-      .filter((note) => note.isPublic && exportedSlugs.has(note.slug) && note.date && note.series)
+      .filter((note) => note.isPublic && exportedSlugs.has(note.slug) && note.date)
       .map((note) => {
-        const seriesSlug = slugify(note.series!);
+        const seriesSlug = note.series ? slugify(note.series) : undefined;
         return {
           slug: note.slug,
           href: `/posts/${note.slug}/`,
@@ -897,9 +914,9 @@ function buildPublicPostIndex(
           updated: note.updated,
           topic: note.topic,
           tags: note.tags,
-          series: note.series!,
+          series: note.series,
           seriesSlug,
-          seriesHref: `/series/${seriesSlug}/`,
+          seriesHref: seriesSlug ? `/series/${seriesSlug}/` : undefined,
           seriesOrder: note.seriesOrder,
           headings: note.headings,
         };
@@ -930,7 +947,7 @@ function buildPublicSearchIndex(
   return {
     generatedAt: new Date().toISOString(),
     documents: notes
-      .filter((note) => note.isPublic && exportedSlugs.has(note.slug) && note.series)
+      .filter((note) => note.isPublic && exportedSlugs.has(note.slug))
       .map((note) => {
         const plainBody = toPlainPreviewText(note.syntax.body);
         return {
@@ -938,9 +955,10 @@ function buildPublicSearchIndex(
           description: note.description,
           topic: note.topic,
           tags: note.tags,
-          series: note.series!,
+          series: note.series,
           url: `/posts/${note.slug}/`,
           searchText: [note.title, note.description, note.topic, note.series, note.tags.join(" "), note.excerpt, plainBody]
+            .filter((part) => typeof part === "string")
             .join(" ")
             .toLowerCase(),
         };

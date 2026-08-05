@@ -1,6 +1,6 @@
-import { formatManifestPath, formatWarningSummary } from "./cli-output.js";
+import { formatBlockingErrors, formatManifestPath, formatWarningSummary } from "./cli-output.js";
 import { parseCliArgs } from "./cli-options.js";
-import { transformVault } from "./transform.js";
+import { ContentSyncError, transformVault } from "./transform.js";
 
 const args = parseCliArgs(process.argv.slice(2));
 
@@ -11,7 +11,11 @@ try {
     console.warn(formatWarningSummary(manifest.warnings.length, args.manifestPath));
   }
 } catch (error) {
-  console.error(error instanceof Error ? error.message : error);
+  if (error instanceof ContentSyncError && error.errors.length > 0) {
+    console.error(formatBlockingErrors(error.errors));
+  } else {
+    console.error(error instanceof Error ? error.message : error);
+  }
   console.error(formatManifestPath(args.manifestPath));
   process.exitCode = 1;
 }

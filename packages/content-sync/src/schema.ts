@@ -93,7 +93,7 @@ export interface ContentModel {
   aliases: string[];
   cssclasses: string[];
   properties: PublicProperty[];
-  series: string;
+  series?: string;
   seriesOrder?: number;
   headings: HeadingNode[];
   outboundLinks: ResolvedReference[];
@@ -183,9 +183,9 @@ export interface PublicPostIndexEntry {
   updated?: string;
   topic: string;
   tags: string[];
-  series: string;
-  seriesSlug: string;
-  seriesHref: string;
+  series?: string;
+  seriesSlug?: string;
+  seriesHref?: string;
   seriesOrder?: number;
   headings: HeadingNode[];
 }
@@ -200,7 +200,7 @@ export interface PublicSearchIndexDocument {
   description: string;
   topic: string;
   tags: string[];
-  series: string;
+  series?: string;
   url: string;
   searchText: string;
 }
