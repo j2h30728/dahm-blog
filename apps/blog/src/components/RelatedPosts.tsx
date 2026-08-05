@@ -17,7 +17,7 @@ export function RelatedPosts({ related }: RelatedPostsProps) {
       <div className={ui.relatedGrid}>
         {related.map(({ post, reasons }) => (
           <Link className={ui.relatedCard} href={post.href} key={post.slug}>
-            <span className={ui.relatedKicker}>{post.series}</span>
+            {post.series ? <span className={ui.relatedKicker}>{post.series}</span> : null}
             <strong className={ui.postTitle}>{post.title}</strong>
             <small className={ui.relatedMeta}>{reasons.join(", ")}</small>
           </Link>

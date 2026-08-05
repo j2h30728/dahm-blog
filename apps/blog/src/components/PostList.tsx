@@ -16,8 +16,12 @@ export function PostList({ posts }: PostListProps) {
             <div className={ui.postBody}>
               <div className={ui.postTopline}>
                 <span className={ui.postSeries}>{post.topic}</span>
-                <span aria-hidden="true">/</span>
-                <span className={ui.postSeries}>{post.series}</span>
+                {post.series ? (
+                  <>
+                    <span aria-hidden="true">/</span>
+                    <span className={ui.postSeries}>{post.series}</span>
+                  </>
+                ) : null}
               </div>
               <h2 className={ui.postTitle}>{post.title}</h2>
               <p className={ui.postDescription}>{post.description}</p>

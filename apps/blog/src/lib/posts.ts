@@ -18,9 +18,9 @@ export interface Post {
   updated?: string;
   topic: string;
   tags: string[];
-  series: string;
-  seriesSlug: string;
-  seriesHref: string;
+  series?: string;
+  seriesSlug?: string;
+  seriesHref?: string;
   seriesOrder?: number;
   headings: Heading[];
 }
@@ -62,6 +62,7 @@ export function getSeriesPosts(posts: Post[], series: string): Post[] {
 export function getSeriesEntries(posts: Post[]): Array<{ name: string; slug: string; posts: Post[] }> {
   const entries = new Map<string, Post[]>();
   for (const post of posts) {
+    if (!post.series) continue;
     entries.set(post.series, [...(entries.get(post.series) ?? []), post]);
   }
 
@@ -77,7 +78,7 @@ export function getSeriesEntries(posts: Post[]): Array<{ name: string; slug: str
 export function getSeriesEntryBySlug(seriesSlug: string): { name: string; posts: Post[] } | undefined {
   const posts = getPublishedPosts();
   const match = posts.find((post) => post.seriesSlug === seriesSlug);
-  if (!match) return undefined;
+  if (!match || !match.series) return undefined;
   return {
     name: match.series,
     posts: getSeriesPosts(posts, match.series),

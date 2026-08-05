@@ -35,7 +35,7 @@ function scoreRelatedPost(current: Post, candidate: Post): RelatedPostScore {
   const reasons: string[] = [];
   let score = 0;
 
-  if (candidate.series === current.series) {
+  if (current.series && candidate.series && candidate.series === current.series) {
     score += 100;
     reasons.push("same series");
   }

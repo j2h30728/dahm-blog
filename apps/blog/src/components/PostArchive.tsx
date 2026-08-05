@@ -30,6 +30,7 @@ export function PostArchive({ posts, topics }: PostArchiveProps) {
         const matchesQuery =
           normalizedQuery.length === 0 ||
           [post.title, post.description, post.excerpt, post.topic, post.series, ...post.tags]
+            .filter((part): part is string => typeof part === "string")
             .join(" ")
             .toLowerCase()
             .includes(normalizedQuery);
