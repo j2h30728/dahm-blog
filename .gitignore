@@ -8,6 +8,7 @@ dist
 .env
 .env.*
 apps/blog/.next
+apps/blog/out
 apps/blog/public/search/index.json
 apps/blog/public/search/pagefind
 packages/*/dist
