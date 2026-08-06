@@ -19,10 +19,12 @@ export const postModules: Record<string, () => Promise<PostModule>> = {
   "AWS-Lambda-API-Gateway": () => import("./posts/AWS-Lambda-API-Gateway.mdx"),
   "axios-cancel": () => import("./posts/axios-cancel.mdx"),
   "boost-pal": () => import("./posts/boost-pal.mdx"),
+  "content-boundaries": () => import("./posts/content-boundaries.mdx"),
   "DoGreen": () => import("./posts/DoGreen.mdx"),
   "esmodule-singleton": () => import("./posts/esmodule-singleton.mdx"),
   "firstdeveloper": () => import("./posts/firstdeveloper.mdx"),
   "hanghae-6": () => import("./posts/hanghae-6.mdx"),
+  "hello-pipeline": () => import("./posts/hello-pipeline.mdx"),
   "iBook": () => import("./posts/iBook.mdx"),
   "next-image-html2canvas-html-to-image": () => import("./posts/next-image-html2canvas-html-to-image.mdx"),
   "Next.js-parellel-intercepting-routes로-모달-만들기": () => import("./posts/Next.js-parellel-intercepting-routes로-모달-만들기.mdx"),
@@ -49,4 +51,4 @@ export const postModules: Record<string, () => Promise<PostModule>> = {
   "혼공컴운-회고": () => import("./posts/혼공컴운-회고.mdx"),
 };
 
-export const postModuleSlugs = ["10weeks","10weeks-second","10weeks-ta","10weeks-third","2023conf","2023년-회고록","2024","2024년-여름-회고","2025","2025teoconf","2차-스터디-회고","AWS-Lambda-API-Gateway","axios-cancel","boost-pal","DoGreen","esmodule-singleton","firstdeveloper","hanghae-6","iBook","next-image-html2canvas-html-to-image","Next.js-parellel-intercepting-routes로-모달-만들기","oauth-2.0-kako-login","obsidian-feature-showcase","openapi-codegen","openapi-generator-boundaries","Planet-scale-백업과-복원하기","Prop-Drilling","python-2-study","React-라이브러리-없이-무한-슬라이드-만들기","React-캘린더를-구현해보자-feat.-date-fns","rsc-dot-notation","rsc-dot-notation-reexport","s3-deploy-cicd","seconddev","seconddeveloper","teosprint15","woowacon","개발자가-블로그도-잘-써야-하나요-를-읽고","글또-삶의-지도","엘리스트랙-회고","포텐데이-403-회고록-멍스토리","혼공컴운-회고"] as const;
+export const postModuleSlugs = ["10weeks","10weeks-second","10weeks-ta","10weeks-third","2023conf","2023년-회고록","2024","2024년-여름-회고","2025","2025teoconf","2차-스터디-회고","AWS-Lambda-API-Gateway","axios-cancel","boost-pal","content-boundaries","DoGreen","esmodule-singleton","firstdeveloper","hanghae-6","hello-pipeline","iBook","next-image-html2canvas-html-to-image","Next.js-parellel-intercepting-routes로-모달-만들기","oauth-2.0-kako-login","obsidian-feature-showcase","openapi-codegen","openapi-generator-boundaries","Planet-scale-백업과-복원하기","Prop-Drilling","python-2-study","React-라이브러리-없이-무한-슬라이드-만들기","React-캘린더를-구현해보자-feat.-date-fns","rsc-dot-notation","rsc-dot-notation-reexport","s3-deploy-cicd","seconddev","seconddeveloper","teosprint15","woowacon","개발자가-블로그도-잘-써야-하나요-를-읽고","글또-삶의-지도","엘리스트랙-회고","포텐데이-403-회고록-멍스토리","혼공컴운-회고"] as const;

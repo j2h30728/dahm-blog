@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T05:06:53.964Z",
+  "generatedAt": "2026-08-05T05:38:15.213Z",
   "tags": [
     {
       "tag": "1의",
@@ -17,6 +17,12 @@
       "tag": "app router",
       "slugs": [
         "Next.js-parellel-intercepting-routes로-모달-만들기"
+      ]
+    },
+    {
+      "tag": "architecture",
+      "slugs": [
+        "content-boundaries"
       ]
     },
     {
@@ -102,6 +108,7 @@
     {
       "tag": "nextjs",
       "slugs": [
+        "hello-pipeline",
         "rsc-dot-notation-reexport"
       ]
     },
@@ -114,6 +121,7 @@
     {
       "tag": "obsidian",
       "slugs": [
+        "hello-pipeline",
         "obsidian-feature-showcase"
       ]
     },
@@ -136,8 +144,15 @@
       ]
     },
     {
+      "tag": "privacy",
+      "slugs": [
+        "content-boundaries"
+      ]
+    },
+    {
       "tag": "publishing",
       "slugs": [
+        "hello-pipeline",
         "obsidian-feature-showcase"
       ]
     },

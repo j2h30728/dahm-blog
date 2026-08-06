@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T05:06:53.963Z",
+  "generatedAt": "2026-08-05T05:38:15.211Z",
   "nodes": [
     {
       "slug": "10weeks",
@@ -146,6 +146,16 @@
       ]
     },
     {
+      "slug": "content-boundaries",
+      "title": "Content Boundaries",
+      "href": "/posts/content-boundaries/",
+      "topic": "blog",
+      "tags": [
+        "architecture",
+        "privacy"
+      ]
+    },
+    {
       "slug": "DoGreen",
       "title": "2차 프로젝트회고록",
       "href": "/posts/DoGreen/",
@@ -182,6 +192,17 @@
       "topic": "회고",
       "tags": [
         "회고"
+      ]
+    },
+    {
+      "slug": "hello-pipeline",
+      "title": "Hello Publishing Pipeline",
+      "href": "/posts/hello-pipeline/",
+      "topic": "blog",
+      "tags": [
+        "nextjs",
+        "obsidian",
+        "publishing"
       ]
     },
     {
@@ -438,6 +459,26 @@
     }
   ],
   "edges": [
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "none",
+      "label": "content boundaries"
+    },
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "heading",
+      "targetAnchor": "#public-allowlist",
+      "label": "the public allowlist"
+    },
+    {
+      "sourceSlug": "hello-pipeline",
+      "targetSlug": "content-boundaries",
+      "kind": "block",
+      "targetAnchor": "#block-allowlist-rule",
+      "label": "the allowlist rule"
+    },
     {
       "sourceSlug": "obsidian-feature-showcase",
       "targetSlug": "obsidian-feature-showcase",
