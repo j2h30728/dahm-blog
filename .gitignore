@@ -12,8 +12,8 @@ apps/blog/.next
 apps/blog/out
 apps/blog/public/search/index.json
 apps/blog/public/search/pagefind
+apps/blog/public/post-assets/**/notion-*
 packages/*/dist
-packages/private-wiki-index/.private-index
 *.tsbuildinfo
 .content-sync/
 .playwright-mcp/

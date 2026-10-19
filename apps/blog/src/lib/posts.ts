@@ -1,6 +1,5 @@
 import postIndexJson from "../content/public-post-index.json";
 import { postModules, postModuleSlugs } from "../content/post-module-map";
-import { slugify } from "./slug";
 
 export interface Heading {
   depth: number;
@@ -18,6 +17,7 @@ export interface Post {
   updated?: string;
   topic: string;
   tags: string[];
+  tagSlugs: Partial<Record<string, string>>;
   series?: string;
   seriesSlug?: string;
   seriesHref?: string;
@@ -98,12 +98,11 @@ export function getTagEntries(posts: Post[]): Array<{ count: number; name: strin
   }
 
   return [...entries.entries()]
-    .map(([name, tagPosts]) => ({
-      count: tagPosts.length,
-      name,
-      posts: getTagPosts(tagPosts, name),
-      slug: slugify(name),
-    }))
+    .map(([name, tagPosts]) => {
+      const slug = tagPosts[0].tagSlugs[name];
+      if (!slug) throw new Error(`태그 URL 인덱스가 없습니다. sync:content를 실행하세요: ${name}`);
+      return { count: tagPosts.length, name, posts: getTagPosts(tagPosts, name), slug };
+    })
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 

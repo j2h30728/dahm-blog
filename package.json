@@ -7,15 +7,12 @@
   "scripts": {
     "check:env": "node scripts/check-env.mjs",
     "preinstall": "node scripts/check-env.mjs",
-    "postinstall": "node scripts/install-hooks.mjs",
     "dev": "pnpm sync:content && pnpm --filter @dahm-blog/blog dev",
     "sync:content": "pnpm --filter @dahm-blog/content-sync sync",
-    "migrate:vault": "node scripts/migrate-vault.mjs",
-    "index:private": "pnpm --filter @dahm-blog/private-wiki-index index",
-    "test": "pnpm --filter @dahm-blog/content-sync test && pnpm --filter @dahm-blog/private-wiki-index test && pnpm sync:content && pnpm --filter @dahm-blog/blog test",
+    "test": "pnpm --filter @dahm-blog/content-sync test && pnpm sync:content && pnpm --filter @dahm-blog/blog test",
     "build:blog": "pnpm sync:content && pnpm --filter @dahm-blog/blog build",
-    "build": "pnpm --filter @dahm-blog/content-sync build && pnpm sync:content && pnpm --filter @dahm-blog/private-wiki-index build && pnpm index:private && pnpm --filter @dahm-blog/blog build",
-    "typecheck": "pnpm --filter @dahm-blog/content-sync typecheck && pnpm --filter @dahm-blog/private-wiki-index typecheck && pnpm sync:content && pnpm --filter @dahm-blog/blog typecheck"
+    "build": "pnpm --filter @dahm-blog/content-sync build && pnpm build:blog",
+    "typecheck": "pnpm --filter @dahm-blog/content-sync typecheck && pnpm sync:content && pnpm --filter @dahm-blog/blog typecheck"
   },
   "engines": {
     "node": "24.x"

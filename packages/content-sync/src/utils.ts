@@ -1,62 +1,22 @@
-import { createHash } from "node:crypto";
-import { readdirSync, statSync } from "node:fs";
-import path from "node:path";
-
-export function checksum(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-
 export function slugify(value: string): string {
-  return value
-    .normalize("NFC")
-    .toLowerCase()
-    .replace(/['"]/g, "")
-    .replace(/[^\p{Letter}\p{Number}\p{Mark}]+/gu, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
+  return value.normalize("NFC").toLowerCase().replace(/['"]/g, "")
+    .replace(/[^\p{Letter}\p{Number}\p{Mark}]+/gu, "-").replace(/^-+|-+$/g, "").replace(/-{2,}/g, "-");
 }
 
 export function slugifyHeading(value: string): string {
-  // Match rehype-slug/github-slugger so generated TOC anchors point at rendered headings.
+  return value.normalize("NFC").toLowerCase().replace(/[^\p{Letter}\p{Number}\p{Mark} _-]+/gu, "").replace(/ /g, "-");
+}
+
+export function plainText(value: string): string {
   return value
-    .normalize("NFC")
-    .toLowerCase()
-    .replace(/[^\p{Letter}\p{Number}\p{Mark} _-]+/gu, "")
-    .replace(/ /g, "-");
-}
-
-export function walkFiles(root: string, extensions = [".md", ".mdx"]): string[] {
-  const files: string[] = [];
-
-  function walk(current: string): void {
-    for (const entry of readdirSync(current)) {
-      if (entry.startsWith(".")) continue;
-      const fullPath = path.join(current, entry);
-      const stat = statSync(fullPath);
-      if (stat.isDirectory()) {
-        walk(fullPath);
-      } else if (extensions.includes(path.extname(entry))) {
-        files.push(fullPath);
-      }
-    }
-  }
-
-  walk(root);
-  return files.sort();
-}
-
-export function isWithin(parent: string, child: string): boolean {
-  const relative = path.relative(path.resolve(parent), path.resolve(child));
-  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
-}
-
-export function toPosixPath(value: string): string {
-  return value.split(path.sep).join("/");
-}
-
-export function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/^\s*`{3,}.*$/gm, "").replace(/<[^>]*>/g, "")
+    .replace(/[`*~]/g, "").replace(/^\s{0,3}#{1,6}\s+/gm, "")
+    .replace(/&#(x[0-9a-f]+|\d+);/gi, (_, code) => {
+      const point = code[0].toLowerCase() === "x" ? parseInt(code.slice(1), 16) : Number(code);
+      return point > 0 && point <= 0x10ffff ? String.fromCodePoint(point) : "";
+    })
+    .replace(/&(?:amp|lt|gt|quot|apos);/g, (entity) => ({ "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&apos;": "'" })[entity]!)
+    .replace(/\s+/g, " ").trim();
 }

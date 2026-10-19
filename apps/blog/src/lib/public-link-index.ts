@@ -1,6 +1,4 @@
-import graphIndexJson from "../content/public-graph-index.json";
 import linkIndexJson from "../content/public-link-index.json";
-import tagIndexJson from "../content/public-tag-index.json";
 
 interface PublicLinkNode {
   slug: string;
@@ -9,7 +7,6 @@ interface PublicLinkNode {
   excerpt: string;
   topic: string;
   tags: string[];
-  aliases?: string[];
   href: string;
   headings: Array<{
     depth: number;
@@ -21,7 +18,7 @@ interface PublicLinkNode {
 interface PublicLinkEdge {
   sourceSlug: string;
   targetSlug: string;
-  kind: "none" | "heading" | "block";
+  kind: "none" | "heading";
   targetAnchor?: string;
   label: string;
 }
@@ -31,23 +28,6 @@ interface PublicLinkIndex {
   edges: PublicLinkEdge[];
 }
 
-interface PublicGraphIndex {
-  nodes: Array<{
-    slug: string;
-    title: string;
-    href: string;
-    topic: string;
-    tags: string[];
-  }>;
-  edges: PublicLinkEdge[];
-}
-
-interface PublicTagIndex {
-  tags: Array<{
-    tag: string;
-    slugs: string[];
-  }>;
-}
 
 export interface Backlink {
   source: PublicLinkNode;
@@ -55,8 +35,6 @@ export interface Backlink {
 }
 
 const linkIndex = linkIndexJson as PublicLinkIndex;
-const graphIndex = graphIndexJson as PublicGraphIndex;
-const tagIndex = tagIndexJson as PublicTagIndex;
 const nodesBySlug = new Map(linkIndex.nodes.map((node) => [node.slug, node]));
 
 export function getBacklinks(slug: string): Backlink[] {
@@ -85,12 +63,4 @@ export function getLinkPreviewPayload(): Record<
       },
     ]),
   );
-}
-
-export function getPublicGraph(): PublicGraphIndex {
-  return graphIndex;
-}
-
-export function getPublicTagIndex(): PublicTagIndex {
-  return tagIndex;
 }

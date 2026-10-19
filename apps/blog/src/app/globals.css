@@ -211,31 +211,6 @@ input:focus-visible {
   padding: 1px 18px;
 }
 
-.content .callout-title {
-  color: var(--color-ink);
-  display: block;
-  font-weight: 720;
-  margin: 0.8rem 0 0.25rem;
-}
-
-.content .callout-title::before {
-  color: var(--color-accent-ink);
-  content: attr(data-callout);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 560;
-  margin-right: 0.5rem;
-  text-transform: uppercase;
-}
-
-.content .callout-title[data-callout-fold]::after {
-  color: var(--color-muted);
-  content: " " attr(data-callout-fold);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 400;
-}
-
 .content mark {
   background: color-mix(in srgb, var(--color-rust) 22%, transparent);
   border-radius: var(--radius-xs);
@@ -246,25 +221,6 @@ input:focus-visible {
 .content input[type="checkbox"] {
   accent-color: var(--color-accent);
   margin-right: 0.42rem;
-}
-
-.content .task-marker {
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-xs);
-  color: var(--color-muted-strong);
-  display: inline-flex;
-  font-family: var(--font-mono);
-  font-size: 0.74em;
-  line-height: 1;
-  margin-right: 0.42rem;
-  min-inline-size: 1.4em;
-  padding: 0.12em 0.28em;
-  text-decoration: none;
-  vertical-align: middle;
-}
-
-.content .task-marker::before {
-  content: attr(data-task-marker);
 }
 
 .content :not(pre) > code {

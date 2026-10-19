@@ -15,7 +15,7 @@ test("uses the Next blog as the default public app", () => {
   assert.equal(rootPackage.scripts.dev, "pnpm sync:content && pnpm --filter @dahm-blog/blog dev");
   assert.equal(rootPackage.scripts["sync:content"], "pnpm --filter @dahm-blog/content-sync sync");
   assert.equal(rootPackage.scripts["build:blog"], "pnpm sync:content && pnpm --filter @dahm-blog/blog build");
-  assert.equal(rootPackage.scripts.build, "pnpm --filter @dahm-blog/content-sync build && pnpm sync:content && pnpm --filter @dahm-blog/private-wiki-index build && pnpm index:private && pnpm --filter @dahm-blog/blog build");
+  assert.equal(rootPackage.scripts.build, "pnpm --filter @dahm-blog/content-sync build && pnpm build:blog");
   assert.equal(rootPackage.scripts["sync:next-content"], undefined);
   assert.equal(rootPackage.scripts["build:next-blog"], undefined);
   assert.equal(rootPackage.scripts["test:next-blog"], undefined);
@@ -102,18 +102,14 @@ test("generates canonical SEO URLs with production guard", async () => {
   assert.equal(site.getSiteUrl({ NODE_ENV: "development" }), "http://localhost:3000");
 });
 
-test("keeps source and generated post media accessible", () => {
-  const sourcePost = readFileSync(
-    path.join(workspaceRoot, "content/public/published/openapi-generator-boundaries.md"),
-    "utf8",
-  );
-  const generatedPost = readFileSync(
-    path.join(appRoot, "src/content/posts/openapi-generator-boundaries.mdx"),
-    "utf8",
-  );
-
-  assert.match(sourcePost, /<img[^>]+alt='OpenAPI generator CLI 실행 흐름'/);
-  assert.match(generatedPost, /<img[^>]+alt='OpenAPI generator CLI 실행 흐름'/);
+test("Notion 생성물에 과거 파일 글과 폐기한 게시 경로가 남지 않는다", () => {
+  const rootPackage = JSON.parse(readFileSync(path.join(workspaceRoot, "package.json"), "utf8"));
+  assert.equal(rootPackage.scripts["migrate:vault"], undefined);
+  assert.equal(rootPackage.scripts["index:private"], undefined);
+  assert.equal(rootPackage.scripts.postinstall, undefined);
+  assert.equal(existsSync(path.join(workspaceRoot, "packages/private-wiki-index")), false);
+  const source = readFileSync(path.join(workspaceRoot, "packages/content-sync/src/notion-sync.ts"), "utf8");
+  assert.doesNotMatch(source, /cpSync|readFileSync|parseNote|prepareNotionVault/);
 });
 
 test("uses generated content-sync artifacts for Next post routing", () => {
@@ -127,10 +123,11 @@ test("uses generated content-sync artifacts for Next post routing", () => {
   const moduleMap = readFileSync(moduleMapPath, "utf8");
 
   assert.equal(Array.isArray(postIndex.posts), true);
-  assert.equal(postIndex.posts.length > 0, true);
+  const moduleSlugs = JSON.parse(moduleMap.match(/postModuleSlugs = (\[[^\n]*\]) as const;/)[1]);
+  assert.deepEqual([...moduleSlugs].sort(), postIndex.posts.map((post) => post.slug).sort());
 
   for (const post of postIndex.posts) {
     assert.equal(typeof post.slug, "string");
-    assert.match(moduleMap, new RegExp(`"${post.slug}": \\(\\) => import\\("\\./posts/${post.slug}\\.mdx"\\)`));
+    assert.ok(moduleMap.includes(`${JSON.stringify(post.slug)}: () => import(`));
   }
 });
