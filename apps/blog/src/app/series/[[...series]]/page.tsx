@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import SeriesIndex, { indexMetadata } from "../index-view";
 import { notFound } from "next/navigation";
 import { PostList } from "../../../components/PostList";
 import { getPublishedPosts, getSeriesEntries, getSeriesEntryBySlug } from "../../../lib/posts";
@@ -7,18 +8,21 @@ import { ui } from "../../../lib/ui-classes";
 
 interface PageProps {
   params: Promise<{
-    series: string;
+    series?: string[];
   }>;
 }
 
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return getSeriesEntries(getPublishedPosts()).map((entry) => ({ series: entry.slug }));
+  return [{ series: [] }, ...getSeriesEntries(getPublishedPosts()).map((entry) => ({ series: [entry.slug] }))];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { series } = await params;
+  const segments = (await params).series ?? [];
+  if (segments.length === 0) return indexMetadata;
+  if (segments.length !== 1) return {};
+  const series = segments[0];
   const entry = getSeriesEntryBySlug(series);
   if (!entry) return {};
 
@@ -49,7 +53,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function SeriesDetailPage({ params }: PageProps) {
-  const { series } = await params;
+  const segments = (await params).series ?? [];
+  if (segments.length === 0) return <SeriesIndex />;
+  if (segments.length !== 1) notFound();
+  const series = segments[0];
   const entry = getSeriesEntryBySlug(series);
   if (!entry) notFound();
 

@@ -6,7 +6,7 @@ import { ui } from "../../lib/ui-classes";
 
 const description = "담의 글을 태그별로 탐색하는 페이지입니다.";
 
-export const metadata: Metadata = {
+export const indexMetadata: Metadata = {
   title: "Tags",
   description,
   alternates: {

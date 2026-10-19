@@ -3,7 +3,7 @@ import { PostsSection } from "../../components/PostsSection";
 import { getPublishedPosts } from "../../lib/posts";
 import { absoluteUrl, canonicalPath, siteConfig } from "../../lib/site";
 
-export const metadata: Metadata = {
+export const indexMetadata: Metadata = {
   title: "Posts",
   description: siteConfig.description,
   alternates: {

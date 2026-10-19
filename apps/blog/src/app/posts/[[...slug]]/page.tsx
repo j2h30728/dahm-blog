@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import PostsIndex, { indexMetadata } from "../index-view";
 import { notFound } from "next/navigation";
 import { Backlinks } from "../../../components/Backlinks";
 import { PostEnhancements } from "../../../components/PostEnhancements";
@@ -12,18 +13,21 @@ import { ui } from "../../../lib/ui-classes";
 
 interface PageProps {
   params: Promise<{
-    slug: string;
+    slug?: string[];
   }>;
 }
 
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return allPostSlugs.map((slug) => ({ slug }));
+  return [{ slug: [] }, ...allPostSlugs.map((slug) => ({ slug: [slug] }))];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const segments = (await params).slug ?? [];
+  if (segments.length === 0) return indexMetadata;
+  if (segments.length !== 1) return {};
+  const slug = segments[0];
   const post = getPost(slug);
   if (!post) return {};
 
@@ -57,7 +61,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function PostPage({ params }: PageProps) {
-  const { slug } = await params;
+  const segments = (await params).slug ?? [];
+  if (segments.length === 0) return <PostsIndex />;
+  if (segments.length !== 1) notFound();
+  const slug = segments[0];
   const post = getPost(slug);
   const postModule = await getPostContent(slug);
   if (!post || !postModule) notFound();

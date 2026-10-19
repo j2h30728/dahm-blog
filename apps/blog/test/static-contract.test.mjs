@@ -27,16 +27,22 @@ test("uses the Next blog as the default public app", () => {
   assert.equal(vercelConfig.outputDirectory, "apps/blog/.next");
 });
 
+test("개발 서버는 일반 404 처리를 쓰고 운영 빌드만 정적 내보내기를 사용한다", async () => {
+  const { default: config } = await import(pathToFileURL(path.join(appRoot, "next.config.mjs")).href);
+  assert.equal(config("phase-development-server").output, undefined);
+  assert.equal(config("phase-production-build").output, "export");
+});
+
 test("declares the public blog routes in App Router", () => {
   const routeFiles = [
     "src/app/page.tsx",
     "src/app/about/page.tsx",
-    "src/app/posts/page.tsx",
-    "src/app/posts/[slug]/page.tsx",
-    "src/app/series/page.tsx",
-    "src/app/series/[series]/page.tsx",
-    "src/app/tags/page.tsx",
-    "src/app/tags/[tag]/page.tsx",
+    "src/app/posts/index-view.tsx",
+    "src/app/posts/[[...slug]]/page.tsx",
+    "src/app/series/index-view.tsx",
+    "src/app/series/[[...series]]/page.tsx",
+    "src/app/tags/index-view.tsx",
+    "src/app/tags/[[...tag]]/page.tsx",
     "src/app/rss.xml/route.ts",
     "src/app/robots.ts",
     "src/app/sitemap.ts",
@@ -69,7 +75,7 @@ test("declares production-safe SEO URL generation", () => {
   const siteSource = readFileSync(path.join(appRoot, "src/lib/site.ts"), "utf8");
   const rssSource = readFileSync(path.join(appRoot, "src/lib/rss.ts"), "utf8");
   const layoutSource = readFileSync(path.join(appRoot, "src/app/layout.tsx"), "utf8");
-  const postSource = readFileSync(path.join(appRoot, "src/app/posts/[slug]/page.tsx"), "utf8");
+  const postSource = readFileSync(path.join(appRoot, "src/app/posts/[[...slug]]/page.tsx"), "utf8");
 
   assert.match(siteSource, /PUBLIC_SITE_URL/);
   assert.match(siteSource, /VERCEL_ENV === "production"/);

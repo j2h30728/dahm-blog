@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import TagsIndex, { indexMetadata } from "../index-view";
 import { notFound } from "next/navigation";
 import { PostList } from "../../../components/PostList";
 import { getPublishedPosts, getTagEntries, getTagEntryBySlug } from "../../../lib/posts";
@@ -7,18 +8,21 @@ import { ui } from "../../../lib/ui-classes";
 
 interface PageProps {
   params: Promise<{
-    tag: string;
+    tag?: string[];
   }>;
 }
 
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return getTagEntries(getPublishedPosts()).map((entry) => ({ tag: entry.slug }));
+  return [{ tag: [] }, ...getTagEntries(getPublishedPosts()).map((entry) => ({ tag: [entry.slug] }))];
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { tag } = await params;
+  const segments = (await params).tag ?? [];
+  if (segments.length === 0) return indexMetadata;
+  if (segments.length !== 1) return {};
+  const tag = segments[0];
   const entry = getTagEntryBySlug(tag);
   if (!entry) return {};
 
@@ -49,7 +53,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function TagDetailPage({ params }: PageProps) {
-  const { tag } = await params;
+  const segments = (await params).tag ?? [];
+  if (segments.length === 0) return <TagsIndex />;
+  if (segments.length !== 1) notFound();
+  const tag = segments[0];
   const entry = getTagEntryBySlug(tag);
   if (!entry) notFound();
 
