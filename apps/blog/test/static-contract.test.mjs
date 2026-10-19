@@ -108,6 +108,7 @@ test("Notion 생성물에 과거 파일 글과 폐기한 게시 경로가 남지
   assert.equal(rootPackage.scripts["index:private"], undefined);
   assert.equal(rootPackage.scripts.postinstall, undefined);
   assert.equal(existsSync(path.join(workspaceRoot, "packages/private-wiki-index")), false);
+  assert.equal(existsSync(path.join(workspaceRoot, "content/public/published")), false);
   const source = readFileSync(path.join(workspaceRoot, "packages/content-sync/src/notion-sync.ts"), "utf8");
   assert.doesNotMatch(source, /cpSync|readFileSync|parseNote|prepareNotionVault/);
 });
