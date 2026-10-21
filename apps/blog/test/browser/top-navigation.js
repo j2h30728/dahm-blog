@@ -39,6 +39,60 @@ async (page) => {
       check(await count() === expected, `${path} hydration 후 범위`);
     }
     report.passed.push("메뉴·로고, 홈 최신순, 중복 탭 제거, 홈/기술/일상 SSR·hydration·canonical");
+
+    const logo = nav.getByRole("link", { name: "Dahm", exact: true });
+    const assertHomeReset = async () => {
+      await page.waitForURL(`${origin}/`, { timeout: 10000 });
+      await page.waitForLoadState("networkidle");
+      await input.waitFor({ state: "hidden" });
+      check(await count() === homeCount, "로고 복귀 후 전체 글 복원");
+      check(await page.getByRole("link", { name: "검색 해제", exact: true }).count() === 0, "검색 상태 표시 제거");
+      check(await page.locator(".post-list time").evaluateAll((nodes) => nodes.every((node) => node.parentElement.textContent.includes("기술"))), "홈 분류 표시 유지");
+      await page.getByRole("button", { name: "글 검색", exact: true }).click();
+      check(await input.inputValue() === "", "로고 복귀 후 검색 입력 초기화");
+      await page.keyboard.press("Escape");
+    };
+    await go("/");
+    await search("Axios");
+    await logo.click(); await assertHomeReset();
+    for (const path of ["/", "/tech/"]) {
+      await go(path); await search("Axios");
+      await page.locator(".post-list a").first().click();
+      await page.waitForURL(`${origin}/posts/axios-cancel/`);
+      await logo.click(); await assertHomeReset();
+    }
+    for (const path of ["/life/?q=Axios", "/posts/?category=life&q=Axios"]) {
+      await go(path); await logo.click(); await assertHomeReset();
+    }
+    await page.getByRole("button", { name: "글 검색", exact: true }).click();
+    await input.fill("작성 중인 검색어");
+    await logo.click(); await assertHomeReset();
+    await go("/?q=Axios");
+    await logo.focus(); await page.keyboard.press("Enter"); await assertHomeReset();
+    const modifiedClick = await logo.evaluate((node) => {
+      const event = new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true });
+      const preserved = node.dispatchEvent(event);
+      return { preserved, href: node.getAttribute("href") };
+    });
+    check(modifiedClick.preserved && modifiedClick.href === "/", "보조키 클릭과 홈 링크 목적지 유지");
+    const touch = await page.context().browser().newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true });
+    try {
+      const mobile = await touch.newPage();
+      await mobile.goto(`${origin}/?q=Axios`, { waitUntil: "networkidle" });
+      await mobile.locator(".post-list a").first().tap();
+      await mobile.waitForURL(`${origin}/posts/axios-cancel/`);
+      await mobile.getByRole("navigation", { name: "메인 메뉴" }).getByRole("link", { name: "Dahm", exact: true }).tap();
+      await mobile.waitForURL(`${origin}/`);
+      await mobile.waitForLoadState("networkidle");
+      check(await mobile.locator(".post-list > article").count() === homeCount, "모바일 터치 로고 전체 목록 복원");
+      await mobile.getByRole("button", { name: "글 검색", exact: true }).tap();
+      check(await mobile.getByRole("searchbox").inputValue() === "", "모바일 검색 입력 초기화");
+      await mobile.getByRole("button", { name: "검색 닫기", exact: true }).tap();
+      const path = "/Users/langdy-45/personal/dahm-blog/.playwright-mcp/logo-search-reset-mobile.png";
+      await mobile.screenshot({ path }); report.screenshots.push(path);
+    } finally { await touch.close(); }
+    report.passed.push("검색 후 직접/상세 경유 로고, 전체·기술·일상·legacy 검색, 입력 초안 초기화, Enter·보조키·모바일 터치");
+
     await go("/");
     await page.getByRole("button", { name: "글 검색", exact: true }).click();
     await input.fill("남기면 안 되는 검색어");

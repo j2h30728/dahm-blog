@@ -100,9 +100,10 @@ export function SiteHeader({ postCategories }: SiteHeaderProps) {
   return (
     <header className={ui.siteHeader}>
       <nav aria-label="메인 메뉴" className={ui.nav}>
-        <Link className={ui.brand} href="/" onClick={handleNavigation}>
+        {/* 홈은 이전 검색 상태를 재사용하지 않고 새 문서로 연다. */}
+        <a className={ui.brand} href="/" onClick={handleNavigation}>
           Dahm
-        </Link>
+        </a>
         <Suspense fallback={<NavigationLinks activeSection={activeSection} onNavigate={handleNavigation} />}>
           <NavigationFromUrl pathname={pathname} postCategories={postCategories} onNavigate={handleNavigation} />
         </Suspense>

@@ -17,3 +17,5 @@ rtk proxy node -e 'const {createRequire}=require("node:module"); const p=createR
 # 상단 메뉴와 전체 홈 회귀 검사
 
 `top-navigation.js` 역시 Playwright MCP의 `browser_run_code_unsafe`에 `filename`으로 전달한다. production export를 3037 포트에서 제공하면 별도 fixture 준비 없이 실행할 수 있다. 홈·기술·일상·소개 이동, 전체/분류 검색, 검색 초기화·해제, 상세 메뉴, 기존 주소, canonical·사이트맵, 모바일 헤더와 키보드를 검사한다. 현재 공개 글은 모두 기술이므로 일상 글이 섞인 전체 목록은 `archive.test.mjs`의 혼합 fixture로 확인한다. 브라우저 함수 반환값의 `errors`가 비어 있어야 통과다.
+
+로고 회귀 검사는 검색 결과에서 직접 복귀, 검색→상세→로고, 기술·일상·기존 주소의 검색, 입력 초안, Enter·보조키·모바일 터치에서 검색어 없는 전체 홈이 복원되는지 확인한다.
