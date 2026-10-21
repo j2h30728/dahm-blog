@@ -442,6 +442,131 @@ html[data-theme="dark"] .shiki span {
   max-width: 100%;
 }
 
+.post-image-trigger {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  cursor: zoom-in;
+  display: inline-block;
+  font: inherit;
+  line-height: 0;
+  max-width: 100%;
+  padding: 0;
+  touch-action: manipulation;
+  vertical-align: middle;
+}
+
+.post-image-dialog {
+  background: transparent;
+  border: 0;
+  color: #ffffff;
+  height: 100vh;
+  height: 100dvh;
+  inset: 0;
+  margin: 0;
+  max-height: none;
+  max-width: none;
+  overflow: hidden;
+  padding: calc(64px + env(safe-area-inset-top)) calc(24px + env(safe-area-inset-right))
+    calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+  width: 100vw;
+}
+
+.post-image-dialog[open] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  place-items: center;
+}
+
+.post-image-dialog::backdrop {
+  background: rgb(0 0 0 / 88%);
+  backdrop-filter: blur(8px);
+}
+
+.post-image-dialog__image {
+  border: 0;
+  grid-area: 1 / 1;
+  height: auto;
+  max-height: 100%;
+  max-width: 100%;
+  min-height: 0;
+  min-width: 0;
+  object-fit: contain;
+  place-self: center;
+  width: auto;
+}
+
+.post-image-dialog__close {
+  align-items: center;
+  appearance: none;
+  background: rgb(17 17 17 / 78%);
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: var(--radius-pill);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 1.4rem;
+  height: 44px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  position: absolute;
+  right: calc(12px + env(safe-area-inset-right));
+  top: calc(12px + env(safe-area-inset-top));
+  width: 44px;
+  z-index: 1;
+}
+
+.post-image-dialog__close:hover {
+  background: rgb(45 45 45 / 92%);
+  border-color: rgb(255 255 255 / 52%);
+}
+
+.post-image-dialog__error {
+  color: rgb(255 255 255 / 86%);
+  font-size: 0.92rem;
+  grid-area: 1 / 1;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 28rem;
+  place-self: center;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .post-image-dialog[open] {
+    animation: post-image-dialog-enter 160ms ease-out;
+  }
+
+  .post-image-dialog[open]::backdrop {
+    animation: post-image-backdrop-enter 160ms ease-out;
+  }
+
+  @keyframes post-image-dialog-enter {
+    from {
+      opacity: 0;
+      transform: scale(0.985);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes post-image-backdrop-enter {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+}
+
 .content .media-embed,
 .content .file-embed {
   display: block;

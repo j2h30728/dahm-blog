@@ -1,0 +1,147 @@
+"use client";
+
+import { createContext, useContext, useEffect, useRef, useState, type ComponentPropsWithoutRef } from "react";
+import { createPortal } from "react-dom";
+
+const ImageLinkContext = createContext(false);
+
+interface SelectedImage {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  trigger: HTMLElement;
+}
+
+function selectImage(image: HTMLImageElement, trigger: HTMLElement): SelectedImage {
+  return {
+    src: image.currentSrc || image.src,
+    alt: image.alt,
+    width: image.naturalWidth,
+    height: image.naturalHeight,
+    trigger,
+  };
+}
+
+export function ZoomableImage(props: ComponentPropsWithoutRef<"img">) {
+  const insideLink = useContext(ImageLinkContext);
+  if (insideLink || !props.src) return <img {...props} alt={props.alt ?? ""} />;
+  return <StandaloneImage {...props} />;
+}
+
+function StandaloneImage(props: ComponentPropsWithoutRef<"img">) {
+  const [selected, setSelected] = useState<SelectedImage | null>(null);
+  return (
+    <>
+      <button
+        type="button"
+        className="post-image-trigger"
+        aria-haspopup="dialog"
+        aria-label={`${props.alt?.trim() || "본문 이미지"} 확대`}
+        onClick={(event) => {
+          const image = event.currentTarget.querySelector("img");
+          if (image) setSelected(selectImage(image, event.currentTarget));
+        }}
+      >
+        <img {...props} alt={props.alt ?? ""} />
+      </button>
+      {selected && <ImageDialog image={selected} onClose={() => setSelected(null)} />}
+    </>
+  );
+}
+
+export function ZoomableImageLink({ children, onClick, ...props }: ComponentPropsWithoutRef<"a">) {
+  const [selected, setSelected] = useState<SelectedImage | null>(null);
+  return (
+    <>
+      <ImageLinkContext.Provider value={true}>
+        <a
+          {...props}
+          aria-haspopup="dialog"
+          onClick={(event) => {
+            onClick?.(event);
+            if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+            const image = event.currentTarget.querySelector("img");
+            if (!image) return;
+            event.preventDefault();
+            setSelected(selectImage(image, event.currentTarget));
+          }}
+        >
+          {children}
+        </a>
+      </ImageLinkContext.Provider>
+      {selected && <ImageDialog image={selected} onClose={() => setSelected(null)} />}
+    </>
+  );
+}
+
+function ImageDialog({ image, onClose }: { image: SelectedImage; onClose: () => void }) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const pointerStartedOutside = useRef(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const { overflow, paddingRight } = document.body.style;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${parseFloat(getComputedStyle(document.body).paddingRight) + scrollbarWidth}px`;
+    }
+    document.body.style.overflow = "hidden";
+    dialog.showModal();
+    closeRef.current?.focus({ preventScroll: true });
+
+    return () => {
+      if (dialog.open) dialog.close();
+      document.body.style.overflow = overflow;
+      document.body.style.paddingRight = paddingRight;
+      if (image.trigger.isConnected) image.trigger.focus({ preventScroll: true });
+    };
+  }, [image]);
+
+  return createPortal(
+    <dialog
+      ref={dialogRef}
+      className="post-image-dialog"
+      aria-label={image.alt.trim() ? `${image.alt} 확대 보기` : "본문 이미지 확대 보기"}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Tab") {
+          event.preventDefault();
+          closeRef.current?.focus({ preventScroll: true });
+        }
+      }}
+      onPointerDown={(event) => {
+        pointerStartedOutside.current = event.target === event.currentTarget;
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget && pointerStartedOutside.current) onClose();
+        pointerStartedOutside.current = false;
+      }}
+    >
+      <button ref={closeRef} type="button" className="post-image-dialog__close" aria-label="이미지 확대 닫기" onClick={onClose}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d="m6 6 12 12M6 18 18 6" />
+        </svg>
+      </button>
+      {failed ? (
+        <p className="post-image-dialog__error" role="status">이미지를 불러오지 못했습니다.</p>
+      ) : (
+        <img
+          className="post-image-dialog__image"
+          src={image.src}
+          alt={image.alt}
+          width={image.width || undefined}
+          height={image.height || undefined}
+          onError={() => setFailed(true)}
+        />
+      )}
+    </dialog>,
+    document.body,
+  );
+}
