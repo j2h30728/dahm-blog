@@ -123,7 +123,9 @@ export const ui = {
     "post-item border-b border-line last:border-b-0",
   postCardLink:
     "block py-7 text-inherit transition-opacity duration-[160ms] hover:opacity-70 hover:text-inherit hover:no-underline max-[640px]:py-6",
+  postMeta: "post-meta flex flex-wrap items-baseline gap-x-2",
   postDate: "mt-3 block text-[0.8rem] text-muted tabular-nums",
+  postCategory: "mt-3 text-[0.75rem] text-muted",
   postTitle:
     "mb-2 mt-0 block text-[clamp(1.08rem,2vw,1.28rem)] font-[680] leading-[1.35] text-ink text-balance",
   postDescription:

@@ -68,7 +68,7 @@ function ArchiveContent({ posts, category, pathname, query, search }: PostArchiv
 
       <p className="sr-only" role="status">{copy.label} 글 {filteredPosts.length}개</p>
       {filteredPosts.length > 0 ? (
-        <PostList posts={filteredPosts} />
+        <PostList posts={filteredPosts} showCategory={category === "all"} />
       ) : (
         <p className={ui.emptyState}>
           {query ? "검색어에 해당하는 글이 없어요." : copy.empty}
