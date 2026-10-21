@@ -17,6 +17,44 @@ async (page) => {
     await page.waitForURL((url) => url.searchParams.get("q") === query.trim());
     await page.waitForLoadState("networkidle");
   };
+  const watchLogoNavigation = async (target = page, theme = "dark") => {
+    const documentRequests = [];
+    const watch = (request) => {
+      if (request.resourceType() === "document") documentRequests.push(request.url());
+    };
+    await target.evaluate((theme) => {
+      localStorage.setItem("theme", theme);
+      document.documentElement.dataset.theme = theme;
+      const probe = window.__logoNavigationProbe = {
+        body: document.body, timeOrigin: performance.timeOrigin,
+        color: getComputedStyle(document.body).backgroundColor, theme,
+        colors: [], sampling: true,
+      };
+      const sample = () => {
+        if (!probe.sampling) return;
+        if (probe.colors.length < 180) probe.colors.push(getComputedStyle(document.body).backgroundColor);
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    }, theme);
+    target.on("request", watch);
+    return async () => {
+      target.off("request", watch);
+      const result = await target.evaluate(() => {
+        const probe = window.__logoNavigationProbe;
+        if (!probe) return { sameDocument: false };
+        probe.sampling = false;
+        return {
+          sameDocument: probe.body === document.body && probe.timeOrigin === performance.timeOrigin,
+          sameTheme: document.documentElement.dataset.theme === probe.theme,
+          sameBackground: getComputedStyle(document.body).backgroundColor === probe.color && probe.colors.every((color) => color === probe.color),
+          frames: probe.colors.length,
+        };
+      });
+      check(result.sameDocument && documentRequests.length === 0, "로고 이동에서 document reload 없음");
+      check(result.sameTheme && result.sameBackground && result.frames > 0, "로고 이동 프레임에서 테마·배경 유지");
+    };
+  };
   try {
     await page.route("**/*", (route) => route.continue());
     await page.setViewportSize({ width: 1200, height: 900 });
@@ -52,23 +90,28 @@ async (page) => {
       check(await input.inputValue() === "", "로고 복귀 후 검색 입력 초기화");
       await page.keyboard.press("Escape");
     };
+    const clickLogo = async (theme = "dark") => {
+      const verify = await watchLogoNavigation(page, theme);
+      await logo.click(); await assertHomeReset(); await verify();
+    };
     await go("/");
     await search("Axios");
-    await logo.click(); await assertHomeReset();
+    await clickLogo();
     for (const path of ["/", "/tech/"]) {
       await go(path); await search("Axios");
       await page.locator(".post-list a").first().click();
       await page.waitForURL(`${origin}/posts/axios-cancel/`);
-      await logo.click(); await assertHomeReset();
+      await clickLogo();
     }
     for (const path of ["/life/?q=Axios", "/posts/?category=life&q=Axios"]) {
-      await go(path); await logo.click(); await assertHomeReset();
+      await go(path); await clickLogo();
     }
     await page.getByRole("button", { name: "글 검색", exact: true }).click();
     await input.fill("작성 중인 검색어");
-    await logo.click(); await assertHomeReset();
+    await clickLogo("light");
     await go("/?q=Axios");
-    await logo.focus(); await page.keyboard.press("Enter"); await assertHomeReset();
+    const verifyKeyboardLogo = await watchLogoNavigation();
+    await logo.focus(); await page.keyboard.press("Enter"); await assertHomeReset(); await verifyKeyboardLogo();
     const modifiedClick = await logo.evaluate((node) => {
       const event = new MouseEvent("click", { bubbles: true, cancelable: true, ctrlKey: true });
       const preserved = node.dispatchEvent(event);
@@ -81,9 +124,11 @@ async (page) => {
       await mobile.goto(`${origin}/?q=Axios`, { waitUntil: "networkidle" });
       await mobile.locator(".post-list a").first().tap();
       await mobile.waitForURL(`${origin}/posts/axios-cancel/`);
+      const verifyTouchLogo = await watchLogoNavigation(mobile);
       await mobile.getByRole("navigation", { name: "메인 메뉴" }).getByRole("link", { name: "Dahm", exact: true }).tap();
       await mobile.waitForURL(`${origin}/`);
       await mobile.waitForLoadState("networkidle");
+      await verifyTouchLogo();
       check(await mobile.locator(".post-list > article").count() === homeCount, "모바일 터치 로고 전체 목록 복원");
       await mobile.getByRole("button", { name: "글 검색", exact: true }).tap();
       check(await mobile.getByRole("searchbox").inputValue() === "", "모바일 검색 입력 초기화");
@@ -91,7 +136,26 @@ async (page) => {
       const path = "/Users/langdy-45/personal/dahm-blog/.playwright-mcp/logo-search-reset-mobile.png";
       await mobile.screenshot({ path }); report.screenshots.push(path);
     } finally { await touch.close(); }
-    report.passed.push("검색 후 직접/상세 경유 로고, 전체·기술·일상·legacy 검색, 입력 초안 초기화, Enter·보조키·모바일 터치");
+    await go("/?q=Axios");
+    await page.locator(".post-list a").first().click();
+    await page.waitForURL(`${origin}/posts/axios-cancel/`);
+    await clickLogo();
+    await page.goBack();
+    await page.waitForURL(`${origin}/posts/axios-cancel/`);
+    await page.goBack();
+    await page.waitForURL(`${origin}/?q=Axios`);
+    check(await count() === 1, "뒤로가기에서 과거 검색 복원");
+    await page.goForward(); await page.waitForURL(`${origin}/posts/axios-cancel/`);
+    await page.goForward(); await page.waitForURL(`${origin}/`);
+    check(await count() === homeCount, "앞으로가기에서 초기화된 전체 홈 복원");
+    await go("/posts/axios-cancel/");
+    await page.evaluate(() => {
+      const menu = document.querySelector('nav[aria-label="메인 메뉴"]');
+      menu.querySelector('a[href="/"]').click();
+      menu.querySelector('a[href="/tech/"]').click();
+    });
+    await page.waitForURL(`${origin}/tech/`);
+    report.passed.push("로고 검색 초기화, 문서·body·timeOrigin 유지/문서 요청0/프레임 배경 유지, Enter·보조키·터치, history·이동 취소");
 
     await go("/");
     await page.getByRole("button", { name: "글 검색", exact: true }).click();

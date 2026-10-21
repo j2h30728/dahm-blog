@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { FormEvent, MouseEvent } from "react";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ui } from "../lib/ui-classes";
 import { ThemeToggle } from "./ThemeToggle";
 import { getArchiveHref, getArchivePath, getNavigationSection, postCategories, type NavigationSection, type PostCategory } from "../lib/archive";
@@ -49,6 +49,7 @@ export function SiteHeader({ postCategories }: SiteHeaderProps) {
   const [searchValue, setSearchValue] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const resetHomeOnArrival = useRef(false);
   const activeSection = getNavigationSection(pathname, postCategories);
   const searchPath = pathname.replace(/\/+$/, "") === "/posts"
     ? "/posts/"
@@ -61,14 +62,42 @@ export function SiteHeader({ postCategories }: SiteHeaderProps) {
 
   const handleNavigation = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    resetHomeOnArrival.current = false;
     resetSearch();
     const target = new URL(event.currentTarget.href);
-    // 정적 페이지의 동일 경로 이동에서도 브라우저 URL의 검색어를 확실히 지운다.
+    // 같은 목록 안의 검색 초기화는 문서 이동 없이 URL 상태만 갱신한다.
     if (window.location.pathname === target.pathname && window.location.search !== target.search) {
       event.preventDefault();
-      window.location.assign(target.href);
+      window.history.pushState(null, "", target.href);
+      window.scrollTo({ top: 0, behavior: "instant" });
     }
   };
+
+  const handleHomeNavigation = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    resetSearch();
+    resetHomeOnArrival.current = true;
+    if (window.location.pathname === "/") {
+      event.preventDefault();
+      resetHomeOnArrival.current = false;
+      if (window.location.search || window.location.hash) window.history.pushState(null, "", "/");
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (pathname !== "/" || !resetHomeOnArrival.current) return;
+    resetHomeOnArrival.current = false;
+    // 정적 홈이 이전 검색 URL로 복원되어도 이번 로고 이동의 목적지는 항상 전체 홈이다.
+    if (window.location.search || window.location.hash) window.history.replaceState(null, "", "/");
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
+
+  useEffect(() => {
+    const cancelHomeReset = () => { resetHomeOnArrival.current = false; };
+    window.addEventListener("popstate", cancelHomeReset);
+    return () => window.removeEventListener("popstate", cancelHomeReset);
+  }, []);
 
   useEffect(() => {
     setSearchOpen(false);
@@ -100,10 +129,9 @@ export function SiteHeader({ postCategories }: SiteHeaderProps) {
   return (
     <header className={ui.siteHeader}>
       <nav aria-label="메인 메뉴" className={ui.nav}>
-        {/* 홈은 이전 검색 상태를 재사용하지 않고 새 문서로 연다. */}
-        <a className={ui.brand} href="/" onClick={handleNavigation}>
+        <Link className={ui.brand} href="/" onClick={handleHomeNavigation}>
           Dahm
-        </a>
+        </Link>
         <Suspense fallback={<NavigationLinks activeSection={activeSection} onNavigate={handleNavigation} />}>
           <NavigationFromUrl pathname={pathname} postCategories={postCategories} onNavigate={handleNavigation} />
         </Suspense>
