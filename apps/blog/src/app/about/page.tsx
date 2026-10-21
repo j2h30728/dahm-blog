@@ -29,7 +29,6 @@ export default function AboutPage() {
   return (
     <section aria-labelledby="about-title" className={ui.homeIntro} id="about">
       <div className={ui.minWidthZero}>
-        <p className={ui.tagline}>About</p>
         <h1 className={ui.homeTitle} id="about-title">
           안녕하세요. 담입니다.
         </h1>

@@ -1,8 +1,11 @@
+const pageFrame = "mx-auto w-full max-w-[980px] px-6 max-[640px]:px-[18px]";
+const pageHeading = "text-[clamp(1.35rem,2.8vw,1.65rem)] font-[650] leading-[1.4] tracking-[-0.02em] text-ink text-balance";
+
 export const ui = {
   siteHeader:
     "sticky top-0 z-10 border-b border-header-border bg-header-bg",
   nav:
-    "relative mx-auto grid w-full max-w-[768px] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-[var(--space-3)] gap-y-[var(--space-2)] px-6 py-3 max-[640px]:gap-x-1.5 max-[640px]:px-[18px] max-[640px]:py-2.5",
+    `${pageFrame} relative grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-[var(--space-3)] gap-y-[var(--space-2)] py-3 max-[640px]:gap-x-1.5 max-[640px]:py-2.5`,
   brand:
     "inline-flex min-w-0 items-center text-ink font-[760] tracking-[-0.01em] transition-opacity duration-[160ms] hover:opacity-70 hover:no-underline",
   navLinks:
@@ -25,11 +28,11 @@ export const ui = {
   navIconButton:
     "group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 text-muted-strong transition-[background,color] duration-[160ms] hover:bg-soft hover:text-ink",
   shell:
-    "mx-auto w-full max-w-[980px] flex-1 px-6 pb-[72px] pt-14 max-[640px]:px-[18px] max-[640px]:pb-12 max-[640px]:pt-[38px]",
+    `${pageFrame} flex-1 pb-14 pt-10 max-[640px]:pb-10 max-[640px]:pt-8`,
   siteFooter:
     "shrink-0 border-t border-line",
   footerInner:
-    "mx-auto grid w-full max-w-[768px] grid-cols-[minmax(0,1fr)_auto] items-start gap-[var(--space-6)] px-6 py-8 text-[0.9rem] max-[640px]:grid-cols-1 max-[640px]:gap-[var(--space-3)] max-[640px]:px-[18px] max-[640px]:py-6",
+    `${pageFrame} grid grid-cols-[minmax(0,1fr)_auto] items-start gap-[var(--space-6)] py-6 text-[0.85rem] max-[640px]:grid-cols-1 max-[640px]:gap-[var(--space-3)]`,
   footerBrand:
     "block font-[720] text-muted-strong",
   footerMeta:
@@ -40,22 +43,22 @@ export const ui = {
     "rounded-[var(--radius-sm)] px-2.5 py-2 font-mono text-[0.8rem] font-[680] uppercase tracking-[0] text-muted transition-[background,color] duration-[160ms] hover:bg-accent-soft hover:text-accent-ink hover:no-underline",
 
   homeIntro:
-    "home-intro grid scroll-mt-28 grid-cols-[minmax(0,1fr)_auto] gap-[var(--space-6)] border-b border-line pb-[34px] pt-2.5 transition-[opacity,transform,filter] duration-[600ms] ease-out-expo max-[860px]:grid-cols-1",
+    "home-intro w-full scroll-mt-28",
   minWidthZero: "min-w-0",
   tagline:
-    "tagline mb-3 block font-mono text-[0.76rem] font-[680] uppercase tracking-[0] text-accent-ink",
+    "tagline mb-2 block text-[0.75rem] font-[500] text-muted",
   homeTitle:
-    "page-title mb-3 max-w-[760px] text-[clamp(1.35rem,2.4vw,1.95rem)] font-[700] leading-[1.18] tracking-[0] text-ink text-balance transition-[opacity,transform,filter] delay-100 duration-[700ms] ease-out-expo max-[640px]:text-[clamp(1.35rem,6vw,1.8rem)]",
+    `page-title mb-5 mt-0 ${pageHeading}`,
   pageTitle:
-    "page-title mb-4 max-w-[820px] text-[clamp(1.45rem,2.8vw,2.2rem)] font-[720] leading-[1.16] tracking-[0] text-ink text-balance transition-[opacity,transform,filter] delay-100 duration-[700ms] ease-out-expo max-[640px]:text-[clamp(1.4rem,6vw,1.8rem)]",
+    `page-title mb-3 mt-0 ${pageHeading}`,
   aboutCopy:
-    "max-w-[720px] space-y-[var(--space-2)] text-[clamp(1rem,2vw,1.12rem)] text-muted [&_p]:m-0",
+    "space-y-3 text-[0.95rem] leading-[1.8] text-muted-strong [&_p]:m-0",
   pageSubtitle:
     "m-0 max-w-[720px] wrap-anywhere text-[clamp(1rem,2vw,1.18rem)] text-muted",
   homeSummary:
-    "flex max-w-[260px] flex-wrap justify-end gap-[var(--space-2)] self-end max-[860px]:max-w-none max-[860px]:justify-start",
+    "mt-6 flex flex-wrap items-center gap-x-5 gap-y-2",
   summaryPill:
-    "summary-pill glass-surface rounded-[var(--radius-pill)] border border-card-border px-2.5 py-[7px] font-mono text-[0.82rem] font-[640] leading-none text-muted transition-[background,border-color,color,box-shadow] duration-[160ms] hover:border-accent-blend hover:bg-accent-soft hover:text-accent-ink hover:shadow-glass-md hover:no-underline",
+    "inline-flex min-h-10 items-center text-[0.85rem] text-muted-strong underline decoration-line-strong underline-offset-4 transition-colors hover:text-ink",
 
   latestStrip:
     "latest-strip relative grid grid-cols-[minmax(0,1fr)_auto] items-end gap-6 overflow-hidden border-b border-line py-[26px] max-[860px]:grid-cols-1",
@@ -80,12 +83,12 @@ export const ui = {
   tagCount:
     "text-[0.74rem] text-muted",
   pageSection: "scroll-mt-28",
-  archive: "mx-auto w-full max-w-[720px]",
-  archiveIntro: "mb-8",
+  archive: "w-full",
+  archiveIntro: "mb-6",
   archiveTitle:
-    "mb-2 mt-0 text-[clamp(1.55rem,4vw,2rem)] font-[700] leading-[1.2] tracking-[-0.02em] text-ink text-balance",
+    `mb-2 mt-0 ${pageHeading}`,
   archiveSubtitle:
-    "m-0 max-w-[620px] text-[1rem] leading-[1.7] text-muted-strong",
+    "m-0 text-[0.95rem] leading-[1.7] text-muted-strong",
   sectionHeading: "mb-[18px] flex items-end justify-between max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-[var(--space-2)]",
   sectionMeta:
     "m-0 font-mono text-[0.8rem] font-[640] uppercase tracking-[0] text-muted tabular-nums",
@@ -122,43 +125,43 @@ export const ui = {
   postCard:
     "post-item border-b border-line last:border-b-0",
   postCardLink:
-    "block py-7 text-inherit transition-opacity duration-[160ms] hover:opacity-70 hover:text-inherit hover:no-underline max-[640px]:py-6",
+    "block py-[18px] text-inherit transition-opacity duration-[160ms] hover:opacity-70 hover:text-inherit hover:no-underline max-[640px]:py-4",
   postMeta: "post-meta flex flex-wrap items-baseline gap-x-2",
-  postDate: "mt-3 block text-[0.8rem] text-muted tabular-nums",
-  postCategory: "mt-3 text-[0.75rem] text-muted",
+  postDate: "mt-2 block text-[0.75rem] text-muted tabular-nums",
+  postCategory: "mt-2 text-[0.75rem] text-muted",
   postTitle:
-    "mb-2 mt-0 block text-[clamp(1.08rem,2vw,1.28rem)] font-[680] leading-[1.35] text-ink text-balance",
+    "mb-1.5 mt-0 block text-[clamp(1rem,2vw,1.1rem)] font-[650] leading-[1.4] text-ink text-balance",
   postDescription:
-    "m-0 line-clamp-1 max-w-[640px] text-[0.95rem] leading-[1.65] text-muted-strong",
+    "m-0 line-clamp-1 text-[0.875rem] leading-[1.5] text-muted-strong",
 
   meta:
-    "meta my-3 mb-[30px] flex flex-wrap items-center gap-2 text-muted",
+    "meta mb-6 mt-0 flex flex-wrap items-center gap-2 text-[0.75rem] text-muted tabular-nums",
   postLayout:
-    "post-layout grid grid-cols-[minmax(0,1fr)_220px] gap-10 max-[860px]:grid-cols-1",
+    "post-layout grid grid-cols-[minmax(0,1fr)_200px] gap-8 max-[860px]:grid-cols-1",
   contentPanel:
-    "content content-panel min-w-0 border-y border-line py-[clamp(22px,4vw,44px)] max-[640px]:py-[18px]",
+    "content content-panel min-w-0 border-t border-line pt-6",
 
   toc:
-    "toc sticky top-[84px] self-start overflow-hidden border-l border-line transition-[border-color] duration-[200ms] hover:border-accent-blend max-[860px]:static max-[860px]:border-l-0 max-[860px]:border-t",
+    "toc sticky top-[84px] self-start overflow-hidden border-l border-line max-[860px]:static max-[860px]:border-l-0 max-[860px]:border-t",
   tocTitle:
-    "mb-0 mt-0 border-b border-card-border px-4 py-[10px] font-mono text-[0.68rem] font-[680] uppercase tracking-[0] text-muted",
+    "mb-1 mt-0 px-4 py-2 text-[0.75rem] font-[500] text-muted",
   tocList: "list-none",
   tocItem: "",
   tocItemNested: "",
   tocLink:
-    "text-[0.85rem] text-ink-soft transition-colors duration-[160ms] hover:text-accent-ink hover:no-underline",
+    "text-[0.8rem] text-muted-strong transition-colors duration-[160ms] hover:text-ink hover:no-underline",
   tocLinkNested:
-    "text-[0.79rem] text-muted transition-colors duration-[160ms] hover:text-accent-ink hover:no-underline",
+    "text-[0.75rem] text-muted transition-colors duration-[160ms] hover:text-ink hover:no-underline",
 
   relatedSection:
-    "related mt-12 border-t border-line pt-[26px]",
-  relatedTitle: "mb-4 mt-0 text-[1.12rem]",
-  relatedGrid: "grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3",
+    "related mt-8 border-t border-line pt-5",
+  relatedTitle: "mb-3 mt-0 text-[0.9rem] font-[600] text-muted-strong",
+  relatedGrid: "grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-x-6 gap-y-3",
   relatedCard:
-    "related-card border-t border-line p-4 text-inherit transition-[background,border-color,transform] duration-[200ms] ease-spring hover:-translate-y-0.5 hover:border-accent-blend hover:bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)] hover:no-underline",
+    "related-card py-2 text-inherit transition-opacity duration-[160ms] hover:opacity-70 hover:no-underline",
   relatedKicker:
-    "mb-1.5 block font-mono text-[0.76rem] font-[680] uppercase tracking-[0] text-teal",
-  relatedMeta: "text-muted",
+    "mb-1 block text-[0.75rem] text-muted",
+  relatedMeta: "text-[0.75rem] text-muted",
   relatedDescription: "m-0 mt-2 text-muted",
 
   searchBox:
