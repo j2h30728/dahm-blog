@@ -438,6 +438,31 @@ html[data-theme="dark"] .shiki span {
   max-width: 100%;
 }
 
+.post-image-frame {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.post-image-frame[data-image-width] > .post-image-trigger,
+.post-image-frame[data-image-width] img {
+  width: 100%;
+}
+
+.post-image-caption {
+  color: var(--color-muted-strong);
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.6;
+  margin-top: 0.5rem;
+  /* 캡션 길이가 자동 크기 이미지의 표시 너비를 늘리지 않게 한다. */
+  min-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
+  width: 0;
+}
+
 .post-image-trigger {
   appearance: none;
   background: transparent;

@@ -25,8 +25,23 @@ function selectImage(image: HTMLImageElement, trigger: HTMLElement): SelectedIma
 
 export function ZoomableImage(props: ComponentPropsWithoutRef<"img">) {
   const insideLink = useContext(ImageLinkContext);
-  if (insideLink || !props.src) return <img {...props} alt={props.alt ?? ""} />;
-  return <StandaloneImage {...props} />;
+  if (!props.src) return <img {...props} alt={props.alt ?? ""} />;
+
+  const originalCaption = props.alt ?? "";
+  const match = /\s*\{width=(\d{1,5})\}\s*$/u.exec(originalCaption);
+  const requestedWidth = match ? Number(match[1]) : 0;
+  const width = requestedWidth > 0 && requestedWidth <= 10_000 ? requestedWidth : undefined;
+  const caption = width ? originalCaption.slice(0, match!.index).trim() : originalCaption;
+  const imageProps = { ...props, alt: caption };
+  const image = insideLink ? <img {...imageProps} /> : <StandaloneImage {...imageProps} />;
+
+  if (!caption.trim() && !width) return image;
+  return (
+    <span className="post-image-frame" style={width ? { width } : undefined} data-image-width={width}>
+      {image}
+      {caption.trim() ? <span className="post-image-caption">{caption}</span> : null}
+    </span>
+  );
 }
 
 function StandaloneImage(props: ComponentPropsWithoutRef<"img">) {

@@ -14,6 +14,8 @@ rtk proxy node -e 'const {createRequire}=require("node:module"); const p=createR
 
 `pnpm --filter @dahm-blog/blog test`는 별도로 실제 MDX 컴파일·SSR 구조·원본 속성·사용자 컴포넌트 우선순위를 확인한다.
 
+`image-caption-width.js`도 같은 최신 build·fixture bundle을 준비한 뒤 실행한다. 캡션 끝 `{width=360}`의 360px 표시와 모바일 축소, 너비 생략, 긴 캡션의 자동 크기 보존, 크기 표기 숨김, 이미지 링크·확대 닫기를 검사한다. 실제 노션 페이지를 수정하지 않는다.
+
 # 상단 메뉴와 전체 홈 회귀 검사
 
 `top-navigation.js` 역시 Playwright MCP의 `browser_run_code_unsafe`에 `filename`으로 전달한다. production export를 3037 포트에서 제공하면 별도 fixture 준비 없이 실행할 수 있다. 홈·기술·일상·소개 이동, 전체/분류 검색, 검색 초기화·해제, 상세 메뉴, 기존 주소, canonical·사이트맵, 모바일 헤더와 키보드를 검사한다. 현재 공개 글은 모두 기술이므로 일상 글이 섞인 전체 목록은 `archive.test.mjs`의 혼합 fixture로 확인한다. 브라우저 함수 반환값의 `errors`가 비어 있어야 통과다.

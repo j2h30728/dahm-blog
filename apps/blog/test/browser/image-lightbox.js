@@ -82,7 +82,7 @@ async (page) => {
     await settle(page);
     check(await fits(page), "세로로 긴 이미지 비율·화면 유지");
     await page.keyboard.press("Escape");
-    const linked = page.locator('a[aria-haspopup="dialog"]');
+    const linked = page.locator('a[aria-haspopup="dialog"]').filter({ has: page.getByAltText("링크 사진", { exact: true }) });
     check(await linked.locator("button").count() === 0, "이미지 링크에 중첩 버튼 없음");
     await linked.click(); await settle(page);
     check(!page.url().endsWith("#original"), "이미지 링크 기본 클릭은 이동 없이 확대");
