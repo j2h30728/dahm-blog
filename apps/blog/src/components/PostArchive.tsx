@@ -1,131 +1,82 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { filterArchivePosts, getArchiveCategory, getArchiveHref, postCategories, type PostCategory } from "../lib/archive";
 import type { Post } from "../lib/posts";
 import { ui } from "../lib/ui-classes";
 import { PostList } from "./PostList";
 
-interface ArchiveEntry {
-  count: number;
-  name: string;
-}
-
 interface PostArchiveProps {
   posts: Post[];
-  topics: ArchiveEntry[];
 }
 
-export function PostArchive({ posts, topics }: PostArchiveProps) {
-  const [query, setQuery] = useState("");
-  const [selectedTopic, setSelectedTopic] = useState("");
-
-  useEffect(() => {
-    setQuery(new URLSearchParams(window.location.search).get("q")?.trim() ?? "");
-  }, []);
-
-  const normalizedQuery = query.trim().toLowerCase();
-  const filteredPosts = useMemo(
-    () =>
-      posts.filter((post) => {
-        const matchesQuery =
-          normalizedQuery.length === 0 ||
-          [post.title, post.description, post.excerpt, post.topic, post.series, ...post.tags]
-            .filter((part): part is string => typeof part === "string")
-            .join(" ")
-            .toLowerCase()
-            .includes(normalizedQuery);
-        const matchesTopic = selectedTopic.length === 0 || post.topic === selectedTopic;
-        return matchesQuery && matchesTopic;
-      }),
-    [normalizedQuery, posts, selectedTopic],
+export function PostArchive({ posts }: PostArchiveProps) {
+  return (
+    <Suspense fallback={<ArchiveContent posts={posts} category="tech" query="" search="" />}>
+      <ArchiveFromUrl posts={posts} />
+    </Suspense>
   );
+}
 
-  const hasFilter = normalizedQuery.length > 0 || selectedTopic.length > 0;
-  const meta = hasFilter ? `${filteredPosts.length} / ${posts.length} posts` : `${posts.length} posts`;
+function ArchiveFromUrl({ posts }: PostArchiveProps) {
+  const params = useSearchParams();
 
   return (
-    <section aria-labelledby="posts-title" className={ui.pageSection} id="posts">
-      <div className={ui.sectionHeading}>
-        <div>
-          <p className={ui.tagline}>Posts</p>
-          <h1 className={ui.sectionTitle} id="posts-title">
-            Posts
-          </h1>
-        </div>
-        <p className={ui.sectionMeta}>{meta}</p>
+    <ArchiveContent
+      posts={posts}
+      category={getArchiveCategory(params.get("category"))}
+      query={params.get("q")?.trim() ?? ""}
+      search={params.toString()}
+    />
+  );
+}
+
+function ArchiveContent({ posts, category, query, search }: PostArchiveProps & {
+  category: PostCategory;
+  query: string;
+  search: string;
+}) {
+  const filteredPosts = filterArchivePosts(posts, category, query);
+  const categoryLabel = category === "tech" ? "기술" : "일상";
+
+  return (
+    <section aria-labelledby="posts-title" className={ui.archive} id="posts">
+      <div className={ui.archiveIntro}>
+        <h1 className={ui.archiveTitle} id="posts-title">글과 선택의 기록.</h1>
+        <p className={ui.archiveSubtitle}>개발하며 배운 것과 일상에서 남긴 생각.</p>
       </div>
 
-      <div className={ui.archiveTools}>
-        {query.length > 0 ? (
-          <div className={ui.activeSearch}>
-            <span className={ui.activeSearchLabel}>Search: {query}</span>
-            <a className={ui.activeSearchClear} href="/posts/">
-              Clear
-            </a>
-          </div>
-        ) : null}
+      <nav aria-label="글 분류" className={ui.archiveTabs}>
+        {postCategories.map(({ value, label }) => (
+          <a
+            aria-current={category === value ? "page" : undefined}
+            className={`${ui.archiveTab} ${category === value ? ui.archiveTabActive : ui.archiveTabInactive}`}
+            href={getArchiveHref(search, { category: value })}
+            key={value}
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
 
-        <div className={ui.filterGrid}>
-          <FilterGroup
-            entries={topics}
-            label="Topics"
-            onSelect={setSelectedTopic}
-            selected={selectedTopic}
-          />
+      {query ? (
+        <div className={ui.activeSearch}>
+          <span className={ui.activeSearchLabel}>검색: {query}</span>
+          <a className={ui.activeSearchClear} href={getArchiveHref(search, { q: "" })}>
+            검색 해제
+          </a>
         </div>
-      </div>
+      ) : null}
 
+      <p className="sr-only" role="status">{categoryLabel} 글 {filteredPosts.length}개</p>
       {filteredPosts.length > 0 ? (
         <PostList posts={filteredPosts} />
       ) : (
-        <p className={ui.emptyState}>No matching posts.</p>
+        <p className={ui.emptyState}>
+          {query ? "검색어에 해당하는 글이 없어요." : `아직 ${categoryLabel} 글이 없어요.`}
+        </p>
       )}
     </section>
-  );
-}
-
-function FilterGroup({
-  entries,
-  label,
-  onSelect,
-  selected,
-}: {
-  entries: ArchiveEntry[];
-  label: string;
-  onSelect: (value: string) => void;
-  selected: string;
-}) {
-  const allSelected = selected.length === 0;
-
-  return (
-    <div className={ui.filterGroup}>
-      <p className={ui.filterLabel}>{label}</p>
-      <div aria-label={label} className={ui.filterList} role="group">
-        <button
-          aria-pressed={allSelected}
-          className={`${ui.filterPill} ${allSelected ? ui.filterPillActive : ""}`.trim()}
-          onClick={() => onSelect("")}
-          type="button"
-        >
-          All
-        </button>
-        {entries.map((entry) => {
-          const isSelected = selected === entry.name;
-
-          return (
-            <button
-              aria-pressed={isSelected}
-              className={`${ui.filterPill} ${isSelected ? ui.filterPillActive : ""}`.trim()}
-              key={entry.name}
-              onClick={() => onSelect(entry.name)}
-              type="button"
-            >
-              {entry.name}
-              <span className={ui.filterCount}>{entry.count}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
   );
 }

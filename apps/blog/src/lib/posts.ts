@@ -1,5 +1,6 @@
 import postIndexJson from "../content/public-post-index.json";
 import { postModules, postModuleSlugs } from "../content/post-module-map";
+import type { PostCategory } from "./archive";
 
 export interface Heading {
   depth: number;
@@ -15,6 +16,7 @@ export interface Post {
   excerpt: string;
   date: string;
   updated?: string;
+  category: PostCategory;
   topic: string;
   tags: string[];
   tagSlugs: Partial<Record<string, string>>;

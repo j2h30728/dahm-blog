@@ -72,9 +72,11 @@ export default function RootLayout({
               <p className={ui.footerMeta}>글과 선택의 기록.</p>
             </div>
             <nav aria-label="Footer" className={ui.footerLinks}>
-              <Link className={ui.footerLink} href="/rss.xml">
+              <Link className={ui.footerLink} href="/series/">시리즈</Link>
+              <Link className={ui.footerLink} href="/tags/">태그</Link>
+              <a className={ui.footerLink} href="/rss.xml">
                 RSS
-              </Link>
+              </a>
               <a className={ui.footerLink} href="https://github.com/j2h30728">
                 GitHub
               </a>
@@ -84,7 +86,6 @@ export default function RootLayout({
             </nav>
           </div>
         </footer>
-        <script dangerouslySetInnerHTML={{ __html: typewriterScript }} />
       </body>
     </html>
   );
@@ -95,27 +96,4 @@ const _s = localStorage.getItem('theme');
 document.documentElement.dataset.theme =
   _s === 'dark' || _s === 'light' ? _s
   : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-`;
-
-const typewriterScript = `
-(() => {
-  const el = document.querySelector('.typewriter');
-  if (!el) return;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    el.classList.add('done');
-    return;
-  }
-  const text = el.textContent.trim();
-  el.textContent = '';
-  let i = 0;
-  function type() {
-    if (i < text.length) {
-      el.textContent += text[i++];
-      setTimeout(type, 58);
-    } else {
-      el.classList.add('done');
-    }
-  }
-  setTimeout(type, 350);
-})();
 `;
