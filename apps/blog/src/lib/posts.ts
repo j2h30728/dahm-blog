@@ -1,6 +1,7 @@
 import postIndexJson from "../content/public-post-index.json";
 import { postModules, postModuleSlugs } from "../content/post-module-map";
 import type { PostCategory } from "./archive";
+import { decodeRouteSegment } from "./route-segment";
 
 export interface Heading {
   depth: number;
@@ -41,11 +42,13 @@ export function getPublishedPosts(): Post[] {
 }
 
 export function getPost(slug: string): Post | undefined {
-  return postsBySlug.get(slug);
+  const key = decodeRouteSegment(slug);
+  return key ? postsBySlug.get(key) : undefined;
 }
 
 export async function getPostContent(slug: string) {
-  const load = postModules[slug];
+  const key = decodeRouteSegment(slug);
+  const load = key ? postModules[key] : undefined;
   if (!load) return undefined;
   return load();
 }
@@ -78,8 +81,10 @@ export function getSeriesEntries(posts: Post[]): Array<{ name: string; slug: str
 }
 
 export function getSeriesEntryBySlug(seriesSlug: string): { name: string; posts: Post[] } | undefined {
+  const key = decodeRouteSegment(seriesSlug);
+  if (!key) return undefined;
   const posts = getPublishedPosts();
-  const match = posts.find((post) => post.seriesSlug === seriesSlug);
+  const match = posts.find((post) => post.seriesSlug === key);
   if (!match || !match.series) return undefined;
   return {
     name: match.series,
@@ -109,7 +114,8 @@ export function getTagEntries(posts: Post[]): Array<{ count: number; name: strin
 }
 
 export function getTagEntryBySlug(tagSlug: string): { name: string; posts: Post[]; slug: string } | undefined {
-  return getTagEntries(getPublishedPosts()).find((entry) => entry.slug === tagSlug);
+  const key = decodeRouteSegment(tagSlug);
+  return key ? getTagEntries(getPublishedPosts()).find((entry) => entry.slug === key) : undefined;
 }
 
 export function getTopicEntries(posts: Post[]): Array<{ count: number; name: string }> {
