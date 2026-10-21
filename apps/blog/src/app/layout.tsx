@@ -4,8 +4,11 @@ import "./globals.css";
 import { SiteHeader } from "../components/SiteHeader";
 import { absoluteUrl, getSiteUrl, siteConfig } from "../lib/site";
 import { ui } from "../lib/ui-classes";
+import { getPublishedPosts } from "../lib/posts";
+import { getArchiveCategory } from "../lib/archive";
 
 const siteUrl = getSiteUrl();
+const postCategories = Object.fromEntries(getPublishedPosts().map((post) => [post.slug, getArchiveCategory(post.category)]));
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -63,7 +66,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
       </head>
       <body>
-        <SiteHeader />
+        <SiteHeader postCategories={postCategories} />
         <main className={ui.shell}>{children}</main>
         <footer className={ui.siteFooter}>
           <div className={ui.footerInner}>

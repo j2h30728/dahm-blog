@@ -4,7 +4,7 @@ import { getPublishedPosts } from "../lib/posts";
 import { absoluteUrl, canonicalPath, siteConfig } from "../lib/site";
 
 export const metadata: Metadata = {
-  title: "Posts",
+  title: "전체 글",
   description: siteConfig.description,
   alternates: {
     canonical: canonicalPath(siteConfig.canonicalHomePath),
@@ -12,19 +12,19 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: absoluteUrl(siteConfig.canonicalHomePath),
-    title: `${siteConfig.name} Posts`,
+    title: `${siteConfig.name} 전체 글`,
     description: siteConfig.description,
     siteName: siteConfig.name,
     locale: siteConfig.locale,
   },
   twitter: {
     card: "summary",
-    title: `${siteConfig.name} Posts`,
+    title: `${siteConfig.name} 전체 글`,
     description: siteConfig.description,
   },
 };
 
 export default function HomePage() {
   const posts = getPublishedPosts();
-  return <PostsSection posts={posts} />;
+  return <PostsSection posts={posts} category="all" />;
 }

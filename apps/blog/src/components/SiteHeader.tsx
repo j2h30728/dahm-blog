@@ -1,24 +1,79 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { FormEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import type { FormEvent, MouseEvent } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { ui } from "../lib/ui-classes";
 import { ThemeToggle } from "./ThemeToggle";
-import { getArchiveHref } from "../lib/archive";
+import { getArchiveHref, getArchivePath, getNavigationSection, postCategories, type NavigationSection, type PostCategory } from "../lib/archive";
 
 const navItems = [
-  { href: "/posts/", label: "글", match: (pathname: string) => pathname === "/" || pathname.startsWith("/posts") },
-  { href: "/about/", label: "소개", match: (pathname: string) => pathname.startsWith("/about") },
+  ...postCategories.map(({ value, label }) => ({ href: getArchivePath(value), label, section: value })),
+  { href: "/about/", label: "소개", section: "about" },
 ];
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  postCategories: Record<string, PostCategory>;
+}
+
+function NavigationLinks({ activeSection, onNavigate }: { activeSection: NavigationSection; onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void }) {
+  return (
+    <div className={ui.navLinks}>
+      {navItems.map((item) => {
+        const active = activeSection === item.section;
+        return (
+          <Link
+            aria-current={active ? "page" : undefined}
+            className={`${ui.navLink} ${active ? ui.navLinkActive : ui.navLinkInactive}`}
+            href={item.href}
+            key={item.href}
+            onClick={onNavigate}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function NavigationFromUrl({ pathname, postCategories, onNavigate }: SiteHeaderProps & { pathname: string; onNavigate: (event: MouseEvent<HTMLAnchorElement>) => void }) {
+  const params = useSearchParams();
+  return <NavigationLinks activeSection={getNavigationSection(pathname, postCategories, params.get("category"))} onNavigate={onNavigate} />;
+}
+
+export function SiteHeader({ postCategories }: SiteHeaderProps) {
   const pathname = usePathname() ?? "/";
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const activeSection = getNavigationSection(pathname, postCategories);
+  const searchPath = pathname.replace(/\/+$/, "") === "/posts"
+    ? "/posts/"
+    : getArchivePath(activeSection === "tech" || activeSection === "life" ? activeSection : "all");
+
+  const resetSearch = () => {
+    setSearchOpen(false);
+    setSearchValue("");
+  };
+
+  const handleNavigation = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    resetSearch();
+    const target = new URL(event.currentTarget.href);
+    // 정적 페이지의 동일 경로 이동에서도 브라우저 URL의 검색어를 확실히 지운다.
+    if (window.location.pathname === target.pathname && window.location.search !== target.search) {
+      event.preventDefault();
+      window.location.assign(target.href);
+    }
+  };
+
+  useEffect(() => {
+    setSearchOpen(false);
+    setSearchValue("");
+  }, [pathname]);
 
   useEffect(() => {
     if (searchOpen) searchInputRef.current?.focus();
@@ -39,30 +94,18 @@ export function SiteHeader() {
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const query = new FormData(event.currentTarget).get("q");
-    window.location.assign(getArchiveHref(window.location.search, { q: typeof query === "string" ? query : "" }));
+    window.location.assign(getArchiveHref(window.location.search, { q: typeof query === "string" ? query : "" }, searchPath));
   };
 
   return (
     <header className={ui.siteHeader}>
       <nav aria-label="메인 메뉴" className={ui.nav}>
-        <Link className={ui.brand} href="/posts/">
+        <Link className={ui.brand} href="/" onClick={handleNavigation}>
           Dahm
         </Link>
-        <div className={ui.navLinks}>
-          {navItems.map((item) => {
-            const active = item.match(pathname);
-            return (
-              <Link
-                aria-current={active ? "page" : undefined}
-                className={`${ui.navLink} ${active ? ui.navLinkActive : ui.navLinkInactive}`}
-                href={item.href}
-                key={item.href}
-              >
-                {item.label}
-              </Link>
-            );
-          })}
-        </div>
+        <Suspense fallback={<NavigationLinks activeSection={activeSection} onNavigate={handleNavigation} />}>
+          <NavigationFromUrl pathname={pathname} postCategories={postCategories} onNavigate={handleNavigation} />
+        </Suspense>
         <div className={ui.navActions}>
           <button
             aria-controls="site-search"
@@ -107,7 +150,7 @@ export function SiteHeader() {
           <ThemeToggle />
         </div>
         <form
-          action="/posts/"
+          action={searchPath}
           aria-hidden={!searchOpen}
           className={`${ui.navSearchForm} ${searchOpen ? ui.navSearchFormOpen : ui.navSearchFormClosed}`.trim()}
           method="get"
@@ -124,7 +167,7 @@ export function SiteHeader() {
                 closeSearch();
               }
             }}
-            placeholder="현재 분류에서 검색"
+            placeholder="글 검색"
             ref={searchInputRef}
             tabIndex={searchOpen ? 0 : -1}
             type="search"

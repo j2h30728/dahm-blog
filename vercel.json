@@ -2,12 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm build:blog",
   "outputDirectory": "apps/blog/.next",
-  "framework": "nextjs",
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/posts/",
-      "permanent": true
-    }
-  ]
+  "framework": "nextjs"
 }

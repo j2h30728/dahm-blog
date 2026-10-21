@@ -86,13 +86,6 @@ export const ui = {
     "mb-2 mt-0 text-[clamp(1.55rem,4vw,2rem)] font-[700] leading-[1.2] tracking-[-0.02em] text-ink text-balance",
   archiveSubtitle:
     "m-0 max-w-[620px] text-[1rem] leading-[1.7] text-muted-strong",
-  archiveTabs:
-    "mb-2 flex items-center gap-6 border-b border-line",
-  archiveTab:
-    "relative -mb-px inline-flex min-h-10 items-center border-b px-0.5 pb-2.5 pt-1 text-[0.95rem] font-[650] transition-colors duration-[160ms] hover:text-ink hover:no-underline",
-  archiveTabActive:
-    "border-ink text-ink",
-  archiveTabInactive: "border-transparent text-muted",
   sectionHeading: "mb-[18px] flex items-end justify-between max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-[var(--space-2)]",
   sectionMeta:
     "m-0 font-mono text-[0.8rem] font-[640] uppercase tracking-[0] text-muted tabular-nums",

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { filterArchivePosts, getArchiveCategory, getArchiveHref } from "../src/lib/archive.ts";
+import { filterArchivePosts, getArchiveCategory, getArchiveHref, getArchivePath, getNavigationSection } from "../src/lib/archive.ts";
 
 const tech = {
   slug: "react-note", category: "tech", title: "React의 상태", description: "소유권을 고민한 기록",
@@ -50,4 +50,32 @@ test("검색 제출과 해제는 일상 분류를 유지하고 특수문자를 �
   assert.equal(url.searchParams.get("category"), "life");
   assert.equal(getArchiveHref(url.search, { q: "" }), "/posts/?category=life");
   assert.equal(getArchiveHref("q=old", { q: "   " }), "/posts/");
+});
+
+test("전체 목록은 기술·일상·기존 글을 빠짐없이 원래 최신순으로 유지한다", () => {
+  assert.deepEqual(filterArchivePosts(posts, "all").map(post => post.slug), posts.map(post => post.slug));
+  assert.deepEqual(filterArchivePosts(posts, "all", "커피").map(post => post.slug), ["weekend-note"]);
+  assert.deepEqual(filterArchivePosts(posts, "all", "React").map(post => post.slug), ["react-note", "old-post"]);
+});
+
+test("홈·분류 검색은 전용 경로를 유지하고 충돌하는 category query를 제거한다", () => {
+  for (const [scope, pathname] of [["all", "/"], ["tech", "/tech/"], ["life", "/life/"]]) {
+    assert.equal(getArchivePath(scope), pathname);
+    const url = new URL(getArchiveHref("category=life&utm_source=rss&q=old", { q: " 산책 & 커피 " }, pathname), "https://dahm.test");
+    assert.equal(url.pathname, pathname);
+    assert.equal(url.searchParams.get("q"), "산책 & 커피");
+    assert.equal(url.searchParams.get("utm_source"), "rss");
+    assert.equal(url.searchParams.has("category"), false);
+    assert.equal(getArchiveHref("q=old&category=tech", { q: "" }, pathname), pathname);
+  }
+});
+
+test("메뉴 활성 상태는 목록 경로·legacy query·상세 글 분류를 구분한다", () => {
+  const sections = { "react-note": "tech", "weekend-note": "life", "old-post": undefined };
+  for (const [pathname, expected] of [["/", null], ["/tech/", "tech"], ["/life/", "life"], ["/about/", "about"], ["/posts/", "tech"], ["/posts/react-note/", "tech"], ["/posts/weekend-note/", "life"], ["/posts/old-post/", "tech"], ["/posts/missing/", null], ["/tags/", null], ["/technology/", null]]) {
+    assert.equal(getNavigationSection(pathname, sections), expected, pathname);
+  }
+  assert.equal(getNavigationSection("/posts/", sections, "life"), "life");
+  assert.equal(getNavigationSection("/tech/", sections, "life"), "tech");
+  assert.equal(getNavigationSection("/life/", sections, "tech"), "life");
 });

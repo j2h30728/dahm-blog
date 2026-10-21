@@ -5,7 +5,7 @@ export const siteConfig = {
   authorUrl: "https://github.com/j2h30728",
   language: "ko",
   locale: "ko_KR",
-  canonicalHomePath: "/posts/",
+  canonicalHomePath: "/",
 } as const;
 
 const localSiteUrl = "http://localhost:3000";

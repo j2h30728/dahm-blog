@@ -12,6 +12,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return [
     pageEntry(siteConfig.canonicalHomePath, latestPostDate, "weekly", 1),
+    pageEntry("/tech/", latestPostDate, "weekly", 0.8),
+    pageEntry("/life/", latestPostDate, "weekly", 0.8),
     pageEntry("/about/", latestPostDate, "monthly", 0.6),
     pageEntry("/series/", latestPostDate, "weekly", 0.7),
     pageEntry("/tags/", latestPostDate, "weekly", 0.7),

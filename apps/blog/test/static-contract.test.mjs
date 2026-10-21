@@ -37,6 +37,8 @@ test("declares the public blog routes in App Router", () => {
   const routeFiles = [
     "src/app/page.tsx",
     "src/app/about/page.tsx",
+    "src/app/tech/page.tsx",
+    "src/app/life/page.tsx",
     "src/app/posts/index-view.tsx",
     "src/app/posts/[[...slug]]/page.tsx",
     "src/app/series/index-view.tsx",
@@ -53,22 +55,24 @@ test("declares the public blog routes in App Router", () => {
   }
 });
 
-test("pins the SEO URL contract to the canonical posts index", () => {
+test("전체 홈을 canonical로 사용하고 루트 리다이렉트 없이 분류 목록을 제공한다", () => {
   const vercelConfig = JSON.parse(readFileSync(path.join(workspaceRoot, "vercel.json"), "utf8"));
   const siteSource = readFileSync(path.join(appRoot, "src/lib/site.ts"), "utf8");
   const homeSource = readFileSync(path.join(appRoot, "src/app/page.tsx"), "utf8");
   const sitemapSource = readFileSync(path.join(appRoot, "src/app/sitemap.ts"), "utf8");
   const headerSource = readFileSync(path.join(appRoot, "src/components/SiteHeader.tsx"), "utf8");
 
-  assert.deepEqual(vercelConfig.redirects[0], {
-    source: "/",
-    destination: "/posts/",
-    permanent: true,
-  });
-  assert.match(siteSource, /canonicalHomePath:\s*"\/posts\/"/);
+  assert.equal((vercelConfig.redirects ?? []).some(redirect => redirect.source === "/"), false);
+  assert.match(siteSource, /canonicalHomePath:\s*"\/"/);
   assert.match(homeSource, /canonicalPath\(siteConfig\.canonicalHomePath\)/);
   assert.match(sitemapSource, /pageEntry\(siteConfig\.canonicalHomePath/);
-  assert.match(headerSource, /href="\/posts\/"/);
+  assert.match(headerSource, /href="\/"/);
+  for (const section of ["tech", "life"]) {
+    const source = readFileSync(path.join(appRoot, `src/app/${section}/page.tsx`), "utf8");
+    assert.match(source, new RegExp(`canonical: "/${section}/"`));
+    assert.match(source, new RegExp(`category="${section}"`));
+    assert.ok(sitemapSource.includes(`pageEntry("/${section}/"`));
+  }
 });
 
 test("declares production-safe SEO URL generation", () => {
