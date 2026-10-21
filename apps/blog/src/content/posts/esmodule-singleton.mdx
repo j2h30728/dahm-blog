@@ -61,7 +61,7 @@ console.log(a === b); // true — 항상 같은 인스턴스
 ## ES Module이 싱글톤처럼 보이는 이유
 서두의 코드로 돌아가자면, `a.js`와 `b.js`가 상태를 공유할 수 있었던 이유는 두 가지 메커니즘이 조합된 결과입니다. 이 메커니즘을 이해하려면 ES Module이 로딩되는 과정을 먼저 봐야 합니다.
 ES Module의 로딩은 세 단계로 이루어집니다. 이 글에서는 설명 편의상 Construction / Instantiation / Evaluation이라는 표현을 사용하지만, ECMAScript 모듈 레코드 수준에서는 LoadRequestedModules → Link → Evaluate가 대응됩니다.
-- **Construction** — 파일을 fetch(호스트가 모듈을 로드)하고 파싱해 Module Record를 준비합니다.
+- **Construction** —  파일을 fetch(호스트가 모듈을 로드)하고 파싱해 Module Record를 준비합니다.
 - **Instantiation** — 모든 모듈의 export/import 바인딩을 메모리에 연결합니다. 어떤 모듈이 무엇을 export하고 import하는지 파악해서, 모듈 간 연결을 실제로 만드는 단계입니다. 코드는 아직 실행되지 않습니다.
 - **Evaluation** — 모듈의 top-level 코드를 실제로 실행합니다.
 > 더 자세한 내용은 [ES modules: A cartoon deep-dive](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/)를 참고하시면 좋습니다.
@@ -144,8 +144,8 @@ const mod2 = await import('./counter.js?v=2');
 ```
 ### Next.js에서는
 이 전제가 달라질 수 있는 환경 중 하나가 Next.js입니다. Next.js는 단일 환경이 아니라 서버와 클라이언트가 각각 독립된 실행 환경을 갖습니다.
-- **서버(Node.js 프로세스)**에서는 하나의 long-lived 프로세스 내부에서는 module map이 유지되어 대체로 같은 인스턴스를 공유합니다. 하지만 이게 오히려 문제가 될 수 있습니다. 모듈 레벨 상태가 요청 간에 공유되기 때문에, 특정 요청에서 상태를 바꾸면 다른 사용자의 요청에도 영향을 줍니다. 또한 멀티 서버 배포 환경에서는 서버 인스턴스 간에 인메모리 상태가 공유되지 않습니다.
-- **클라이언트(브라우저)**에서는 클라이언트 사이드 네비게이션이면 Document가 유지되므로 module map도 유지됩니다. 하지만 새로고침이나 직접 URL 입력 같은 hard navigation이면 Document가 새로 만들어지고 module map도 초기화됩니다.
+**서버(Node.js 프로세스)에서는** 하나의 long-lived 프로세스 내부에서는 module map이 유지되어 대체로 같은 인스턴스를 공유합니다. 하지만 이게 오히려 문제가 될 수 있습니다. 모듈 레벨 상태가 요청 간에 공유되기 때문에, 특정 요청에서 상태를 바꾸면 다른 사용자의 요청에도 영향을 줍니다. 또한 멀티 서버 배포 환경에서는 서버 인스턴스 간에 인메모리 상태가 공유되지 않습니다.
+**클라이언트(브라우저)에서는** 클라이언트 사이드 네비게이션이면 Document가 유지되므로 module map도 유지됩니다. 하지만 새로고침이나 직접 URL 입력 같은 hard navigation이면 Document가 새로 만들어지고 module map도 초기화됩니다.
 Server Component와 Client Component 는 실행 환경 자체가 다릅니다. Next.js 공식 문서도 서버와 클라이언트가 isolated module systems에서 실행된다고 설명합니다. 같은 모듈을 양쪽에서 import하더라도 각각 독립된 인스턴스가 됩니다.
 ```plain text
 서버 환경  → Node.js의 ESM URL 캐시 → store.js 인스턴스 A
@@ -171,3 +171,5 @@ SPA 환경에서는 이 차이를 느끼기 어렵습니다. module map이 하�
 - [Modules: ECMAScript modules — Node.js](https://nodejs.org/api/esm.html)
 - [Modules: CommonJS modules — Node.js](https://nodejs.org/api/modules.html#caching)
 - [Singleton Pattern — Refactoring Guru](https://refactoring.guru/design-patterns/singleton)
+---
+[Velog 원문](https://velog.io/@rachel28/esmodule-singleton)
