@@ -11,6 +11,7 @@ export interface NotionPost {
   description: string;
   date: string;
   updated: string;
+  category: "tech" | "life";
   topic: string;
   tags: string[];
   series?: string;

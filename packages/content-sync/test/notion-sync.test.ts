@@ -19,8 +19,10 @@ const imageUrl = "https://prod-files-secure.s3.us-west-2.amazonaws.com/page/exam
 const schema = { properties: { status: { type: "select" }, type: { type: "select" } } };
 const rich = (text: string) => ({ type: "rich_text", rich_text: [{ plain_text: text }] });
 
-function page(id = first, slug = "new-post", status = "published"): NotionPage & { object: string } {
-  return {
+function page(
+  id = first, slug = "new-post", status = "published", section?: string | null,
+): NotionPage & { object: string } {
+  const result: NotionPage & { object: string } = {
     object: "page", id, last_edited_time: "2026-10-19T01:00:00.000Z",
     properties: {
       title: { type: "title", title: [{ plain_text: "새 글" }] },
@@ -32,6 +34,10 @@ function page(id = first, slug = "new-post", status = "published"): NotionPage &
       tags: { type: "multi_select", multi_select: [{ name: "React" }] },
     },
   };
+  if (section !== undefined) {
+    result.properties.section = { type: "select", select: section === null ? null : { name: section } };
+  }
+  return result;
 }
 
 const json = (value: unknown, status = 200, headers?: HeadersInit) => new Response(JSON.stringify(value), { status, headers });
@@ -79,6 +85,52 @@ function outputOptions(root: string): PublishOptions {
 function publish(root: string, content: Awaited<ReturnType<typeof fetchNotionContent>>) {
   return publishPosts(content.posts, content.assetDir, outputOptions(root));
 }
+
+test("section이 없거나 비어 있으면 기술 글이며 한글·영문 선택값을 분류로 변환한다", async (t) => {
+  const root = workspace(t);
+  const cases = [
+    { section: undefined, expected: "tech" },
+    { section: null, expected: "tech" },
+    { section: "기술", expected: "tech" },
+    { section: "tech", expected: "tech" },
+    { section: "일상", expected: "life" },
+    { section: "life", expected: "life" },
+  ] as const;
+
+  for (const { section, expected } of cases) {
+    const prepared = await fetchNotionContent(root, config, api([page(first, "new-post", "published", section)]));
+    try {
+      assert.equal(prepared.posts[0]?.category, expected);
+      assert.equal(prepared.posts[0]?.topic, "frontend");
+    } finally {
+      prepared.cleanup();
+    }
+  }
+});
+
+test("지원하지 않는 section 선택값은 해당 값과 페이지를 알리는 오류로 중단한다", async (t) => {
+  const root = workspace(t);
+  await assert.rejects(
+    fetchNotionContent(root, config, api([page(first, "new-post", "published", "회고")])),
+    (error: Error) => error.message.includes("section") && error.message.includes("회고") && error.message.includes(first),
+  );
+});
+
+test("글 분류를 공개 글·링크·검색 인덱스에 동일하게 전달한다", async (t) => {
+  const root = workspace(t);
+  const prepared = await fetchNotionContent(root, config, api([page(first, "new-post", "published", "일상")]));
+  t.after(prepared.cleanup);
+
+  const entries = publish(root, prepared);
+  const posts = JSON.parse(readFileSync(outputOptions(root).publicPostIndexPath, "utf8"));
+  const links = JSON.parse(readFileSync(outputOptions(root).publicLinkIndexPath, "utf8"));
+  const search = JSON.parse(readFileSync(outputOptions(root).searchIndexPath, "utf8"));
+
+  assert.equal(entries[0]?.category, "life");
+  assert.equal(posts.posts[0]?.category, "life");
+  assert.equal(links.nodes[0]?.category, "life");
+  assert.equal(search[0]?.category, "life");
+});
 
 test("Notion에 없는 파일 글은 무시하고 DB의 글·URL·본문·에셋만 게시한다", async (t) => {
   const root = workspace(t);

@@ -107,7 +107,8 @@ export function publishPosts(posts: NotionPost[], assetDir: string, options: Pub
       edges: posts.flatMap((post) => internalPostLinks(post.body, slugs).map((edge) => ({ sourceSlug: post.slug, ...edge }))),
     });
     addFile(options.searchIndexPath, posts.map((post) => ({
-      title: post.title, description: post.description, topic: post.topic, tags: post.tags, series: post.series,
+      title: post.title, description: post.description, category: post.category,
+      topic: post.topic, tags: post.tags, series: post.series,
       url: `/posts/${encodeURIComponent(post.slug)}/`,
       searchText: [post.title, post.description, post.topic, post.series, post.tags.join(" "), plainText(post.body)].filter(Boolean).join(" ").toLowerCase(),
     })).sort((a, b) => a.url.localeCompare(b.url)));

@@ -4,6 +4,13 @@ import { NotionClient, notionId, object, property, selectProperty, textProperty,
 import { notionMarkdown } from "./notion-markdown.js";
 import type { NotionPost } from "./schema.js";
 
+function postCategory(page: NotionPage): NotionPost["category"] {
+  const section = page.properties.section ? selectProperty(page, "section").trim().toLowerCase() : "";
+  if (!section || section === "기술" || section === "tech") return "tech";
+  if (section === "일상" || section === "life") return "life";
+  throw new Error(`Notion section 속성 값 오류 (${page.id}): ${section}`);
+}
+
 export function notionConfig(env: NodeJS.ProcessEnv): NotionConfig {
   if (env.CONTENT_SOURCE && env.CONTENT_SOURCE !== "notion") {
     throw new Error("파일 게시 모드는 제거되었습니다. CONTENT_SOURCE를 지우고 Notion API를 설정하세요.");
@@ -43,6 +50,7 @@ function metadata(page: NotionPage): Omit<NotionPost, "body"> {
   }
   return {
     id: notionId(page.id), title, slug, description, date, updated, tags,
+    category: postCategory(page),
     topic: selectProperty(page, "category") || "general",
     ...(series ? { series } : {}),
     ...(order !== null ? { seriesOrder: order } : {}),

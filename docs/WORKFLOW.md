@@ -25,12 +25,15 @@ PUBLIC_SITE_URL=https://실제-블로그-도메인
 | `tags` | 태그 | 한 개 이상 |
 | `slug` | /posts/slug/ | 필수, 문자·숫자·점·밑줄·하이픈의 단일 경로 |
 | `category` | topic | 비어 있으면 general |
+| `section` | 글 분류 | 선택, `기술`/`tech` 또는 `일상`/`life`; 없거나 비어 있으면 `tech` |
 | `status` | 공개 여부 | published만 게시 |
 | `type` | 글 종류 | post만 게시 |
 | `series`, `seriesOrder` | 시리즈·순서 | 선택 |
 | 페이지 수정 시각 | updated | API last_edited_time |
 
 `author`, `thumbnail` 속성은 현재 UI에서 사용하지 않습니다. 로컬 파일의 frontmatter나 별도 페이지 ID 예외 매핑도 사용하지 않습니다. URL 유지를 위해 세 기존 글의 DB slug를 `rsc-dot-notation`, `esmodule-singleton`, `axios-cancel`로 정리했습니다.
+
+Notion DB의 `section` 선택 속성에서 `기술` 또는 `일상`을 선택합니다. 비어 있는 글은 기술 글로 동기화됩니다. API에서는 `tech`와 `life` 값도 지원하며, 지원하지 않는 선택값은 잘못된 분류를 조용히 게시하지 않도록 동기화 오류로 처리합니다. 기존 `category`는 주제(`topic`) 용도이며 글 분류와 별개입니다.
 
 ## 동기화와 확인
 

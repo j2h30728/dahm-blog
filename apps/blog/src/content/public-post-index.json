@@ -11,6 +11,7 @@
         "Frontend",
         "Next.js"
       ],
+      "category": "tech",
       "topic": "frontend",
       "href": "/posts/rsc-dot-notation/",
       "tagSlugs": {
@@ -120,6 +121,7 @@
       "tags": [
         "Pattern"
       ],
+      "category": "tech",
       "topic": "design pattern",
       "href": "/posts/esmodule-singleton/",
       "tagSlugs": {
@@ -193,6 +195,7 @@
       "tags": [
         "Frontend"
       ],
+      "category": "tech",
       "topic": "HTTP",
       "href": "/posts/axios-cancel/",
       "tagSlugs": {
