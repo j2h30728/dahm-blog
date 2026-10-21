@@ -60,6 +60,39 @@ test("CJK 강조 보완은 escaped 기호·코드·링크 주소를 다시 해�
   assert.match(html, /href="https:\/\/example.com\/\*\*/);
 });
 
+test("Notion이 평문으로 남긴 인라인 강조를 자식 노드 구조와 함께 복원한다", async () => {
+  for (const [source, expected] of [
+    [
+      "**해당 풀리퀘스트 : **[**Feature #17 강아지 등록 폼 로직 구현**](https://example.com)",
+      /<strong>해당 풀리퀘스트 :<\/strong> <a href="https:\/\/example.com"><strong>Feature #17 강아지 등록 폼 로직 구현<\/strong><\/a>/,
+    ],
+    [
+      "공식문서에서는 **`pscale branch promote <name>` 명령어를 사용하여 프로덕트 브랜치로 승격하라고 한다.**",
+      /공식문서에서는 <strong><code>pscale branch promote &lt;name&gt;<\/code> 명령어를 사용하여 프로덕트 브랜치로 승격하라고 한다\.<\/strong>/,
+    ],
+    ["**`shallow`**는 zustand에서 사용한다.", /<strong><code>shallow<\/code><\/strong>는 zustand에서 사용한다\./],
+    ["***'이력서는 제일 드라이한 문서'***라고 말했다.", /<em><strong>&#x27;이력서는 제일 드라이한 문서&#x27;<\/strong><\/em>라고 말했다\./],
+  ]) assert.match(await render(source), expected);
+});
+
+test("Notion이 연속 출력한 강조 경계를 리터럴 별표 없이 보존한다", async () => {
+  const pscale = await render("공식문서에서는 **`pscale branch promote <name>`**** 명령어를 사용하여 프로덕트 브랜치로 승격하라고 한다.**");
+  assert.match(pscale, /<strong><code>pscale branch promote &lt;name&gt;<\/code><\/strong> <strong>명령어를 사용하여 프로덕트 브랜치로 승격하라고 한다\.<\/strong>/);
+  assert.doesNotMatch(pscale, /\*\*/);
+
+  const shallow = await render("**`shallow`****는 zustand에서 변경되지않는 값은 리렌더링을 방지하는 기능**이다.");
+  assert.match(shallow, /<strong><code>shallow<\/code>는 zustand에서 변경되지않는 값은 리렌더링을 방지하는 기능<\/strong>이다\./);
+  assert.doesNotMatch(shallow, /\*\*/);
+});
+
+test("강조 보완은 escaped·entity 별표와 산술식·코드 리터럴을 건드리지 않는다", async () => {
+  const html = await render("\\*\\*한글\\*\\*과 &#42;&#42;한글&#42;&#42;\n\n2 ** 3 ** 4\n\n`**한글**`\n\n```text\n**한글**\n```");
+  assert.match(html, /\*\*한글\*\*과 \*\*한글\*\*/);
+  assert.match(html, /2 \*\* 3 \*\* 4/);
+  assert.equal((html.match(/<strong>/g) ?? []).length, 0);
+  assert.equal((html.match(/<code>/g) ?? []).length, 2);
+});
+
 test("제목과 표 셀의 CJK 강조도 구조나 링크 주소를 바꾸지 않고 렌더링한다", async () => {
   const html = await render("## **서버(설계)**에서는\n\n| 항목 | 설명 |\n| --- | --- |\n| **캐시(상태)**에는 | [링크](https://example.com/a**b**/) |");
   assert.match(html, /<h2[^>]*><strong>서버\(설계\)<\/strong>에서는<\/h2>/);

@@ -1,7 +1,7 @@
 type Block = { line: string; children: Block[] };
 
 const listMarker = /^(?:[-+*]|\d+[.)])[ \t]+/;
-const lineBreak = /<br\s*\/?\s*>/g;
+const lineBreak = /(?<!\\)<br\s*\/?\s*>/g;
 
 function inline(text: string): string {
   return text.split(lineBreak).map((part, index) => index === 0 ? part : part

@@ -84,7 +84,10 @@ function protectCode(markdown: string): { body: string; restore: (body: string) 
       if (close && close[1][0] === fence[0] && close[1].length >= fence.length) {
         const ending = /\r?\n$/.exec(block)?.[0] ?? "";
         const indent = /^\t*/.exec(block)![0];
-        const content = block.split(/(?<=\n)/).map(part => part.startsWith(indent) ? part.slice(indent.length) : part).join("");
+        const parts = block.split(/(?<=\n)/);
+        // Notion은 child fence 줄만 들여쓰고 본문은 코드 원문 그대로 반환한다.
+        const content = parts.map((part, index) => (index === 0 || index === parts.length - 1) && part.startsWith(indent)
+          ? part.slice(indent.length) : part).join("");
         body += indent + save(content.slice(0, content.length - ending.length)) + ending;
         block = "";
         fence = undefined;
@@ -150,17 +153,23 @@ function normalizeProse(body: string): string {
   const result = body
     // Notion 구분선은 빈 줄 없이 반환될 수 있다. Setext 제목과 충돌하지 않는 표기를 쓴다.
     .replace(/^([ \t]*(?:>[ \t]*)*)---[ \t]*(\r?)$/gm, "$1***$2")
-    .replace(/<table\b([^>]*)>([\s\S]*?)<\/table>/g, (_, attributes, content) => tableMarkdown(attributes, content))
+    .replace(/(\\*)<table\b([^>]*)>([\s\S]*?)<\/table>/g, (value, escapes, attributes, content) =>
+      escapes.length % 2 ? value : escapes + tableMarkdown(attributes, content))
     .replace(/\s*\{color="[a-z_]+"\}/g, "")
-    .replace(/<empty-block\s*\/>/g, "\n")
-    .replace(/<callout\b[^>]*>([\s\S]*?)<\/callout>/g, (_, content) => `\n\n**메모**\n\n${content.trim()}\n\n`)
-    .replace(/<details>\s*<summary>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/g, (_, title, content) => `\n\n**${title.trim()}**\n\n${content.trim()}\n\n`)
-    .replace(/<(https?:\/\/[^>\s]+)>/g, (_, url) => `[${url}](${url})`);
+    .replace(/(\\*)<empty-block\s*\/>/g, (value, escapes) => escapes.length % 2 ? value : escapes + "\n")
+    .replace(/(\\*)<callout\b[^>]*>([\s\S]*?)<\/callout>/g, (value, escapes, content) =>
+      escapes.length % 2 ? value : `${escapes}\n\n**메모**\n\n${content.trim()}\n\n`)
+    .replace(/(\\*)<details>\s*<summary>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/g, (value, escapes, title, content) =>
+      escapes.length % 2 ? value : `${escapes}\n\n**${title.trim()}**\n\n${content.trim()}\n\n`)
+    .replace(/(\\*)<(https?:\/\/[^>\s]+)>/g, (value, escapes, url) =>
+      escapes.length % 2 ? value : `${escapes}[${url}](${url})`);
   const blocks = emitNotionBlocks(result);
-  const unsupported = /<\/?([a-z][a-z_-]*)(?=[\s/>])/.exec(blocks);
-  if (unsupported) throw new Error(`지원하지 않는 Notion 본문 태그: ${unsupported[1]}. 표준 Markdown 블록으로 바꿔 주세요.`);
+  const unsupported = [...blocks.matchAll(/(\\*)<\/?([a-z][a-z_-]*)(?=[\s/>])/g)]
+    .find(match => match[1].length % 2 === 0);
+  if (unsupported) throw new Error(`지원하지 않는 Notion 본문 태그: ${unsupported[2]}. 표준 Markdown 블록으로 바꿔 주세요.`);
   // Notion 본문을 JavaScript/JSX로 실행하지 않는다. 코드 예제는 protectCode가 보존한다.
-  return blocks.replace(/</g, "&lt;").replace(/\{/g, "&#123;").replace(/\}/g, "&#125;")
+  return blocks.replace(/(\\*)([<{}])/g, (_, escapes, character) =>
+    escapes.slice(0, escapes.length - escapes.length % 2) + ({ "<": "&lt;", "{": "&#123;", "}": "&#125;" })[character as "<" | "{" | "}"])
     .replace(/(\S)[ \t]{2,}\n/g, (_, last) => last + "\\" + "\n")
     .replace(/[ \t]+\n/g, "\n");
 }
@@ -218,9 +227,10 @@ export async function notionMarkdown(
   };
   // 에셋 URL의 &를 변형하지 않도록 URL 처리 이후 MDX 문자를 escape한다.
   let body = code.body;
-  body = body.replace(/<(?:file|video|audio|pdf|image)\b[^>]*\bsrc="([^"]+)"[^>]*>([\s\S]*?)<\/(?:file|video|audio|pdf|image)>/g,
-    (_, url, caption) => `![${caption.trim().replace(/[\[\]\n]/g, " ")}](${url})`)
-    .replace(/<(?:file|video|audio|pdf|image)\b[^>]*\bsrc="([^"]+)"[^>]*\/>/g, (_, url) => `![](${url})`);
+  body = body.replace(/(\\*)<(?:file|video|audio|pdf|image)\b[^>]*\bsrc="([^"]+)"[^>]*>([\s\S]*?)<\/(?:file|video|audio|pdf|image)>/g,
+    (value, escapes, url, caption) => escapes.length % 2 ? value : `${escapes}![${caption.trim().replace(/[\[\]\n]/g, " ")}](${url})`)
+    .replace(/(\\*)<(?:file|video|audio|pdf|image)\b[^>]*\bsrc="([^"]+)"[^>]*\/>/g, (value, escapes, url) =>
+      escapes.length % 2 ? value : `${escapes}![](${url})`);
   for (const link of markdownLinks(body).reverse()) {
     let replacement: string | undefined;
     let url: URL;

@@ -274,11 +274,26 @@ test("인용 안 줄바꿈 목록과 native 자식·목록 번호·중첩을 보
 
 test("블록 정규화는 native 인용·목록 안 fenced code와 escaped 리치 텍스트를 보존한다", async (t) => {
   const options = { workRoot: workspace(t), pageId: first, slugs: new Map() };
-  const source = "> 인용\n\t- 항목\n\t\t```md\n\t\t---\n\t\t**문자** <br> {literal}\n\t\t```\n밖\n\\*\\*의도한 별표\\*\\*와 `**코드**`\n| 항목 | 값 |\n| --- | --- |\n| 코드 | `a | b` |";
+  const source = "> 인용\n\t- 항목\n\t\t```md\n---\n**문자** <br> {literal}\n\t\t```\n밖\n\\*\\*의도한 별표\\*\\*와 `**코드**`\n| 항목 | 값 |\n| --- | --- |\n| 코드 | `a | b` |";
   const result = await notionMarkdown(source, options);
   assert.match(result, /> {3}```md\n> {3}---\n> {3}\*\*문자\*\* <br> \{literal\}\n> {3}```/);
   assert.match(result, /\n\n밖\n\n\\\*\\\*의도한 별표\\\*\\\*와 `\*\*코드\*\*`/);
   assert.match(result, /\| --- \| --- \|\n\| 코드 \| `a \\\| b` \|/);
+});
+
+test("Notion이 escape한 MDX 기호는 문자 참조 문자열로 노출하지 않고 리터럴로 보존한다", async (t) => {
+  const options = { workRoot: workspace(t), pageId: first, slugs: new Map() };
+  assert.equal(await notionMarkdown(String.raw`\<tag> \{x\} \<br>`, options), "&lt;tag> &#123;x&#125; &lt;br>\n");
+  assert.equal(await notionMarkdown(String.raw`\\\<tag>`, options), String.raw`\\&lt;tag>` + "\n");
+  assert.equal(await notionMarkdown(String.raw`\<https://example.com>`, options), "&lt;https://example.com>\n");
+  assert.equal(await notionMarkdown(String.raw`\<table>\<tr>\<td>문자\</td>\</tr>\</table>`, options),
+    "&lt;table>&lt;tr>&lt;td>문자&lt;/td>&lt;/tr>&lt;/table>\n");
+});
+
+test("native child fence의 들여쓰기와 코드 본문 자체의 탭을 구분한다", async (t) => {
+  const options = { workRoot: workspace(t), pageId: first, slugs: new Map() };
+  const result = await notionMarkdown("- 항목\n\t```text\n첫 줄\n\treturn value;\n  spaces\n\t```\n밖", options);
+  assert.equal(result, "- 항목\n\n  ```text\n  첫 줄\n  \treturn value;\n    spaces\n  ```\n\n밖\n");
 });
 
 test("빈 줄 없는 Notion 구분선이 앞 문단을 Setext 제목으로 만들지 않게 정규화한다", async (t) => {
