@@ -168,7 +168,7 @@ import { ListUI } from '@langdy/design-system/list/list-ui';
 Next.js는 빌드 타임에 `'use client'` 모듈을 client reference로 치환하고, manifest로 그 참조를 실제 로딩 정보와 연결한 뒤, 요청 시 RSC Payload에 그 참조를 실어 보냅니다. 브라우저는 그 참조를 다시 해석해 실제 client component를 합성합니다.
 그래서 정적 export로 주소가 잡히지 않는 런타임 합성은 서버에서는 알 수가 없습니다. `Object.assign`, 함수 프로퍼티 할당, dotting 기반 compound API가 App Router에서 깨지는 이유가 여기에 있습니다.
 저희 팀의 경우에는 런타임 합성 대신 정적 export 기반으로 구조를 바꾸는 것이 실용적인 해결책이었습니다. re-export namespace를 채택해 기존 사용성을 유지하면서도 RSC 호환성 문제를 해결할 수 있었지만, 이것이 유일한 정답은 아닙니다. Next.js에는 namespace/compound components의 RSC 호환에 관한 이슈가 아직 열려 있으며, 팀의 규모와 구조, 번들 전략에 따라 다른 접근이 더 적합할 수도 있습니다.
----
+***
 ## 참고 자료
 - [Next.js — Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components)
 - [React — 'use client'](https://react.dev/reference/rsc/use-client)
@@ -179,5 +179,5 @@ Next.js는 빌드 타임에 `'use client'` 모듈을 client reference로 치환�
 - [Next.js Issue #51593 — Dot notation client component breaks RSC](https://github.com/vercel/next.js/issues/51593)
 - [Next.js Issue #75192 — Namespace compound components in RSC](https://github.com/vercel/next.js/issues/75192)
 - [isBatak — Multipart Namespace Components: Addressing RSC and Dot Notation Issues](https://ivicabatinic.from.hr/posts/multipart-namespace-components-addressing-rsc-and-dot-notation-issues)
----
+***
 [Velog 원문](https://velog.io/@rachel28/rsc-dot-notation)

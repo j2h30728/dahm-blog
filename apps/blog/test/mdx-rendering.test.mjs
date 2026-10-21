@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import test from "node:test";
 import { createElement } from "react";
@@ -102,4 +102,21 @@ test("본문 회귀 fixture의 모든 heading·문단·목록·표·코드를 �
   for (const tag of ["strong", "em", "del", "blockquote", "ul", "ol", "table", "pre", "hr"]) {
     assert.match(html, new RegExp(`<${tag}(?:[ >]|/)`));
   }
+});
+
+test("동기화한 글의 원문 링크 앞 구분선이 마무리 문단을 제목으로 바꾸지 않는다", async () => {
+  const directory = new URL("../src/content/posts/", import.meta.url);
+  let checked = 0;
+  for (const filename of readdirSync(directory).filter((name) => name.endsWith(".mdx"))) {
+    const source = readFileSync(new URL(filename, directory), "utf8");
+    if (!source.includes("[Velog 원문](")) continue;
+    const html = await render(source);
+    assert.match(html, /<hr\/>\s*<p><a href="https:\/\/velog\.io\/[^\"]+">Velog 원문<\/a><\/p>$/, filename);
+    if (filename === "2025teoconf.mdx") {
+      assert.match(html, /<h2[^>]*>마무리<\/h2>\s*<p>2025년 테오콘을/);
+      assert.match(html, /감사합니다\.<\/p>\s*<hr\/>/);
+    }
+    checked++;
+  }
+  assert.ok(checked > 0, "실제 동기화한 글로 회귀를 검증해야 한다");
 });

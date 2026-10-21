@@ -141,6 +141,8 @@ function tableMarkdown(attributes: string, content: string): string {
 
 function normalizeProse(body: string): string {
   const result = body
+    // Notion 구분선은 빈 줄 없이 반환될 수 있다. Setext 제목과 충돌하지 않는 표기를 쓴다.
+    .replace(/^([ \t]*(?:>[ \t]*)*)---[ \t]*(\r?)$/gm, "$1***$2")
     .replace(/<table\b([^>]*)>([\s\S]*?)<\/table>/g, (_, attributes, content) => tableMarkdown(attributes, content))
     .replace(/\s*\{color="[a-z_]+"\}/g, "")
     .replace(/<empty-block\s*\/>/g, "\n")

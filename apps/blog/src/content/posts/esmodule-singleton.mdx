@@ -57,7 +57,7 @@ console.log(a === b); // true — 항상 같은 인스턴스
 생성자 내부의 가드 로직과 `getInstance()`가 싱글톤 패턴의 두 핵심 장치입니다. 가드 로직은 두 번째 인스턴스 생성 시도를 차단하고, `getInstance()`는 인스턴스가 없을 때만 하나를 만들고 이후에는 항상 그것을 반환합니다.
 > 참고로 JavaScript에는 `private constructor` 문법이 없습니다. 위 예시는 생성자 내부에서 런타임 가드로 이를 흉내낸 것입니다.
 패턴의 의도는 명확합니다. "이 클래스의 인스턴스는 반드시 하나여야 한다"를 **하나의 실행 컨텍스트 안에서 애플리케이션 코드로 강제**하는 것입니다.
----
+***
 ## ES Module이 싱글톤처럼 보이는 이유
 서두의 코드로 돌아가자면, `a.js`와 `b.js`가 상태를 공유할 수 있었던 이유는 두 가지 메커니즘이 조합된 결과입니다. 이 메커니즘을 이해하려면 ES Module이 로딩되는 과정을 먼저 봐야 합니다.
 ES Module의 로딩은 세 단계로 이루어집니다. 이 글에서는 설명 편의상 Construction / Instantiation / Evaluation이라는 표현을 사용하지만, ECMAScript 모듈 레코드 수준에서는 LoadRequestedModules → Link → Evaluate가 대응됩니다.
@@ -161,7 +161,7 @@ SPA 환경에서는 이 차이를 느끼기 어렵습니다. module map이 하�
 하지만 Next.js처럼 서버와 클라이언트가 나뉘거나, 로더 컨텍스트가 분리되는 환경에서는 이 전제가 깨집니다.
 당연히 하나라고 생각했던 상태가 여러 개로 나뉘면서, 예상하지 못한 버그로 이어질 수 있습니다.
 겉으로는 둘 다 “하나만 있는 것처럼” 보이지만 싱글톤은 애플리케이션 코드가 그 유일성을 직접 보장하는 것이고, ES Module은 로더가 같은 모듈을 재사용해 준 결과일 뿐입니다.
----
+***
 - [ES modules: A cartoon deep-dive](https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/)
 - [ECMAScript Specification — Scripts and Modules](https://tc39.es/ecma262/multipage/ecmascript-language-scripts-and-modules.html)
 - [HTML Standard — module map](https://html.spec.whatwg.org/multipage/webappapis.html#module-map)
@@ -171,5 +171,5 @@ SPA 환경에서는 이 차이를 느끼기 어렵습니다. module map이 하�
 - [Modules: ECMAScript modules — Node.js](https://nodejs.org/api/esm.html)
 - [Modules: CommonJS modules — Node.js](https://nodejs.org/api/modules.html#caching)
 - [Singleton Pattern — Refactoring Guru](https://refactoring.guru/design-patterns/singleton)
----
+***
 [Velog 원문](https://velog.io/@rachel28/esmodule-singleton)

@@ -256,6 +256,28 @@ test("표준 Markdown·코드 예제를 보존하고 MDX 표현식을 escape하�
   await assert.rejects(notionMarkdown("<unknown id=\"x\"/>", { workRoot: root, pageId: first, slugs: new Map() }), /지원하지 않는/);
 });
 
+test("빈 줄 없는 Notion 구분선이 앞 문단을 Setext 제목으로 만들지 않게 정규화한다", async (t) => {
+  const options = { workRoot: workspace(t), pageId: first, slugs: new Map() };
+  for (const newline of ["\n", "\r\n"]) {
+    const source = ["## 마무리", "첫 문장", "감사합니다.", "---", "[원문](https://example.com/)", "", "다른 문단", "  ---  ", "끝"].join(newline);
+    const expected = ["## 마무리", "첫 문장", "감사합니다.", "***", "[원문](https://example.com/)", "", "다른 문단", "  ***", "끝"].join(newline);
+    assert.equal(await notionMarkdown(source, options), `${expected}\n`);
+  }
+  assert.equal(await notionMarkdown("인용 앞\n> 인용 문단\n> ---\n> 다음 인용", options), "인용 앞\n> 인용 문단\n> ***\n> 다음 인용\n");
+});
+
+test("구분선 정규화는 코드·표·목록·리터럴 대시를 보존한다", async (t) => {
+  const options = { workRoot: workspace(t), pageId: first, slugs: new Map() };
+  const source = [
+    "```markdown", "본문", "---", "```", "", "~~~~text", "---", "~~~~", "",
+    "`---`", "", "| 항목 | 설명 |", "| --- | --- |", "| 값 | `---` |", "",
+    "- --- -", "문장 속 --- 대시", "\\---", "", "> > 중첩 인용", "> > ---", "> > 이어지는 인용",
+    "", "- 항목", "\t---", "", "본문", "- - -", "다음 문단",
+  ].join("\n");
+  const result = await notionMarkdown(source, options);
+  assert.equal(result, `${source.replace("> > ---", "> > ***").replace("\t---", "\t***")}\n`);
+});
+
 test("메타데이터와 같은 첫 H1만 제거하고 제목 서식·Unicode·공백을 표시 텍스트로 비교한다", async (t) => {
   const root = workspace(t);
   const options = { workRoot: root, pageId: first, slugs: new Map(), title: "새 글 제목" };
