@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { Fetch } from "./notion-client.js";
 import type { LinkEdge } from "./schema.js";
+import { plainText } from "./utils.js";
 
 const MAX_ASSET_BYTES = 25 * 1024 * 1024;
 
@@ -100,6 +101,29 @@ function protectCode(markdown: string): { body: string; restore: (body: string) 
   }) };
 }
 
+function withoutDuplicateTitle(markdown: string, title?: string): string {
+  if (!title) return markdown;
+  const expected = title.normalize("NFC").replace(/\s+/gu, " ").trim();
+  const source = markdown.startsWith("\uFEFF") ? markdown.slice(1) : markdown;
+  const lines = /([^\r\n]*)(?:\r\n|\n|\r|$)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = lines.exec(source))) {
+    const line = match[1];
+    if (!line.trim()) {
+      if (match[0].length === 0) return markdown;
+      continue;
+    }
+    const heading = /^ {0,3}#(?:[ \t]+(.*?)|[ \t]*)$/.exec(line);
+    if (!heading) return markdown;
+    const label = (heading[1] ?? "").replace(/[ \t]+#+[ \t]*$/, "");
+    const actual = plainText(label).normalize("NFC").replace(/\s+/gu, " ").trim();
+    if (actual !== expected) return markdown;
+    return source.slice(0, match.index) + source.slice(match.index + match[0].length);
+  }
+  return markdown;
+}
+
 function tableMarkdown(attributes: string, content: string): string {
   if (/\b(?:rowspan|colspan)=/.test(content) || /<table\b/.test(content)) {
     throw new Error("Notion 병합/중첩 표는 지원하지 않습니다.");
@@ -169,9 +193,9 @@ export function internalPostLinks(markdown: string, slugs: Set<string>): Omit<Li
 
 export async function notionMarkdown(
   markdown: string,
-  options: { workRoot: string; pageId: string; slugs: Map<string, string>; fetcher?: Fetch },
+  options: { workRoot: string; pageId: string; slugs: Map<string, string>; title?: string; fetcher?: Fetch },
 ): Promise<string> {
-  const code = protectCode(markdown);
+  const code = protectCode(withoutDuplicateTitle(markdown, options.title));
   const media: string[] = [];
   const escape = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const renderMedia = (url: string, label: string, image: boolean): string => {

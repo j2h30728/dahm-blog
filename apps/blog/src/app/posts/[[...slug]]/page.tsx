@@ -111,7 +111,7 @@ export default async function PostPage({ params }: PageProps) {
       />
       {post.series ? (
         <p className={ui.tagline}>
-          <span className="typewriter">{post.series}</span>
+          {post.series}
         </p>
       ) : null}
       <h1 className={ui.pageTitle}>{post.title}</h1>

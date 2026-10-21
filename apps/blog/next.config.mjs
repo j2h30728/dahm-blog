@@ -5,6 +5,7 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
 import rehypeShiki from "@shikijs/rehype";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
+import remarkNotionTypography from "./src/lib/remark-notion-typography.mjs";
 
 // sync CLI와 Next 빌드는 서로 다른 프로세스이므로 루트 환경파일을 각각 읽는다.
 for (const name of ["../../.env.local", "../../.env"]) {
@@ -12,23 +13,23 @@ for (const name of ["../../.env.local", "../../.env"]) {
   if (existsSync(file)) process.loadEnvFile(file);
 }
 
-const withMDX = createMDX({
-  options: {
-    remarkPlugins: [remarkGfm],
-    rehypePlugins: [
-      [
-        rehypeShiki,
-        {
-          themes: {
-            light: "github-dark",
-            dark: "github-dark",
-          },
+export const mdxOptions = {
+  remarkPlugins: [remarkGfm, remarkNotionTypography],
+  rehypePlugins: [
+    [
+      rehypeShiki,
+      {
+        themes: {
+          light: "github-light",
+          dark: "github-dark",
         },
-      ],
-      rehypeSlug,
+      },
     ],
-  },
-});
+    rehypeSlug,
+  ],
+};
+
+const withMDX = createMDX({ options: mdxOptions });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

@@ -256,6 +256,71 @@ test("표준 Markdown·코드 예제를 보존하고 MDX 표현식을 escape하�
   await assert.rejects(notionMarkdown("<unknown id=\"x\"/>", { workRoot: root, pageId: first, slugs: new Map() }), /지원하지 않는/);
 });
 
+test("메타데이터와 같은 첫 H1만 제거하고 제목 서식·Unicode·공백을 표시 텍스트로 비교한다", async (t) => {
+  const root = workspace(t);
+  const options = { workRoot: root, pageId: first, slugs: new Map(), title: "새 글 제목" };
+  const cases = [
+    { markdown: "# 새 글 제목\n\n본문", expected: "\n본문\n" },
+    { markdown: "# **새 글**   제목 ###\n\n본문", expected: "\n본문\n" },
+    { markdown: "# `새 글` 제목\n\n본문", expected: "\n본문\n" },
+    { markdown: `# ${"새 글 제목".normalize("NFD")}\n\n본문`, expected: "\n본문\n" },
+    { markdown: "\uFEFF# 새 글 제목\r\n\r\n본문", expected: "\r\n본문\n" },
+  ];
+
+  for (const { markdown, expected } of cases) {
+    assert.equal(await notionMarkdown(markdown, options), expected);
+  }
+});
+
+test("첫 H1이 다른 제목이거나 첫 내용이 아니면 H1을 보존한다", async (t) => {
+  const root = workspace(t);
+  const options = { workRoot: root, pageId: first, slugs: new Map(), title: "새 글" };
+  const cases = [
+    "# 다른 글\n\n본문",
+    "본문\n\n# 새 글",
+    "## 소제목\n\n# 새 글",
+    "    # 새 글\n\n본문",
+    "제목 없음",
+  ];
+
+  for (const markdown of cases) {
+    assert.equal(await notionMarkdown(markdown, options), `${markdown}\n`);
+  }
+  const noTitle = { workRoot: root, pageId: first, slugs: new Map() };
+  assert.equal(await notionMarkdown("# 새 글\n\n본문", noTitle), "# 새 글\n\n본문\n");
+});
+
+test("메타데이터 제목의 일반 별표 문자를 지워 다른 제목과 같다고 판단하지 않는다", async (t) => {
+  const root = workspace(t);
+  const options = { workRoot: root, pageId: first, slugs: new Map(), title: "C*" };
+  assert.equal(await notionMarkdown("# C\n\n본문", options), "# C\n\n본문\n");
+});
+
+test("제목 제거 뒤의 H1과 fenced code 안의 H1·escaped 별표를 그대로 둔다", async (t) => {
+  const root = workspace(t);
+  const options = { workRoot: root, pageId: first, slugs: new Map(), title: "새 글" };
+  const markdown = "# 새 글\n\n# 뒤 제목\n\n```md\n# 새 글\n```\n\n\\*문자 그대로\\*";
+  const result = await notionMarkdown(markdown, options);
+
+  assert.equal(result, "\n# 뒤 제목\n\n```md\n# 새 글\n```\n\n\\*문자 그대로\\*\n");
+});
+
+test("첫 비어 있지 않은 줄이 코드 펜스이면 내부와 뒤의 같은 H1을 제거하지 않는다", async (t) => {
+  const root = workspace(t);
+  const options = { workRoot: root, pageId: first, slugs: new Map(), title: "새 글" };
+  const markdown = "```md\n# 새 글\n```\n\n# 새 글";
+
+  assert.equal(await notionMarkdown(markdown, options), `${markdown}\n`);
+});
+
+test("Notion 동기화가 메타데이터 제목을 본문 변환에 전달한다", async (t) => {
+  const root = workspace(t);
+  const prepared = await fetchNotionContent(root, config, api([page()], "# 새 글\n\n본문\n"));
+  t.after(prepared.cleanup);
+
+  assert.equal(prepared.posts[0]?.body, "\n본문\n");
+});
+
 test("callout·toggle를 텍스트로 변환하고 XML 미디어와 괄호가 있는 파일 URL도 저장한다", async (t) => {
   const root = workspace(t);
   const url = imageUrl.replace("example.png", "example(1).png");

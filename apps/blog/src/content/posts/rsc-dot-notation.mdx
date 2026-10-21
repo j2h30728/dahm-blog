@@ -1,4 +1,3 @@
-# **왜 RSC에서는 dot notation이 안 될까**
 **— Object.assign을 버리고 re-export를 택한 이유**
 디자인 시스템을 만들면서, `Object.assign` 기반 compound export에서 **정적 re-export namespace** 방식으로 바꿨습니다.
 기존에는 컴파운드 패턴을 따르는 컴포넌트의 경우 `ComponentRoot`에 `Item`을 런타임에서 조합하여 `<Component.Item />` 형태를 만들었습니다. 이 패턴은 CSR에서는 자연스럽지만, Next.js App Router(RSC) 환경에서 이 디자인 시스템을 사용하려고 하자 문제가 발생했습니다. RSC에서는 client component가 런타임 객체가 아니라 **모듈 경로와 export 이름 기준의 식별자**(`모듈#export`)로 다뤄지기 때문에 그대로 통하지 않는 것이었습니다.

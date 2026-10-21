@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-19T08:16:03.881Z",
+  "generatedAt": "2026-10-20T09:28:24.956Z",
   "nodes": [
     {
       "title": "왜 RSC에서는 dot notation이 안 될까",
@@ -18,7 +18,7 @@
         "Frontend": "frontend",
         "Next.js": "next-js"
       },
-      "excerpt": "왜 RSC에서는 dot notation이 안 될까 — Object.assign을 버리고 re-export를 택한 이유 디자인 시스템을 만들면서, Object.assign 기반 compound export에서 정적 re-export namespace 방식으로 바꿨습니다. 기존에는 컴파운드 패턴을 따르는 컴포넌트의 경우 ComponentRoot에 Item을 런타임에서 조합하여 형태를 만들었습니다. 이 패턴은 CSR에서는 자연스럽지",
+      "excerpt": "— Object.assign을 버리고 re-export를 택한 이유 디자인 시스템을 만들면서, Object.assign 기반 compound export에서 정적 re-export namespace 방식으로 바꿨습니다. 기존에는 컴파운드 패턴을 따르는 컴포넌트의 경우 ComponentRoot에 Item을 런타임에서 조합하여 형태를 만들었습니다. 이 패턴은 CSR에서는 자연스럽지만, Next.js App Router(RSC) 환",
       "headings": [
         {
           "depth": 2,
@@ -117,7 +117,7 @@
       "slug": "esmodule-singleton",
       "description": "싱글톤",
       "date": "2026-03-17",
-      "updated": "2026-10-19T07:53:00.000Z",
+      "updated": "2026-10-20T09:27:00.000Z",
       "tags": [
         "Pattern"
       ],
@@ -127,7 +127,7 @@
       "tagSlugs": {
         "Pattern": "pattern"
       },
-      "excerpt": "ES Module은 싱글톤일까? 싱글톤을 공부하다 ES Module의 동작방식이 유사하다는 생각이 들며 \"ES Module은 싱글톤일까?\" 라는 의문이 들었습니다. 아래는 ES Module 코드입니다. // counter.js let count = 0; export function increment() { count++; } export function getCount() { return count; } // a.js impo",
+      "excerpt": "싱글톤을 공부하다 ES Module의 동작방식이 유사하다는 생각이 들며 \"ES Module은 싱글톤일까?\" 라는 의문이 들었습니다. 아래는 ES Module 코드입니다. // counter.js let count = 0; export function increment() { count++; } export function getCount() { return count; } // a.js import { increment } f",
       "headings": [
         {
           "depth": 2,

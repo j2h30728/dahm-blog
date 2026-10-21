@@ -80,7 +80,7 @@ export async function fetchNotionContent(
     const posts: NotionPost[] = [];
     for (const post of pages) {
       const body = await notionMarkdown(await client.markdown(post.id), {
-        workRoot, pageId: post.id, slugs, fetcher,
+        workRoot, pageId: post.id, slugs, title: post.title, fetcher,
       });
       posts.push({ ...post, body });
     }
