@@ -256,14 +256,39 @@ test("표준 Markdown·코드 예제를 보존하고 MDX 표현식을 escape하�
   await assert.rejects(notionMarkdown("<unknown id=\"x\"/>", { workRoot: root, pageId: first, slugs: new Map() }), /지원하지 않는/);
 });
 
+test("Notion의 단일 개행 블록과 br 줄바꿈을 구분하고 인용 범위를 닫는다", async (t) => {
+  const options = { workRoot: workspace(t), pageId: first, slugs: new Map() };
+  assert.equal(await notionMarkdown("첫 문단\n둘째 문단<br>같은 문단\n> 인용<br>둘째 줄\n인용 밖", options),
+    "첫 문단\n\n둘째 문단\\\n같은 문단\n\n> 인용\n> 둘째 줄\n\n인용 밖\n");
+});
+
+test("인용 안 줄바꿈 목록과 native 자식·목록 번호·중첩을 보존한다", async (t) => {
+  const options = { workRoot: workspace(t), pageId: first, slugs: new Map() };
+  const source = "> 환경<br>- React<br>- Next.js\n인용 밖\n> Native 인용\n\t- 자식 목록\n\t\t1. 손자 목록\n7. 일곱<br>설명\n\t- 하위 목록\n8. 여덟\n다음 문단";
+  const result = await notionMarkdown(source, options);
+  assert.match(result, /> 환경\n>\s*\n> - React\n> - Next\.js\n\n인용 밖/);
+  assert.match(result, /> Native 인용\n>\s*\n> - 자식 목록\n>\s+1\. 손자 목록/);
+  assert.match(result, /7\. 일곱\\\n {3}설명\n {3}- 하위 목록\n8\. 여덟\n\n다음 문단/);
+  assert.equal(await notionMarkdown("> 인용\n\n\t- 자식\n밖", options), "> 인용\n>\n> - 자식\n\n밖\n");
+});
+
+test("블록 정규화는 native 인용·목록 안 fenced code와 escaped 리치 텍스트를 보존한다", async (t) => {
+  const options = { workRoot: workspace(t), pageId: first, slugs: new Map() };
+  const source = "> 인용\n\t- 항목\n\t\t```md\n\t\t---\n\t\t**문자** <br> {literal}\n\t\t```\n밖\n\\*\\*의도한 별표\\*\\*와 `**코드**`\n| 항목 | 값 |\n| --- | --- |\n| 코드 | `a | b` |";
+  const result = await notionMarkdown(source, options);
+  assert.match(result, /> {3}```md\n> {3}---\n> {3}\*\*문자\*\* <br> \{literal\}\n> {3}```/);
+  assert.match(result, /\n\n밖\n\n\\\*\\\*의도한 별표\\\*\\\*와 `\*\*코드\*\*`/);
+  assert.match(result, /\| --- \| --- \|\n\| 코드 \| `a \\\| b` \|/);
+});
+
 test("빈 줄 없는 Notion 구분선이 앞 문단을 Setext 제목으로 만들지 않게 정규화한다", async (t) => {
   const options = { workRoot: workspace(t), pageId: first, slugs: new Map() };
   for (const newline of ["\n", "\r\n"]) {
     const source = ["## 마무리", "첫 문장", "감사합니다.", "---", "[원문](https://example.com/)", "", "다른 문단", "  ---  ", "끝"].join(newline);
-    const expected = ["## 마무리", "첫 문장", "감사합니다.", "***", "[원문](https://example.com/)", "", "다른 문단", "  ***", "끝"].join(newline);
+    const expected = ["## 마무리", "첫 문장", "감사합니다.", "***", "[원문](https://example.com/)", "다른 문단", "  ***", "끝"].join(newline + newline);
     assert.equal(await notionMarkdown(source, options), `${expected}\n`);
   }
-  assert.equal(await notionMarkdown("인용 앞\n> 인용 문단\n> ---\n> 다음 인용", options), "인용 앞\n> 인용 문단\n> ***\n> 다음 인용\n");
+  assert.equal(await notionMarkdown("인용 앞\n> 인용 문단\n> ---\n> 다음 인용", options), "인용 앞\n\n> 인용 문단\n\n> ***\n\n> 다음 인용\n");
 });
 
 test("구분선 정규화는 코드·표·목록·리터럴 대시를 보존한다", async (t) => {
@@ -275,7 +300,13 @@ test("구분선 정규화는 코드·표·목록·리터럴 대시를 보존한�
     "", "- 항목", "\t---", "", "본문", "- - -", "다음 문단",
   ].join("\n");
   const result = await notionMarkdown(source, options);
-  assert.equal(result, `${source.replace("> > ---", "> > ***").replace("\t---", "\t***")}\n`);
+  assert.ok(result.includes("```markdown\n본문\n---\n```"));
+  assert.ok(result.includes("~~~~text\n---\n~~~~"));
+  assert.ok(result.includes("`---`"));
+  assert.ok(result.includes("| 항목 | 설명 |\n| --- | --- |\n| 값 | `---` |"));
+  assert.ok(result.includes("- --- -\n\n문장 속 --- 대시\n\n\\---"));
+  assert.ok(result.includes("> > 중첩 인용\n\n> > ***\n\n> > 이어지는 인용"));
+  assert.ok(result.includes("- 항목\n\n  ***\n\n본문\n\n- - -\n\n다음 문단"));
 });
 
 test("메타데이터와 같은 첫 H1만 제거하고 제목 서식·Unicode·공백을 표시 텍스트로 비교한다", async (t) => {

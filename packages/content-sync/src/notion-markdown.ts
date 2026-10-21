@@ -4,6 +4,7 @@ import path from "node:path";
 import type { Fetch } from "./notion-client.js";
 import type { LinkEdge } from "./schema.js";
 import { plainText } from "./utils.js";
+import { emitNotionBlocks } from "./notion-blocks.js";
 
 const MAX_ASSET_BYTES = 25 * 1024 * 1024;
 
@@ -81,7 +82,10 @@ function protectCode(markdown: string): { body: string; restore: (body: string) 
       block += line;
       const close = /^\s*(`+|~+)\s*$/.exec(line.trimEnd());
       if (close && close[1][0] === fence[0] && close[1].length >= fence.length) {
-        body += save(block);
+        const ending = /\r?\n$/.exec(block)?.[0] ?? "";
+        const indent = /^\t*/.exec(block)![0];
+        const content = block.split(/(?<=\n)/).map(part => part.startsWith(indent) ? part.slice(indent.length) : part).join("");
+        body += indent + save(content.slice(0, content.length - ending.length)) + ending;
         block = "";
         fence = undefined;
       }
@@ -95,9 +99,12 @@ function protectCode(markdown: string): { body: string; restore: (body: string) 
   body = body.replace(/(?<!`)(`+)(?!`)([\s\S]*?)(?<!`)\1(?!`)/g, (text) => save(text));
   return { body, restore: (value) => value.replace(/\0CODE(\d+)\0/g, (_, index, offset) => {
     const code = saved[Number(index)];
-    const inTable = value.slice(value.lastIndexOf("\n", offset) + 1, offset).startsWith("|");
+    const prefix = value.slice(value.lastIndexOf("\n", offset) + 1, offset);
+    const inTable = prefix.replace(/^[ \t>]+/, "").startsWith("|");
     if (inTable && /^\s*(`{3,}|~{3,})/.test(code)) throw new Error("Notion 표 안의 코드 블록은 표 밖으로 옮겨 주세요.");
-    return inTable ? code.replace(/\|/g, "\\|") : code;
+    if (inTable) return code.replace(/\|/g, "\\|");
+    return /^(?:[ \t]|>)*$/.test(prefix) && /^\s*(`{3,}|~{3,})/.test(code)
+      ? code.replace(/\r?\n/g, newline => newline + prefix) : code;
   }) };
 }
 
@@ -148,12 +155,12 @@ function normalizeProse(body: string): string {
     .replace(/<empty-block\s*\/>/g, "\n")
     .replace(/<callout\b[^>]*>([\s\S]*?)<\/callout>/g, (_, content) => `\n\n**메모**\n\n${content.trim()}\n\n`)
     .replace(/<details>\s*<summary>([\s\S]*?)<\/summary>([\s\S]*?)<\/details>/g, (_, title, content) => `\n\n**${title.trim()}**\n\n${content.trim()}\n\n`)
-    .replace(/<br\s*\/?\s*>/g, "  \n")
     .replace(/<(https?:\/\/[^>\s]+)>/g, (_, url) => `[${url}](${url})`);
-  const unsupported = /<\/?([a-z][a-z_-]*)(?=[\s/>])/.exec(result);
+  const blocks = emitNotionBlocks(result);
+  const unsupported = /<\/?([a-z][a-z_-]*)(?=[\s/>])/.exec(blocks);
   if (unsupported) throw new Error(`지원하지 않는 Notion 본문 태그: ${unsupported[1]}. 표준 Markdown 블록으로 바꿔 주세요.`);
   // Notion 본문을 JavaScript/JSX로 실행하지 않는다. 코드 예제는 protectCode가 보존한다.
-  return result.replace(/</g, "&lt;").replace(/\{/g, "&#123;").replace(/\}/g, "&#125;")
+  return blocks.replace(/</g, "&lt;").replace(/\{/g, "&#123;").replace(/\}/g, "&#125;")
     .replace(/(\S)[ \t]{2,}\n/g, (_, last) => last + "\\" + "\n")
     .replace(/[ \t]+\n/g, "\n");
 }

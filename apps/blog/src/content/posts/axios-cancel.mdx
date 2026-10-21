@@ -1,8 +1,13 @@
 모던 딥다이브 자바스크립트 스터디에서 `XMLHttpRequest` 객체의 `abort` 메서드를 읽고 문득 궁금증이 생겼다. `XMLHttpRequest`로 만든 Axios는 요청 취소하는 방법은 다른 방법을 사용하고 있었던 것 같은데, 왜 직접적으로 `xhr.abort` 메서드를 사용하지않고 다른 방식을 선택했을까 생각이 들었다.
+
 많은 사람들이 참여해서 만들고 사용하는 Axios에서 요청 취소를 구현하는 데에는 분명히 합리적인 이유가 있을 것 같아 찾아보았다.
+
 ## xhr.abort 란?
+
 `XMLHttpRequest`는 브라우저가 서버에게 비동기 요청을 보낼 수 있게 해주는 Web API이다. 이 객체의 `abort()` 메서드는 이미 `send()` 메서드를 통해 전송된 HTTP 요청을 중단할 수 있는 기능을 제공한다.
+
 - [mdn XMLHttpRequest : abort() method](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/abort)
+
 ```javascript
 // 출처 : mdn
 const xhr = new XMLHttpRequest();
@@ -16,18 +21,29 @@ if (OH_NOES_WE_NEED_TO_CANCEL_RIGHT_NOW_OR_ELSE) {
   xhr.abort();
 }
 ```
+
 `xhr.abort()`를 호출하면 HTTP 요청을 중단할 수 있으며, 요청 중단 시 상태는 서버 응답을 받기 전의 상태(0;UNSENT)와 동일하게 변경된다. 이때 에러 객체는 타입은 `Error`로 설정되고, 상태는 0(UNSENT이 된다.
+
 ![small](/post-assets/notion/308e8c228b658188a96ed839467e42ac/notion-8a0c0ab978be47579f7c.png)
+
 ## Axios에서의 요청 취소 방법 변천사
+
 Axios는 Promise 기반으로 `XMLHttpRequest`를 사용한 HTTP 요청 라이브러리다. 그런데 Axios에서 직접적으로`xhr.abort()` 사용하는 대신 다른 방법을 사용해 요청을 취소한다.
+
 ![](/post-assets/notion/308e8c228b658188a96ed839467e42ac/notion-9ee0e4b118932852a52b.png)
+
 ### 1. XMLHttpRequest의 abort() 메서드 사용 문제 (2015년 3월)
+
 2015년 3월, Axios에서 `XMLHttpRequest`의 `abort()` 메서드를 사용하여 요청을 취소하는 방법에 대해 논의가 있다. 그러나 Promise 기반의 Axios 구조에서는 `abort()` 메서드의 사용이 적절하지 않다는 의견이 있었다.
+
 - 관련 Git Iusse : [GitHub Issue #50](https://github.com/axios/axios/issues/50)
+
 Axios는 요청을 보낼 때 `XMLHttpRequest`으로 요청하는 로직을 Promise  객체로 래핑하여 반환한다. 이로 인해 `xhr.abort()` 메서드를 구조적으로 사용할 수 없다.
+
 - 자바스크립트의 클로저를 사용하여 Promise 객체안에 캡슐화 되어 외부스코프에서 접근이 불가능하다.
 - resolve와 reject 메서드로만 상태변경이 가능하며, 내부로직이나 상태를 변경할수 없다.(xhr.abort() 와 같은)
 - Promise 객체 안에서 `new XMLHTTPRequest`가 실행되기 때문에 Promise가 반환된 시점에서 `XMLHttpRequest`객체가 생성되지 않았을 수도 있기 때문에 `xhr.abort()`을 실행하려 해도 xhr 참조 값이 없을 수 있다.
+
 ```javascript
 // 당시 xhr 요청
 module.exports = function xhrAdapter(config) {
@@ -42,21 +58,33 @@ module.exports = function httpAdapter(config) {
 	  }
   }
 ```
+
 또한, Axios는 코드 실행 환경에 따라 브라우저라면 `XMLHttpRequest` 인스턴스를 생성하고, Node.js일 경우에는 `http/https` 인스턴스를 생성한다.\
 따라서 브라우저에서만 사용할 수 있는 WebAPI인 `xhr.abort()` 는 유지보수 관점에서도 문제가 발생한다.
+
 당시 [GitHub Issue #50](https://github.com/axios/axios/issues/50)에서는 요청 취소와 관련하여 여러 가지 방법이 논의되었다.\
 예를 들어, Angular의 `$http`에서 사용되던 `timeout`을 활용하거나 다른 대체 방안들이 고려되었다.
+
 ### 2. CancelToken 도입 제안 (2016년 5월, 10월)
+
 2016년 5월, Axios는 요청을 취소하고 해당 취소를 처리하기 위한 메커니즘을 결정하는 논의가 시작되었고 같은해 10월에 최종적으로`CancelToken`으로 결정되었다.
+
 - 제안 Git Issue : [GitHub Issue #333](https://github.com/axios/axios/issues/333)
 - CancelToken 도입 Pull Request: [GitHub PR #452](https://github.com/axios/axios/pull/452)
+
 > 도입되었던 CancelToken 은 현재 중단되었다.
-	![](https://velog.velcdn.com/images/rachel28/post/3e1f272e-3361-46f0-bf39-db177ff3c424/image.png)
-	위의 사진 내용을 확인하면 [proposal-cancelable-promises](https://github.com/tc39/proposal-cancelable-promises) 을 기반으로 생성되었다는 것을 알 수있다.
-	Git Issue #50와 [#333 에서 해당 라이브러리의 컨트리뷰터](https://github.com/axios/axios/issues/333#issuecomment-240506469)를 만날 수 있는데, Promise에서 pending, fulfilled, rejected 상태 뿐만 아니라 취소 상태도 있어야한다는 주장을 한다.\
-TC39에도 제안했지만, 상태가 많아 짐에 따라 복잡성이 증가하고 일관성 해칠 수 있기 떄문에 제안은 성사되지 못했다.
-	- 관련 내용 : [https://github.com/tc39/proposal-cancelable-promises/issues/70](https://github.com/tc39/proposal-cancelable-promises/issues/70)
+>
+> ![](https://velog.velcdn.com/images/rachel28/post/3e1f272e-3361-46f0-bf39-db177ff3c424/image.png)
+>
+> 위의 사진 내용을 확인하면 [proposal-cancelable-promises](https://github.com/tc39/proposal-cancelable-promises) 을 기반으로 생성되었다는 것을 알 수있다.
+>
+> Git Issue #50와 [#333 에서 해당 라이브러리의 컨트리뷰터](https://github.com/axios/axios/issues/333#issuecomment-240506469)를 만날 수 있는데, Promise에서 pending, fulfilled, rejected 상태 뿐만 아니라 취소 상태도 있어야한다는 주장을 한다.\
+> TC39에도 제안했지만, 상태가 많아 짐에 따라 복잡성이 증가하고 일관성 해칠 수 있기 떄문에 제안은 성사되지 못했다.
+>
+> - 관련 내용 : [https://github.com/tc39/proposal-cancelable-promises/issues/70](https://github.com/tc39/proposal-cancelable-promises/issues/70)
+
 ### [cancle token 사용 방법](https://axios-http.com/docs/cancellation)
+
 ```javascript
 const CancelToken = axios.CancelToken;
 const source = CancelToken.source(); // 재사용 가능한 요청 취소 토큰 생성
@@ -85,14 +113,21 @@ document.getElementById('cancel-button').addEventListener('click', function () {
   source.cancel('Operation canceled by the user.');
 });
 ```
+
 ### 3. CancelToken의 메모리 누수 문제 (2020년 6월)
+
 2020년 6월, `CancelToken`을 여러 요청에서 재사용할 경우 메모리 누수가 발생한다는 문제가 보고되었다. 요청이 완료된 후에도 구독 해제 기능이 없어 `CancelToken`에 대한 참조가 유지되어 메모리가 해제되지 않았기 때문이다.
+
 - 관련 Git Iusse : [GitHub Issue #3001](https://github.com/axios/axios/issues/3001)
+
 ### 4. AbortController 지원 및 CancelToken 개선 (2021년 9월)
+
 2021년 9월, Axios는 `CancelToken`의 메모리 누수 문제를 해결하고, 브라우저의 표준 API인 `AbortController`를 지원하기 위한 업데이트를 진행했다. 이를 통해 표준화된 방식으로 요청을 취소할 수 있게 되었다.
+
 - 관련 Pull Request : [GitHub PR #3305](https://github.com/axios/axios/pull/3305)
 - AbortController : [https://developer.mozilla.org/ko/docs/Web/API/AbortController](https://developer.mozilla.org/ko/docs/Web/API/AbortController)
 - Axios AbortController 적용 방법 : [https://axios-http.com/docs/cancellation](https://axios-http.com/docs/cancellation)
+
 ```javascript
 const controller = new AbortController();
 
@@ -113,10 +148,16 @@ document.getElementById('cancel-button').addEventListener('click', function () {
 		controller.abort(); // 요청 취소 호출
 });
 ```
+
 ## 마무리
+
 부끄럽지만, 라이브코딩 면접중에 abort signal 을 추가하라는 과제를 기점으로 HTTP 요청 취소에 대해서 고려하게 되었다. 비록 그때의 면접에서는 떨어졌지만, 새로운 지식을 배우게 된 기쁨에 개인프로젝트에서 취소 요청이 필요한 부분에 추가했기도 했다.
+
 - 취소요청 기능을 추가했던 내용 : [https://github.com/j2h30728/dam-witter/pull/74](https://github.com/j2h30728/dam-witter/pull/74)
+
 이런 과거때문인지, `XMLHttpeRequest` 부분을 읽다가 abort 기능이 눈에 꽂혀 짧은 지식으로 Axios와 연결지어 생각하게 되었고, `CancelToken` 도입과 중단, `AbortController` 지원 순의 변천사를 찾아보게 되었다.
+
 이 과정에서 Promise 구조 기반이기 떄문에 `xhr.abort`는 사용하기 힘들다는 말을 이해하기 위해서 당시 코드를 찾아보기도 했다.\
 취소요청 내용과 관련된 초기 코드와 관련된 과거의 Git Issue와 Pull Request를 탐색하며 다양한 개발자들이 소통하고 협력하며 현재의 Axios를 만들어왔다는 점이 정말 멋지고 재밌었다.
+
 잘못된 내용이 있을 경우 댓글로 알려주세요!🙏

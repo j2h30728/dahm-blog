@@ -120,3 +120,19 @@ test("동기화한 글의 원문 링크 앞 구분선이 마무리 문단을 제
   }
   assert.ok(checked > 0, "실제 동기화한 글로 회귀를 검증해야 한다");
 });
+
+test("공개 글의 강조·인용·자식 목록이 원문 범위에 남고 다음 문단을 흡수하지 않는다", async () => {
+  const post = async (slug) => render(readFileSync(new URL(`../src/content/posts/${slug}.mdx`, import.meta.url), "utf8"));
+  const teoconf = await post("2025teoconf");
+  assert.match(teoconf, /<strong>&#x27;이런 흐름이 정말 컨퍼런스 취지에 맞을까&#x27;<\/strong>라는/);
+  assert.match(teoconf, /<strong>&quot;팀합&quot;<\/strong>이라는/);
+  assert.match(teoconf, /방이 세 개면 트랙도 세 개\? 그럼 MC도 세 명\? 진행은 어떻게 하지\?<\/p>\s*<\/blockquote>\s*<p>여러 회의를/);
+  const rsc = await post("rsc-dot-notation");
+  assert.match(rsc, /<blockquote>\s*<p>이 글의 내용은 아래 환경을 기준으로 작성했습니다\.<\/p>\s*<ul>\s*<li>디자인 시스템/);
+  const hanghae = await post("hanghae-6");
+  assert.match(hanghae, /<blockquote>\s*<p>useRef를 제대로 구현해야 합니다\.<\/p>\s*<ol>/);
+  const axios = await post("axios-cancel");
+  assert.match(axios, /<blockquote>[\s\S]*?<img [\s\S]*?<ul>[\s\S]*?<\/blockquote>\s*<h3/);
+  const seconddev = await post("seconddev");
+  assert.match(seconddev, /<li>처음 수업페이지 접근 시,\s*<ul>\s*<li>사용자가 수강해야 하는 챕터/);
+});
