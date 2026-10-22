@@ -71,13 +71,27 @@ async (page) => {
     }
     report.passed.push("320/375px 세로·812px 가로, 양 테마, 44px 닫기 버튼, 가로 스크롤 없음");
     const bundle = await (await page.request.get("http://127.0.0.1:3037/__image-lightbox-qa__/fixture.js")).text();
+    const originalRequests = { success: 0, slow: 0, failure: 0 };
     await page.route("**/__image-lightbox-qa__/**", async (route) => {
       const url = route.request().url();
       if (url.endsWith("fixture.js")) return route.fulfill({ contentType: "application/javascript", body: bundle });
-      if (url.endsWith("missing.png")) return route.fulfill({ status: 404, body: "missing" });
+      if (url.endsWith("slow-original.svg")) {
+        originalRequests.slow += 1;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="2400"><rect width="600" height="2400" fill="#dc2626"/></svg>' });
+      }
+      if (url.endsWith("/original.svg")) {
+        originalRequests.success += 1;
+        return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1200"><rect width="2400" height="1200" fill="#2563eb"/></svg>' });
+      }
+      if (url.endsWith("missing.png")) {
+        originalRequests.failure += 1;
+        return route.fulfill({ status: 404, body: "missing" });
+      }
       return route.fulfill({ contentType: "text/html", body: `<!doctype html><html lang="ko"><head>${css.map((href) => `<link rel="stylesheet" href="${href}">`).join("")}</head><body><div id="fixture"></div><script src="/__image-lightbox-qa__/fixture.js"></script></body></html>` });
     });
     await page.goto("http://127.0.0.1:3037/__image-lightbox-qa__/", { waitUntil: "networkidle" });
+    check(Object.values(originalRequests).every((count) => count === 0), "클릭 전 원본 이미지 요청이 없어야 한다");
     await page.getByRole("button", { name: "세로 사진 확대" }).click();
     await settle(page);
     check(await fits(page), "세로로 긴 이미지 비율·화면 유지");
@@ -93,10 +107,24 @@ async (page) => {
       node.dataset.modifierPreserved = String(node.dispatchEvent(event));
     });
     check(await linked.getAttribute("data-modifier-preserved") === "true", "보조키 클릭 기본 동작 보존");
+    await page.getByRole("button", { name: "CDN 사진 확대" }).click(); await settle(page);
+    await page.locator('dialog img[src$="/original.svg"]').waitFor();
+    check(originalRequests.success === 1, "클릭 후 원본 이미지를 한 번만 요청해야 한다");
+    check(await page.locator("dialog img").getAttribute("width") === "2400", "원본 로드 후 원본 크기로 교체해야 한다");
+    await page.getByRole("button", { name: "이미지 확대 닫기" }).click();
+    await page.getByRole("button", { name: "느린 원본 사진 확대" }).click(); await settle(page);
+    await page.getByRole("button", { name: "이미지 확대 닫기" }).click();
+    await page.getByRole("button", { name: "CDN 사진 확대" }).click(); await settle(page);
+    await page.waitForTimeout(300);
+    check(await page.locator('dialog img[src$="/original.svg"]').count() === 1, "빠르게 닫고 재선택해도 이전 원본이 새 모달을 바꾸지 않아야 한다");
+    check(originalRequests.slow === 1 && originalRequests.success === 1, "원본 요청은 이미지별 클릭 횟수를 넘지 않아야 한다");
+    await page.getByRole("button", { name: "이미지 확대 닫기" }).click();
     await page.getByRole("button", { name: "실패 사진 확대" }).click(); await settle(page);
     await page.getByRole("status").waitFor();
+    check(originalRequests.failure === 1, "실패한 원본도 클릭 후 한 번만 요청해야 한다");
+    check(await page.locator("dialog img").evaluate((image) => image.complete && image.naturalWidth > 0), "원본 실패 시 미리보기를 유지해야 한다");
     await page.getByRole("button", { name: "이미지 확대 닫기" }).click();
-    report.passed.push("StrictMode, 긴 세로 이미지, 이미지 링크·보조키 클릭, 로딩 실패에서 닫기");
+    report.passed.push("StrictMode, 긴 세로 이미지, 이미지 링크·보조키 클릭, 클릭 전 원본 0건·성공 교체·빠른 닫기 race·실패 preview 유지");
     await page.unroute("**/__image-lightbox-qa__/**");
     const touch = await page.context().browser().newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, reducedMotion: "reduce" });
     try {

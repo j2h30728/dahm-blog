@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { Fetch } from "./notion-client.js";
-import type { LinkEdge } from "./schema.js";
+import type { ImageAsset, LinkEdge } from "./schema.js";
 import { plainText } from "./utils.js";
 import { emitNotionBlocks } from "./notion-blocks.js";
 
@@ -211,7 +211,14 @@ export function internalPostLinks(markdown: string, slugs: Set<string>): Omit<Li
 
 export async function notionMarkdown(
   markdown: string,
-  options: { workRoot: string; pageId: string; slugs: Map<string, string>; title?: string; fetcher?: Fetch },
+  options: {
+    workRoot: string;
+    pageId: string;
+    slugs: Map<string, string>;
+    title?: string;
+    fetcher?: Fetch;
+    processImage?: (source: string) => Promise<ImageAsset>;
+  },
 ): Promise<string> {
   const code = protectCode(withoutDuplicateTitle(markdown, options.title));
   const media: string[] = [];
@@ -235,7 +242,19 @@ export async function notionMarkdown(
     let replacement: string | undefined;
     let url: URL;
     try { url = new URL(link.href); } catch { continue; }
-    if (hostedFile(url) && !/\/(?:[a-f0-9]{32}|[^/]*-[a-f0-9]{32})$/i.test(url.pathname)) {
+    const nonImageMedia = link.image && /\.(?:pdf|mp4|webm|mov|mp3|wav|ogg|m4a|flac)$/i.test(url.pathname)
+      && ["https:", "http:"].includes(url.protocol);
+    if (link.image && !nonImageMedia && options.processImage) {
+      let image: ImageAsset;
+      try {
+        image = await options.processImage(url.href);
+      } catch (error) {
+        const sourceId = createHash("sha256").update(`${url.origin}${url.pathname}`).digest("hex").slice(0, 12);
+        const reason = error instanceof Error ? error.message : "이미지 최적화 실패";
+        throw new Error(`${reason} (페이지 ${options.pageId}, 이미지 ${sourceId})`);
+      }
+      replacement = renderMedia(image.src, link.label, true);
+    } else if (hostedFile(url) && !/\/(?:[a-f0-9]{32}|[^/]*-[a-f0-9]{32})$/i.test(url.pathname)) {
       const local = await downloadNotionFile(url.href, options.workRoot, options.pageId, options.fetcher);
       replacement = renderMedia(local, link.label, link.image);
     } else if (url.hostname === "notion.so" || url.hostname.endsWith(".notion.so")
@@ -244,7 +263,7 @@ export async function notionMarkdown(
       const id = /([a-f0-9]{32}|[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/i.exec(url.pathname)?.[1].replace(/-/g, "").toLowerCase();
       const slug = id && options.slugs.get(id);
       if (slug) replacement = `[${link.label}](/posts/${encodeURIComponent(slug)}/${url.hash})`;
-    } else if (link.image && /\.(?:pdf|mp4|webm|mov|mp3|wav|ogg|m4a|flac)$/i.test(url.pathname) && ["https:", "http:"].includes(url.protocol)) {
+    } else if (nonImageMedia) {
       replacement = renderMedia(url.href, link.label, true);
     }
     if (replacement) body = body.slice(0, link.start) + replacement + body.slice(link.end);

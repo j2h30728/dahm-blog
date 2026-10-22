@@ -25,11 +25,13 @@ export function parseCliArgs(
     publicPostIndexPath: path.join(root, "apps/blog/src/content/public-post-index.json"),
     searchIndexPath: path.join(root, "apps/blog/public/search/index.json"),
     postModuleMapPath: path.join(root, "apps/blog/src/content/post-module-map.ts"),
+    imageManifestPath: path.join(root, "apps/blog/src/content/image-manifest.json"),
   };
   const flags: Record<string, keyof PublishOptions> = {
     "--out": "outputDir", "--assets": "assetOutputDir", "--manifest": "manifestPath",
     "--public-index": "publicLinkIndexPath", "--public-post-index": "publicPostIndexPath",
     "--search-index": "searchIndexPath", "--post-module-map": "postModuleMapPath",
+    "--image-manifest": "imageManifestPath",
   };
   for (let index = 0; index < argv.length; index += 2) {
     const key = flags[argv[index]];

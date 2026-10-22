@@ -15,6 +15,7 @@ test("Notion 출력 경로는 workspace 루트를 기준으로 정한다", (t) =
   assert.equal(options.outputDir, path.join(root, "apps/blog/src/content/posts"));
   assert.equal(options.assetOutputDir, path.join(root, "apps/blog/public/post-assets"));
   assert.equal(options.searchIndexPath, path.join(root, "apps/blog/public/search/index.json"));
+  assert.equal(options.imageManifestPath, path.join(root, "apps/blog/src/content/image-manifest.json"));
   assert.equal("sourceDir" in options, false);
   const overridden = parseCliArgs(["--out", "tmp/posts", "--public-index", "tmp/links.json"], { cwd, env: {} });
   assert.equal(overridden.outputDir, path.join(root, "tmp/posts"));

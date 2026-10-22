@@ -79,6 +79,7 @@ function outputOptions(root: string): PublishOptions {
     publicPostIndexPath: path.join(target, "posts.json"), publicLinkIndexPath: path.join(target, "links.json"),
     manifestPath: path.join(target, "manifest.json"), searchIndexPath: path.join(target, "search.json"),
     postModuleMapPath: path.join(target, "post-modules.ts"),
+    imageManifestPath: path.join(target, "image-manifest.json"),
   };
 }
 
@@ -150,6 +151,7 @@ test("Notion에 없는 파일 글은 무시하고 DB의 글·URL·본문·에셋
   const index = JSON.parse(readFileSync(path.join(root, "output/posts.json"), "utf8"));
   assert.equal(index.posts.find((post: { slug: string }) => post.slug === "new-post").description, "글 요약");
   assert.doesNotMatch(readFileSync(path.join(root, "output/links.json"), "utf8"), /notionPageId/);
+  assert.deepEqual(JSON.parse(readFileSync(path.join(root, "output/image-manifest.json"), "utf8")), { version: 1, images: {} });
 });
 
 test("Notion 글이 비공개·삭제되면 모든 출력에서 제거하고 과거 파일로 대체하지 않는다", async (t) => {

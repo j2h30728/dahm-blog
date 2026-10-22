@@ -83,6 +83,8 @@ CJK 문장과 문장부호가 붙어 문자로 남은 `**강조(설명)**에서�
 
 ## 배포
 
+이미지 사전 변환과 S3·CloudFront의 실행 모드·개인 계정 인증·전환 검증은 [이미지 CDN 운영](./IMAGE-CDN.md)을 참고합니다.
+
 Vercel의 빌드 명령 `pnpm build:blog`가 최신 공개 글을 가져옵니다. Notion 변경으로 배포를 자동 시작하는 웹훅은 아직 없습니다. 운영 반영은 Vercel 재배포 또는 새 Git 배포로 진행합니다.
 
 API·출력 검사 중에는 `--out`, `--assets`, `--manifest`, `--public-index`, `--public-post-index`, `--search-index`, `--post-module-map`으로 생성 경로만 바꿀 수 있습니다. 로컬 파일 게시 모드·vault·preview 입력은 지원하지 않습니다.

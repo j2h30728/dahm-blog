@@ -1,0 +1,193 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Dahm blog image storage and CloudFront delivery",
+  "Parameters": {
+    "ExistingOidcProviderArn": {
+      "Type": "String",
+      "Default": "",
+      "Description": "Existing Vercel team OIDC provider ARN. Leave empty to create it in this account.",
+      "AllowedPattern": "^$|^arn:aws:iam::[0-9]{12}:oidc-provider/oidc[.]vercel[.]com/j2h30728s-projects$",
+      "ConstraintDescription": "Use the exact j2h30728s-projects Vercel OIDC provider ARN or leave it empty."
+    }
+  },
+  "Conditions": {
+    "CreateOidcProvider": { "Fn::Equals": [{ "Ref": "ExistingOidcProviderArn" }, ""] }
+  },
+  "Resources": {
+    "ImageBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "OwnershipControls": { "Rules": [{ "ObjectOwnership": "BucketOwnerEnforced" }] },
+        "PublicAccessBlockConfiguration": {
+          "BlockPublicAcls": true,
+          "BlockPublicPolicy": true,
+          "IgnorePublicAcls": true,
+          "RestrictPublicBuckets": true
+        },
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [{ "ServerSideEncryptionByDefault": { "SSEAlgorithm": "AES256" } }]
+        },
+        "Tags": [{ "Key": "Project", "Value": "dahm-blog" }]
+      }
+    },
+    "ImageOriginAccess": {
+      "Type": "AWS::CloudFront::OriginAccessControl",
+      "Properties": {
+        "OriginAccessControlConfig": {
+          "Name": { "Fn::Sub": "${AWS::StackName}-images" },
+          "OriginAccessControlOriginType": "s3",
+          "SigningBehavior": "always",
+          "SigningProtocol": "sigv4"
+        }
+      }
+    },
+    "ImageCachePolicy": {
+      "Type": "AWS::CloudFront::CachePolicy",
+      "Properties": {
+        "CachePolicyConfig": {
+          "Name": { "Fn::Sub": "${AWS::StackName}-immutable-images" },
+          "MinTTL": 0,
+          "DefaultTTL": 31536000,
+          "MaxTTL": 31536000,
+          "ParametersInCacheKeyAndForwardedToOrigin": {
+            "CookiesConfig": { "CookieBehavior": "none" },
+            "HeadersConfig": { "HeaderBehavior": "none" },
+            "QueryStringsConfig": { "QueryStringBehavior": "none" },
+            "EnableAcceptEncodingGzip": false,
+            "EnableAcceptEncodingBrotli": false
+          }
+        }
+      }
+    },
+    "ImageDistribution": {
+      "Type": "AWS::CloudFront::Distribution",
+      "Properties": {
+        "DistributionConfig": {
+          "Enabled": true,
+          "IPV6Enabled": true,
+          "Comment": "Dahm blog immutable image assets",
+          "HttpVersion": "http2and3",
+          "Origins": [{
+            "Id": "image-bucket",
+            "DomainName": { "Fn::GetAtt": ["ImageBucket", "RegionalDomainName"] },
+            "OriginAccessControlId": { "Fn::GetAtt": ["ImageOriginAccess", "Id"] },
+            "S3OriginConfig": { "OriginAccessIdentity": "" }
+          }],
+          "DefaultCacheBehavior": {
+            "TargetOriginId": "image-bucket",
+            "ViewerProtocolPolicy": "redirect-to-https",
+            "AllowedMethods": ["GET", "HEAD"],
+            "CachedMethods": ["GET", "HEAD"],
+            "CachePolicyId": { "Ref": "ImageCachePolicy" },
+            "Compress": false
+          },
+          "ViewerCertificate": { "CloudFrontDefaultCertificate": true }
+        },
+        "Tags": [{ "Key": "Project", "Value": "dahm-blog" }]
+      }
+    },
+    "ImageBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": { "Ref": "ImageBucket" },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Sid": "OnlyThisDistributionReadsImages",
+            "Effect": "Allow",
+            "Principal": { "Service": "cloudfront.amazonaws.com" },
+            "Action": "s3:GetObject",
+            "Resource": { "Fn::Sub": "${ImageBucket.Arn}/blog-images/*" },
+            "Condition": { "StringEquals": { "AWS:SourceArn": { "Fn::Sub": "arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${ImageDistribution}" } } }
+          }, {
+            "Sid": "RequireTLS",
+            "Effect": "Deny",
+            "Principal": "*",
+            "Action": "s3:*",
+            "Resource": [{ "Fn::GetAtt": ["ImageBucket", "Arn"] }, { "Fn::Sub": "${ImageBucket.Arn}/*" }],
+            "Condition": { "Bool": { "aws:SecureTransport": "false" } }
+          }]
+        }
+      }
+    },
+    "ImageUploaderPolicy": {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties": {
+        "Description": "Upload and verify only Dahm blog image objects; attach to a dedicated build identity",
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Action": ["s3:GetObject", "s3:PutObject"],
+            "Resource": { "Fn::Sub": "${ImageBucket.Arn}/blog-images/*" }
+          }, {
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": { "Fn::GetAtt": ["ImageBucket", "Arn"] }
+          }]
+        }
+      }
+    },
+    "VercelOidcProvider": {
+      "Type": "AWS::IAM::OIDCProvider",
+      "Condition": "CreateOidcProvider",
+      "DeletionPolicy": "Retain",
+      "UpdateReplacePolicy": "Retain",
+      "Properties": {
+        "Url": "https://oidc.vercel.com/j2h30728s-projects",
+        "ClientIdList": ["https://vercel.com/j2h30728s-projects"],
+        "Tags": [{ "Key": "Project", "Value": "dahm-blog" }]
+      }
+    },
+    "ImageUploaderRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "Description": "Dahm blog production builds upload immutable images through Vercel OIDC",
+        "MaxSessionDuration": 3600,
+        "ManagedPolicyArns": [{ "Ref": "ImageUploaderPolicy" }],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": {
+              "Federated": {
+                "Fn::If": [
+                  "CreateOidcProvider",
+                  { "Ref": "VercelOidcProvider" },
+                  { "Ref": "ExistingOidcProviderArn" }
+                ]
+              }
+            },
+            "Action": "sts:AssumeRoleWithWebIdentity",
+            "Condition": {
+              "StringEquals": {
+                "oidc.vercel.com/j2h30728s-projects:aud": "https://vercel.com/j2h30728s-projects",
+                "oidc.vercel.com/j2h30728s-projects:sub": "owner:j2h30728s-projects:project:dahm-blog:environment:production"
+              }
+            }
+          }]
+        },
+        "Tags": [{ "Key": "Project", "Value": "dahm-blog" }]
+      }
+    }
+  },
+  "Outputs": {
+    "AccountId": { "Value": { "Ref": "AWS::AccountId" } },
+    "BucketName": { "Value": { "Ref": "ImageBucket" } },
+    "DistributionId": { "Value": { "Ref": "ImageDistribution" } },
+    "CdnBaseUrl": { "Value": { "Fn::Sub": "https://${ImageDistribution.DomainName}" } },
+    "UploaderPolicyArn": { "Value": { "Ref": "ImageUploaderPolicy" } },
+    "AwsRoleArn": { "Value": { "Fn::GetAtt": ["ImageUploaderRole", "Arn"] } },
+    "OidcProviderArn": {
+      "Value": {
+        "Fn::If": [
+          "CreateOidcProvider",
+          { "Ref": "VercelOidcProvider" },
+          { "Ref": "ExistingOidcProviderArn" }
+        ]
+      }
+    }
+  }
+}

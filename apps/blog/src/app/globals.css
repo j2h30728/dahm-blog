@@ -546,14 +546,19 @@ html[data-theme="dark"] .shiki span {
 }
 
 .post-image-dialog__error {
+  align-self: end;
+  background: rgb(17 17 17 / 82%);
+  border-radius: var(--radius-pill);
   color: rgb(255 255 255 / 86%);
   font-size: 0.92rem;
   grid-area: 1 / 1;
   line-height: 1.5;
-  margin: 0;
+  margin: 0 0 0.5rem;
   max-width: 28rem;
-  place-self: center;
+  padding: 0.55rem 0.85rem;
+  place-self: end center;
   text-align: center;
+  z-index: 1;
 }
 
 @media (prefers-reduced-motion: no-preference) {

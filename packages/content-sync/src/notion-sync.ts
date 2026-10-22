@@ -3,6 +3,9 @@ import path from "node:path";
 import { NotionClient, notionId, object, property, selectProperty, textProperty, type Fetch, type NotionConfig, type NotionPage } from "./notion-client.js";
 import { notionMarkdown } from "./notion-markdown.js";
 import type { NotionPost } from "./schema.js";
+import type { ImageProcessor } from "./image-processor.js";
+import { emptyImageManifest } from "./image-processor.js";
+import type { ImageManifest } from "./schema.js";
 
 function postCategory(page: NotionPage): NotionPost["category"] {
   const section = page.properties.section ? selectProperty(page, "section").trim().toLowerCase() : "";
@@ -59,8 +62,11 @@ function metadata(page: NotionPage): Omit<NotionPost, "body"> {
 
 /** 게시 입력은 API 결과뿐이다. 저장소의 Markdown·사본을 읽지 않는다. */
 export async function fetchNotionContent(
-  root: string, config: NotionConfig, fetcher: Fetch = fetch,
-): Promise<{ posts: NotionPost[]; assetDir: string; cleanup: () => void }> {
+  root: string,
+  config: NotionConfig,
+  fetcher: Fetch = fetch,
+  imageProcessorFactory?: (workRoot: string) => ImageProcessor | undefined,
+): Promise<{ posts: NotionPost[]; assetDir: string; imageManifest: ImageManifest; cleanup: () => void }> {
   const work = path.join(root, ".content-sync");
   mkdirSync(work, { recursive: true });
   const workRoot = mkdtempSync(path.join(work, "notion-"));
@@ -68,6 +74,7 @@ export async function fetchNotionContent(
   mkdirSync(assetDir);
   const cleanup = () => rmSync(workRoot, { recursive: true, force: true });
   try {
+    const imageProcessor = imageProcessorFactory?.(workRoot);
     const client = new NotionClient(config, fetcher);
     const pages = (await client.publishedPosts()).map(metadata);
     const slugs = new Map<string, string>();
@@ -81,10 +88,11 @@ export async function fetchNotionContent(
     for (const post of pages) {
       const body = await notionMarkdown(await client.markdown(post.id), {
         workRoot, pageId: post.id, slugs, title: post.title, fetcher,
+        processImage: imageProcessor?.process,
       });
       posts.push({ ...post, body });
     }
-    return { posts, assetDir, cleanup };
+    return { posts, assetDir, imageManifest: imageProcessor?.manifest ?? emptyImageManifest(), cleanup };
   } catch (error) {
     cleanup();
     throw error;

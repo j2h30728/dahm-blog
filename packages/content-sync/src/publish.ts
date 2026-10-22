@@ -1,6 +1,7 @@
 import { cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import type { HeadingNode, NotionPost, PostIndexEntry, PublishOptions } from "./schema.js";
+import type { HeadingNode, ImageManifest, NotionPost, PostIndexEntry, PublishOptions } from "./schema.js";
+import { emptyImageManifest } from "./image-processor.js";
 import { internalPostLinks } from "./notion-markdown.js";
 import { plainText, slugify, slugifyHeading } from "./utils.js";
 
@@ -51,7 +52,9 @@ function moduleMap(posts: NotionPost[], options: PublishOptions): string {
 }
 
 /** 전체 결과를 먼저 준비하고, 실패하면 이전 생성물을 복원한다. */
-export function publishPosts(posts: NotionPost[], assetDir: string, options: PublishOptions): PostIndexEntry[] {
+export function publishPosts(
+  posts: NotionPost[], assetDir: string, options: PublishOptions, imageManifest: ImageManifest = emptyImageManifest(),
+): PostIndexEntry[] {
   const slugs = new Set<string>();
   const tags = new Map<string, string>();
   const series = new Map<string, string>();
@@ -113,6 +116,7 @@ export function publishPosts(posts: NotionPost[], assetDir: string, options: Pub
       searchText: [post.title, post.description, post.topic, post.series, post.tags.join(" "), plainText(post.body)].filter(Boolean).join(" ").toLowerCase(),
     })).sort((a, b) => a.url.localeCompare(b.url)));
     addFile(options.postModuleMapPath, moduleMap(posts, options), true);
+    addFile(options.imageManifestPath, imageManifest);
     addFile(options.manifestPath, { source: "notion", generatedAt, posts: posts.map(({ id, slug }) => ({ id, slug })) });
     mkdirSync(path.join(stage, "backups"));
     for (const artifact of artifacts) {

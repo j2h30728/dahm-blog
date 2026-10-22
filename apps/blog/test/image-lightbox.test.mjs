@@ -8,6 +8,7 @@ import * as runtime from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 import { mdxOptions } from "../next.config.mjs";
+import rehypePostImages from "../src/lib/rehype-post-images.mjs";
 
 const require = createRequire(import.meta.url);
 const loaderRequire = createRequire(require.resolve("@mdx-js/loader"));
@@ -28,8 +29,8 @@ const { useMDXComponents } = await import(compileModule("../src/mdx-components.t
   "./components/ZoomableImage": imageModule,
 }));
 
-async function render(markdown, overrides = {}) {
-  const { default: Content } = await evaluate(markdown, { ...mdxOptions, ...runtime });
+async function render(markdown, overrides = {}, compileOptions = {}) {
+  const { default: Content } = await evaluate(markdown, { ...mdxOptions, ...compileOptions, ...runtime });
   return renderToStaticMarkup(createElement(Content, { components: useMDXComponents(overrides) }));
 }
 
@@ -122,4 +123,56 @@ test("호출자가 전달한 MDX 이미지·링크 컴포넌트가 우선한다"
   assert.match(html, /<span>그림<\/span>/);
   assert.match(html, /<strong>링크<\/strong>/);
   assert.doesNotMatch(html, /post-image-trigger/);
+});
+
+test("manifest 이미지에 반응형 본문 속성과 클릭 전용 원본 정보를 주입한다", async () => {
+  const source = "https://cdn.example.com/hash/w960.webp";
+  const original = "https://cdn.example.com/hash/original.png";
+  const manifest = {
+    version: 1,
+    images: {
+      [source]: {
+        src: source,
+        originalSrc: original,
+        width: 960,
+        height: 480,
+        originalWidth: 2400,
+        originalHeight: 1200,
+        variants: [
+          { src: "https://cdn.example.com/hash/w960.webp", width: 960 },
+          { src: "https://cdn.example.com/hash/w640.webp", width: 640 },
+          { src: "https://cdn.example.com/hash/w960-duplicate.webp", width: 960 },
+        ],
+      },
+    },
+  };
+  const html = await render(`![화면 &#123;width=360&#125;](${source})`, {}, {
+    rehypePlugins: [
+      ...mdxOptions.rehypePlugins.slice(0, -1),
+      [rehypePostImages, { mode: "local", manifest }],
+    ],
+  });
+
+  assert.match(html, /src="https:\/\/cdn\.example\.com\/hash\/w960\.webp"/);
+  assert.match(html, /srcSet="https:\/\/cdn\.example\.com\/hash\/w640\.webp 640w, https:\/\/cdn\.example\.com\/hash\/w960\.webp 960w"/);
+  assert.match(html, /sizes="\(max-width: 360px\) 100vw, 360px"/);
+  assert.match(html, /width="960" height="480"/);
+  assert.match(html, /loading="lazy" decoding="async"/);
+  assert.match(html, /data-original-src="https:\/\/cdn\.example\.com\/hash\/original\.png"/);
+  assert.match(html, /data-original-width="2400" data-original-height="1200"/);
+  assert.doesNotMatch(html, /rel="preload"/);
+});
+
+test("관리 모드에서는 manifest에 없는 본문 이미지를 빌드 오류로 처리하고 off에서는 허용한다", async () => {
+  const manifest = { version: 1, images: {} };
+  await assert.rejects(
+    render("![누락](/missing.png)", {}, {
+      rehypePlugins: [[rehypePostImages, { mode: "s3", manifest }]],
+    }),
+    /manifest에 본문 이미지가 없습니다/,
+  );
+  const html = await render("![기존](/legacy.png)", {}, {
+    rehypePlugins: [[rehypePostImages, { mode: "off", manifest }]],
+  });
+  assert.match(html, /src="\/legacy\.png"/);
 });

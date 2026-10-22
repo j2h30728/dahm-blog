@@ -5,6 +5,7 @@ import { PHASE_DEVELOPMENT_SERVER } from "next/constants.js";
 import rehypeShiki from "@shikijs/rehype";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
+import rehypePostImages from "./src/lib/rehype-post-images.mjs";
 import remarkNotionTypography from "./src/lib/remark-notion-typography.mjs";
 
 // sync CLI와 Next 빌드는 서로 다른 프로세스이므로 루트 환경파일을 각각 읽는다.
@@ -26,6 +27,7 @@ export const mdxOptions = {
       },
     ],
     rehypeSlug,
+    rehypePostImages,
   ],
 };
 

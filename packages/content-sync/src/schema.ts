@@ -36,6 +36,26 @@ export interface LinkEdge {
   label: string;
 }
 
+export interface ImageVariant {
+  src: string;
+  width: number;
+}
+
+export interface ImageAsset {
+  src: string;
+  originalSrc: string;
+  width: number;
+  height: number;
+  originalWidth: number;
+  originalHeight: number;
+  variants: ImageVariant[];
+}
+
+export interface ImageManifest {
+  version: 1;
+  images: Record<string, ImageAsset>;
+}
+
 export interface PublishOptions {
   outputDir: string;
   assetOutputDir: string;
@@ -44,4 +64,5 @@ export interface PublishOptions {
   publicPostIndexPath: string;
   searchIndexPath: string;
   postModuleMapPath: string;
+  imageManifestPath: string;
 }

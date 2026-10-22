@@ -13,6 +13,7 @@ apps/blog/out
 apps/blog/public/search/index.json
 apps/blog/public/search/pagefind
 apps/blog/public/post-assets/**/notion-*
+apps/blog/public/post-assets/blog-images/
 packages/*/dist
 *.tsbuildinfo
 .content-sync/

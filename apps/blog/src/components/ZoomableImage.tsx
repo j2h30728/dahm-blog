@@ -6,19 +6,27 @@ import { createPortal } from "react-dom";
 const ImageLinkContext = createContext(false);
 
 interface SelectedImage {
-  src: string;
+  previewSrc: string;
+  originalSrc: string;
   alt: string;
-  width: number;
-  height: number;
+  previewWidth: number;
+  previewHeight: number;
+  originalWidth?: number;
+  originalHeight?: number;
   trigger: HTMLElement;
 }
 
 function selectImage(image: HTMLImageElement, trigger: HTMLElement): SelectedImage {
+  const originalWidth = Number(image.dataset.originalWidth);
+  const originalHeight = Number(image.dataset.originalHeight);
   return {
-    src: image.currentSrc || image.src,
+    previewSrc: image.currentSrc || image.src,
+    originalSrc: image.dataset.originalSrc || image.currentSrc || image.src,
     alt: image.alt,
-    width: image.naturalWidth,
-    height: image.naturalHeight,
+    previewWidth: image.naturalWidth,
+    previewHeight: image.naturalHeight,
+    originalWidth: originalWidth > 0 ? originalWidth : undefined,
+    originalHeight: originalHeight > 0 ? originalHeight : undefined,
     trigger,
   };
 }
@@ -32,7 +40,11 @@ export function ZoomableImage(props: ComponentPropsWithoutRef<"img">) {
   const requestedWidth = match ? Number(match[1]) : 0;
   const width = requestedWidth > 0 && requestedWidth <= 10_000 ? requestedWidth : undefined;
   const caption = width ? originalCaption.slice(0, match!.index).trim() : originalCaption;
-  const imageProps = { ...props, alt: caption };
+  const imageProps = {
+    ...props,
+    alt: caption,
+    sizes: width ? `(max-width: ${width}px) 100vw, ${width}px` : props.sizes,
+  };
   const image = insideLink ? <img {...imageProps} /> : <StandaloneImage {...imageProps} />;
 
   if (!caption.trim() && !width) return image;
@@ -60,7 +72,9 @@ function StandaloneImage(props: ComponentPropsWithoutRef<"img">) {
       >
         <img {...props} alt={props.alt ?? ""} />
       </button>
-      {selected && <ImageDialog image={selected} onClose={() => setSelected(null)} />}
+      {selected ? (
+        <ImageDialog key={`${selected.previewSrc}:${selected.originalSrc}`} image={selected} onClose={() => setSelected(null)} />
+      ) : null}
     </>
   );
 }
@@ -85,7 +99,9 @@ export function ZoomableImageLink({ children, onClick, ...props }: ComponentProp
           {children}
         </a>
       </ImageLinkContext.Provider>
-      {selected && <ImageDialog image={selected} onClose={() => setSelected(null)} />}
+      {selected ? (
+        <ImageDialog key={`${selected.previewSrc}:${selected.originalSrc}`} image={selected} onClose={() => setSelected(null)} />
+      ) : null}
     </>
   );
 }
@@ -95,6 +111,34 @@ function ImageDialog({ image, onClose }: { image: SelectedImage; onClose: () => 
   const closeRef = useRef<HTMLButtonElement>(null);
   const pointerStartedOutside = useRef(false);
   const [failed, setFailed] = useState(false);
+  const [displayed, setDisplayed] = useState({
+    src: image.previewSrc,
+    width: image.previewWidth,
+    height: image.previewHeight,
+  });
+
+  useEffect(() => {
+    if (image.originalSrc === image.previewSrc) return;
+    let active = true;
+    const original = new Image();
+    original.onload = () => {
+      if (!active) return;
+      setDisplayed({
+        src: image.originalSrc,
+        width: image.originalWidth ?? original.naturalWidth,
+        height: image.originalHeight ?? original.naturalHeight,
+      });
+    };
+    original.onerror = () => {
+      if (active) setFailed(true);
+    };
+    original.src = image.originalSrc;
+    return () => {
+      active = false;
+      original.onload = null;
+      original.onerror = null;
+    };
+  }, [image]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -144,18 +188,14 @@ function ImageDialog({ image, onClose }: { image: SelectedImage; onClose: () => 
           <path d="m6 6 12 12M6 18 18 6" />
         </svg>
       </button>
-      {failed ? (
-        <p className="post-image-dialog__error" role="status">이미지를 불러오지 못했습니다.</p>
-      ) : (
-        <img
-          className="post-image-dialog__image"
-          src={image.src}
-          alt={image.alt}
-          width={image.width || undefined}
-          height={image.height || undefined}
-          onError={() => setFailed(true)}
-        />
-      )}
+      <img
+        className="post-image-dialog__image"
+        src={displayed.src}
+        alt={image.alt}
+        width={displayed.width || undefined}
+        height={displayed.height || undefined}
+      />
+      {failed ? <p className="post-image-dialog__error" role="status">원본 이미지를 불러오지 못해 미리보기를 표시합니다.</p> : null}
     </dialog>,
     document.body,
   );

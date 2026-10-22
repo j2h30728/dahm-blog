@@ -9,7 +9,7 @@
 rtk proxy node -e 'const {createRequire}=require("node:module"); const p=createRequire(process.cwd()+"/packages/content-sync/package.json"); const r=createRequire(p.resolve("tsx")); r("esbuild").buildSync({entryPoints:["apps/blog/test/browser/image-lightbox-fixture.tsx"],bundle:true,platform:"browser",format:"iife",jsx:"automatic",outfile:"apps/blog/out/__image-lightbox-qa__/fixture.js",define:{"process.env.NODE_ENV":"\"development\""}})'
 ```
 
-3. MCP에서 `image-lightbox.js`를 실행한다. fixture HTML과 오류 이미지는 해당 테스트 페이지의 요청 가로채기로만 제공된다. 실제 게시글을 추가하지 않는다.
+3. MCP에서 `image-lightbox.js`를 실행한다. fixture HTML과 오류 이미지는 해당 테스트 페이지의 요청 가로채기로만 제공된다. 클릭 전 원본 요청 0건, 클릭 후 1건과 원본 실패 시 미리보기 유지를 함께 검사한다. 실제 게시글을 추가하지 않는다.
 4. 검사 후 생성한 `apps/blog/out/__image-lightbox-qa__/fixture.js`와 빈 디렉터리를 삭제한다. 이 임시 fixture를 배포하지 않는다.
 
 `pnpm --filter @dahm-blog/blog test`는 별도로 실제 MDX 컴파일·SSR 구조·원본 속성·사용자 컴포넌트 우선순위를 확인한다.
