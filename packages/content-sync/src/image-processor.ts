@@ -21,6 +21,7 @@ const MAX_FRAME_PIXELS = 24_000_000;
 const MAX_TOTAL_PIXELS = 128_000_000;
 const MAX_TRANSFORM_MS = 30_000;
 const MAX_ANIMATED_TRANSFORM_MS = 120_000;
+const MAX_S3_CONCURRENCY = 4;
 const WIDTHS = [640, 960, 1440] as const;
 const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
 const TRANSFORM_VERSION = `webp-v1-sharp-${sharp.versions.sharp}-w${WIDTHS.join("-")}`;
@@ -388,6 +389,18 @@ async function storeS3(
   }
 }
 
+async function storeS3Images(
+  client: Pick<S3Client, "send">, bucket: string, expectedBucketOwner: string, images: StoredImage[],
+): Promise<void> {
+  for (let offset = 0; offset < images.length; offset += MAX_S3_CONCURRENCY) {
+    const results = await Promise.allSettled(images.slice(offset, offset + MAX_S3_CONCURRENCY)
+      .map((image) => storeS3(client, bucket, expectedBucketOwner, image)));
+    const failure = results.find((result) => result.status === "rejected");
+    // CLI가 임시 파일을 정리하기 전에 시작한 업로드와 검증 요청을 모두 마친다.
+    if (failure?.status === "rejected") throw failure.reason;
+  }
+}
+
 function storeLocal(assetRoot: string, image: StoredImage): void {
   const output = path.join(assetRoot, ...image.key.split("/"));
   mkdirSync(path.dirname(output), { recursive: true });
@@ -471,7 +484,7 @@ export function createImageProcessor(options: ImageProcessorFactoryOptions): Ima
         const all = [transformed.original, ...transformed.variants];
         stage = "storage";
         if (mode === "s3") {
-          for (const image of all) await storeS3(s3!, bucket, expectedBucketOwner, image);
+          await storeS3Images(s3!, bucket, expectedBucketOwner, all);
         } else {
           for (const image of all) storeLocal(assetRoot, image);
         }

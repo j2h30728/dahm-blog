@@ -244,6 +244,56 @@ test("s3 모드는 필수 설정을 검증하고 404가 아닌 Head 오류를 �
   await assert.rejects(processor.process("https://i.ibb.co/image.png"), /이미지 최적화 실패/);
 });
 
+test("S3 원본과 변환본은 최대 4개씩 저장하고 실패 시 시작한 요청을 모두 기다린다", async (t) => {
+  for (const failOriginal of [false, true]) {
+    const root = workspace(t);
+    const stored = new Map<string, { sha256: string; checksum: string }>();
+    let active = 0;
+    let peak = 0;
+    let delayedRequests = 0;
+    const client = {
+      async send(command: HeadObjectCommand | PutObjectCommand) {
+        active++;
+        peak = Math.max(peak, active);
+        try {
+          const key = String(command.input.Key);
+          if (failOriginal && key.endsWith("original.png")) {
+            throw Object.assign(new Error("forbidden"), { $metadata: { httpStatusCode: 403 } });
+          }
+          delayedRequests++;
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          if (command instanceof PutObjectCommand) {
+            stored.set(key, { sha256: String(command.input.Metadata?.sha256), checksum: String(command.input.ChecksumSHA256) });
+            return {};
+          }
+          const value = stored.get(key);
+          if (!value) throw Object.assign(new Error("missing"), { $metadata: { httpStatusCode: 404 } });
+          return { Metadata: { sha256: value.sha256 }, ChecksumSHA256: value.checksum };
+        } finally { active--; }
+      },
+    };
+    const processor = createImageProcessor({ root, workRoot: root,
+      env: { IMAGE_ASSETS_MODE: "s3", IMAGE_S3_BUCKET: "images", IMAGE_CDN_BASE_URL: "https://cdn.example.com",
+        IMAGE_AWS_ACCOUNT_ID: "123456789012", AWS_REGION: "ap-northeast-2",
+        AWS_ROLE_ARN: "arn:aws:iam::123456789012:role/test-images", VERCEL_OIDC_TOKEN: "test-token-never-sent" },
+      resolver: publicAddress, fetcher: async () => imageResponse(await png(2000, 1000), "image/png"),
+      s3Client: client as never,
+    })!;
+    const task = processor.process("https://i.ibb.co/concurrent.png");
+    if (failOriginal) {
+      await assert.rejects(task, /이미지 최적화 실패 \(저장\).*HTTP 403/);
+      assert.deepEqual(processor.manifest.images, {});
+      assert.ok(delayedRequests > 0, "실패한 원본 이외의 요청도 시작되어야 한다");
+    } else {
+      const image = await task;
+      assert.equal(processor.manifest.images[image.src], image);
+    }
+    assert.ok(peak >= 2 && peak <= 4, `동시 요청 ${peak}개`);
+    assert.equal(active, 0, "성공·실패 반환 전에 모든 진행 요청을 마쳐야 한다");
+    assert.equal(stored.size, failOriginal ? 3 : 4);
+  }
+});
+
 test("Markdown의 모든 일반 이미지는 callback 결과를 쓰고 비이미지 미디어는 기존 출력을 유지한다", async (t) => {
   const root = workspace(t);
   const sources: string[] = [];
