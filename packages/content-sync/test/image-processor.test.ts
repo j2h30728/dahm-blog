@@ -6,11 +6,33 @@ import path from "node:path";
 import { test } from "node:test";
 import { HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import sharp from "sharp";
-import { assertImageResourceLimits, createImageProcessor } from "../src/image-processor.js";
+import { assertImageResourceLimits, createImageProcessor, imageProcessingErrorMessage, imageVariantsForDelivery } from "../src/image-processor.js";
 import { notionMarkdown } from "../src/notion-markdown.js";
 import type { ImageAsset } from "../src/schema.js";
 
 const publicAddress = async () => [{ address: "93.184.216.34" }];
+
+test("작은 해상도가 더 큰 파일이면 모바일에도 더 선명하고 작은 파일을 제공한다", () => {
+  const variants = [
+    { width: 320, bytes: Buffer.alloc(5) },
+    { width: 640, bytes: Buffer.alloc(34) },
+    { width: 864, bytes: Buffer.alloc(10) },
+    { width: 1440, bytes: Buffer.alloc(50) },
+  ];
+  assert.deepEqual(imageVariantsForDelivery(variants).map(({ width }) => width), [320, 864, 1440]);
+  assert.equal(imageVariantsForDelivery([variants[1]])[0], variants[1]);
+});
+
+test("Sharp timeout을 변환 시간 초과로 분류하고 민감한 오류 원문은 노출하지 않는다", () => {
+  const timeout = new Error("timeout: 100% complete\nVipsImage: killed\nwebpsave_buffer: anim add error");
+  assert.equal(imageProcessingErrorMessage(timeout, "transform"), "이미지 최적화 실패 (변환): 이미지 변환 시간 제한 초과");
+  const secret = new Error("https://example.com/file?token=must-not-log");
+  assert.equal(imageProcessingErrorMessage(secret, "download"), "이미지 최적화 실패 (다운로드): 이미지 다운로드 오류");
+  assert.equal(imageProcessingErrorMessage(secret, "transform"), "이미지 최적화 실패 (변환): 이미지 변환 오류");
+  Object.assign(secret, { $metadata: { httpStatusCode: 403 } });
+  assert.equal(imageProcessingErrorMessage(secret, "storage"), "이미지 최적화 실패 (저장): 이미지 저장 오류 (HTTP 403)");
+  assert.match(imageProcessingErrorMessage(new Error("이미지 다운로드 재시도 한도 초과 (HTTP 503)"), "download"), /HTTP 503/);
+});
 
 function workspace(t: { after: (fn: () => void) => void }): string {
   const root = mkdtempSync(path.join(os.tmpdir(), "image-processor-test-"));

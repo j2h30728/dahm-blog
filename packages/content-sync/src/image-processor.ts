@@ -20,6 +20,7 @@ const MAX_FRAMES = 200;
 const MAX_FRAME_PIXELS = 24_000_000;
 const MAX_TOTAL_PIXELS = 128_000_000;
 const MAX_TRANSFORM_MS = 30_000;
+const MAX_ANIMATED_TRANSFORM_MS = 120_000;
 const WIDTHS = [640, 960, 1440] as const;
 const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
 const TRANSFORM_VERSION = `webp-v1-sharp-${sharp.versions.sharp}-w${WIDTHS.join("-")}`;
@@ -297,6 +298,7 @@ async function transformImage(downloaded: DownloadedImage, cacheRoot?: string): 
   const metadata = await input.metadata();
   if (!metadata.width || !metadata.height || !metadata.format) throw new Error("이미지 메타데이터가 없습니다");
   const pages = metadata.pages ?? 1;
+  const transformBudgetMs = pages > 1 ? MAX_ANIMATED_TRANSFORM_MS : MAX_TRANSFORM_MS;
   const frameHeight = metadata.pageHeight ?? Math.floor(metadata.height / pages);
   assertImageResourceLimits(metadata.width, frameHeight, pages);
   const originalSize = orientedSize(metadata.width, frameHeight, metadata.orientation);
@@ -315,11 +317,11 @@ async function transformImage(downloaded: DownloadedImage, cacheRoot?: string): 
   if (cached) return cached;
   const variants: Array<StoredImage & { width: number; height: number }> = [];
   for (const targetWidth of targetWidths) {
-    if (Date.now() - started > MAX_TRANSFORM_MS) throw new Error("이미지 변환 시간 제한 초과");
+    if (Date.now() - started > transformBudgetMs) throw new Error("이미지 변환 시간 제한 초과");
     const transformer = sharp(downloaded.bytes, { animated: true, limitInputPixels: MAX_TOTAL_PIXELS, sequentialRead: true })
       .rotate()
       .resize({ width: targetWidth, withoutEnlargement: true })
-      .timeout({ seconds: Math.max(1, Math.ceil((MAX_TRANSFORM_MS - (Date.now() - started)) / 1000)) });
+      .timeout({ seconds: Math.max(1, Math.ceil((transformBudgetMs - (Date.now() - started)) / 1000)) });
     const bytes = await transformer.webp({
       quality: metadata.format === "jpeg" || metadata.format === "avif" ? 86 : 100,
       lossless: metadata.format === "png" || metadata.format === "gif",
@@ -339,7 +341,7 @@ async function transformImage(downloaded: DownloadedImage, cacheRoot?: string): 
       height: outputHeight,
     });
   }
-  if (Date.now() - started > MAX_TRANSFORM_MS) throw new Error("이미지 변환 시간 제한 초과");
+  if (Date.now() - started > transformBudgetMs) throw new Error("이미지 변환 시간 제한 초과");
   const result = { hash, original, variants, originalWidth: originalSize.width, originalHeight: originalSize.height };
   if (cacheRoot) saveLocalTransform(cacheRoot, result);
   return result;
@@ -402,8 +404,28 @@ function modeFromEnv(env: NodeJS.ProcessEnv): ImageAssetsMode {
   return value;
 }
 
+type ImageStage = "download" | "transform" | "storage";
+
+/** 원본 URL·토큰·SDK 원문 대신 제한된 실패 단계와 상태만 공개한다. */
+export function imageProcessingErrorMessage(error: unknown, stage: ImageStage): string {
+  const message = error instanceof Error ? error.message : "";
+  const known = /^(?:이미지 (?:HTTP \d{3}|크기 제한 초과|픽셀 또는 프레임 제한 초과|변환 시간 제한 초과|리다이렉트 제한 초과|호스트 확인 실패|호스트 주소가 안전하지 않습니다|메타데이터가 없습니다|다운로드 재시도 한도 초과(?: \(HTTP \d{3}\))?)|허용되지 않은 이미지 URL|지원하지 않는 이미지 형식|S3 이미지 (?:객체|업로드) 검증 실패|로컬 이미지 캐시 검증 실패)$/.test(message);
+  const label = { download: "다운로드", transform: "변환", storage: "저장" }[stage];
+  const safe = stage === "transform" && /^timeout:/i.test(message)
+    ? "이미지 변환 시간 제한 초과" : known ? message : `이미지 ${label} 오류`;
+  const metadata = error && typeof error === "object" ? (error as { $metadata?: { httpStatusCode?: unknown } }).$metadata : undefined;
+  const status = metadata?.httpStatusCode;
+  return `이미지 최적화 실패 (${label}): ${safe}${typeof status === "number" && Number.isInteger(status) && status >= 400 && status <= 599 ? ` (HTTP ${status})` : ""}`;
+}
+
 export function emptyImageManifest(): ImageManifest {
   return { version: 1, images: {} };
+}
+
+/** 리사이즈로 파일이 더 커진 후보는 더 선명하고 작은 파일로 대체한다. */
+export function imageVariantsForDelivery<T extends { width: number; bytes: Buffer }>(variants: T[]): T[] {
+  return variants.filter((variant) => !variants.some((other) =>
+    other.width > variant.width && other.bytes.length <= variant.bytes.length));
 }
 
 export function createImageProcessor(options: ImageProcessorFactoryOptions): ImageProcessor | undefined {
@@ -441,17 +463,22 @@ export function createImageProcessor(options: ImageProcessorFactoryOptions): Ima
     const existing = inFlight.get(source);
     if (existing) return existing;
     const task = (async () => {
+      let stage: ImageStage = "download";
       try {
-        const transformed = await transformImage(await downloadImage(source, fetcher, resolver), cacheRoot);
+        const downloaded = await downloadImage(source, fetcher, resolver);
+        stage = "transform";
+        const transformed = await transformImage(downloaded, cacheRoot);
         const all = [transformed.original, ...transformed.variants];
+        stage = "storage";
         if (mode === "s3") {
           for (const image of all) await storeS3(s3!, bucket, expectedBucketOwner, image);
         } else {
           for (const image of all) storeLocal(assetRoot, image);
         }
         const url = (key: string) => mode === "s3" ? publicUrl(baseUrl, key) : localUrl(key);
-        const variants = transformed.variants.map(({ key, width }) => ({ src: url(key), width }));
-        const defaultVariant = transformed.variants.reduce((best, variant) =>
+        const deliveryVariants = imageVariantsForDelivery(transformed.variants);
+        const variants = deliveryVariants.map(({ key, width }) => ({ src: url(key), width }));
+        const defaultVariant = deliveryVariants.reduce((best, variant) =>
           Math.abs(variant.width - 960) < Math.abs(best.width - 960) ? variant : best);
         const asset: ImageAsset = {
           src: url(defaultVariant.key),
@@ -465,10 +492,7 @@ export function createImageProcessor(options: ImageProcessorFactoryOptions): Ima
         manifest.images[asset.src] = asset;
         return asset;
       } catch (error) {
-        const message = error instanceof Error ? error.message : "";
-        const safe = /^(?:이미지 (?:HTTP \d{3}|크기 제한 초과|픽셀 또는 프레임 제한 초과|변환 시간 제한 초과|리다이렉트 제한 초과|호스트 확인 실패|호스트 주소가 안전하지 않습니다|메타데이터가 없습니다)|허용되지 않은 이미지 URL|지원하지 않는 이미지 형식|S3 이미지 (?:객체|업로드) 검증 실패|로컬 이미지 캐시 검증 실패)$/.test(message)
-          ? message : "네트워크 또는 이미지 저장소 오류";
-        throw new Error(`이미지 최적화 실패: ${safe}`);
+        throw new Error(imageProcessingErrorMessage(error, stage));
       }
     })();
     inFlight.set(source, task);
