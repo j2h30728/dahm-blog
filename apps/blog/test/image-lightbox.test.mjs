@@ -163,6 +163,25 @@ test("manifest 이미지에 반응형 본문 속성과 클릭 전용 원본 정�
   assert.doesNotMatch(html, /rel="preload"/);
 });
 
+test("원본 fallback도 단일 srcset·클릭 확대·캡션 너비를 유지한다", async () => {
+  const source = "https://cdn.example.com/hash/original.jpg";
+  const manifest = { version: 1, images: { [source]: {
+    src: source, originalSrc: source, width: 800, height: 1200,
+    originalWidth: 800, originalHeight: 1200, variants: [{ src: source, width: 800 }],
+  } } };
+  const html = await render(`![사진 &#123;width=360&#125;](${source})`, {}, {
+    rehypePlugins: [...mdxOptions.rehypePlugins.slice(0, -1), [rehypePostImages, { mode: "s3", manifest }]],
+  });
+  assert.match(html, /src="https:\/\/cdn\.example\.com\/hash\/original\.jpg"/);
+  assert.match(html, /srcSet="https:\/\/cdn\.example\.com\/hash\/original\.jpg 800w"/);
+  assert.match(html, /data-original-src="https:\/\/cdn\.example\.com\/hash\/original\.jpg"/);
+  assert.match(html, /width="800" height="1200"/);
+  assert.match(html, /sizes="\(max-width: 360px\) 100vw, 360px"/);
+  assert.match(html, /aria-haspopup="dialog"/);
+  assert.match(html, /loading="lazy"/);
+  assert.doesNotMatch(html, /width=360|rel="preload"/);
+});
+
 test("관리 모드에서는 manifest에 없는 본문 이미지를 빌드 오류로 처리하고 off에서는 허용한다", async () => {
   const manifest = { version: 1, images: {} };
   await assert.rejects(

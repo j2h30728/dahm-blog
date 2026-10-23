@@ -12,6 +12,7 @@ import sharp from "sharp";
 import type { Fetch } from "./notion-client.js";
 import type { ImageAsset, ImageManifest } from "./schema.js";
 import { imageS3Config } from "./image-s3-config.js";
+import { createRemoteImageCache, type RemoteImageDescriptor, type RemoteSourceRecord } from "./image-remote-cache.js";
 
 const MAX_DOWNLOAD_BYTES = 25 * 1024 * 1024;
 const MAX_REDIRECTS = 3;
@@ -25,12 +26,23 @@ const MAX_S3_CONCURRENCY = 4;
 const WIDTHS = [640, 960, 1440] as const;
 const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
 const TRANSFORM_VERSION = `webp-v1-sharp-${sharp.versions.sharp}-w${WIDTHS.join("-")}`;
+const CACHE_POLICY_VERSION = `${TRANSFORM_VERSION}-delivery-v2`;
 
 export type ImageAssetsMode = "off" | "local" | "s3";
 
 export interface ImageProcessor {
   readonly manifest: ImageManifest;
+  readonly stats?: ImageProcessingStats;
   process(source: string): Promise<ImageAsset>;
+  flush?(): Promise<void>;
+}
+
+export interface ImageProcessingStats {
+  checked: number;
+  downloaded: number;
+  reused: number;
+  transformed: number;
+  uploaded: number;
 }
 
 export interface ImageProcessorFactoryOptions {
@@ -45,7 +57,17 @@ export interface ImageProcessorFactoryOptions {
 interface DownloadedImage {
   bytes: Buffer;
   contentType: string;
+  validatorUrlHash: string;
+  etag?: string;
+  lastModified?: string;
 }
+
+type ImageDownload = DownloadedImage | {
+  notModified: true;
+  validatorUrlHash: string;
+  etag?: string;
+  lastModified?: string;
+};
 
 interface StoredImage {
   bytes: Buffer;
@@ -75,6 +97,33 @@ function trustedHost(hostname: string): boolean {
     || host === "notionusercontent.com"
     || host.endsWith(".notionusercontent.com")
     || /^prod-files-secure\.s3(?:[.-][a-z0-9-]+)?\.amazonaws\.com$/.test(host);
+}
+
+/** 요청에는 새 서명 URL을 사용하고, 캐시에는 인증 정보를 뺀 identity의 hash만 기록한다. */
+function sourceIdentity(value: string): string {
+  const url = new URL(value);
+  if (url.protocol !== "https:" || url.username || url.password || (url.port && url.port !== "443") || !trustedHost(url.hostname)) {
+    throw new Error("허용되지 않은 이미지 URL");
+  }
+  url.hash = "";
+  if (/^prod-files-secure\.s3(?:[.-][a-z0-9-]+)?\.amazonaws\.com$/.test(url.hostname)
+    || ["notion.so", "notion-static.com", "notionusercontent.com"].some((host) => url.hostname === host || url.hostname.endsWith(`.${host}`))) {
+    const signingKeys = new Set(["x-amz-algorithm", "x-amz-credential", "x-amz-date", "x-amz-expires", "x-amz-signedheaders", "x-amz-signature", "x-amz-security-token"]);
+    for (const key of [...url.searchParams.keys()]) {
+      if (signingKeys.has(key.toLowerCase())) url.searchParams.delete(key);
+    }
+  }
+  return sha256(Buffer.from(url.href));
+}
+
+function responseValidators(response: Response): { etag?: string; lastModified?: string } {
+  const etag = response.headers.get("etag");
+  const lastModified = response.headers.get("last-modified");
+  return {
+    ...(etag && etag.length <= 1024 && /^(?:W\/)?"[^"\x00-\x1f\x7f]*"$/.test(etag) ? { etag } : {}),
+    ...(lastModified && lastModified.length <= 128 && !/[\x00-\x1f\x7f]/.test(lastModified)
+      && Number.isFinite(Date.parse(lastModified)) ? { lastModified } : {}),
+  };
 }
 
 function privateAddress(address: string): boolean {
@@ -133,14 +182,27 @@ async function downloadImage(
   source: string,
   fetcher: Fetch,
   resolver: (hostname: string) => Promise<ReadonlyArray<{ address: string }>>,
+  previous?: RemoteSourceRecord,
   sleep: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-): Promise<DownloadedImage> {
+): Promise<ImageDownload> {
   let lastStatus = 0;
+  let validators = previous;
   for (let attempt = 0; attempt < MAX_DOWNLOAD_ATTEMPTS; attempt++) {
     let url = await validateRemoteUrl(source, resolver);
     try {
       for (let redirects = 0; redirects <= MAX_REDIRECTS; redirects++) {
-        const response = await fetcher(url.href, { redirect: "manual", signal: AbortSignal.timeout(30_000) });
+        const validatorUrlHash = sourceIdentity(url.href);
+        const matching = validators?.validatorUrlHash === validatorUrlHash ? validators : undefined;
+        const headers: Record<string, string> | undefined = matching?.etag ? { "If-None-Match": matching.etag }
+          : matching?.lastModified ? { "If-Modified-Since": matching.lastModified } : undefined;
+        let sentConditional = Boolean(headers);
+        let response = await fetcher(url.href, { redirect: "manual", signal: AbortSignal.timeout(30_000), headers });
+        if (headers && (response.status === 400 || response.status === 412)) {
+          await response.body?.cancel();
+          validators = undefined;
+          sentConditional = false;
+          response = await fetcher(url.href, { redirect: "manual", signal: AbortSignal.timeout(30_000) });
+        }
         if ([301, 302, 303, 307, 308].includes(response.status)) {
           const location = response.headers.get("location");
           await response.body?.cancel();
@@ -149,6 +211,13 @@ async function downloadImage(
           continue;
         }
         lastStatus = response.status;
+        if (response.status === 304) {
+          await response.body?.cancel();
+          if (!matching || !sentConditional) throw new Error("이미지 변경 확인 응답을 재사용할 수 없습니다");
+          return { notModified: true, validatorUrlHash, ...{
+            etag: matching.etag, lastModified: matching.lastModified,
+          }, ...responseValidators(response) };
+        }
         if (!response.ok) {
           await response.body?.cancel();
           if ([408, 429, 500, 502, 503, 504].includes(response.status) && attempt + 1 < MAX_DOWNLOAD_ATTEMPTS) break;
@@ -159,7 +228,7 @@ async function downloadImage(
           await response.body?.cancel();
           throw new Error("지원하지 않는 이미지 형식");
         }
-        return { bytes: await responseBytes(response), contentType };
+        return { bytes: await responseBytes(response), contentType, validatorUrlHash, ...responseValidators(response) };
       }
     } catch (error) {
       if (attempt + 1 >= MAX_DOWNLOAD_ATTEMPTS || (error instanceof Error && /허용되지 않은|제한 초과|지원하지 않는/.test(error.message))) throw error;
@@ -286,7 +355,7 @@ function saveLocalTransform(
   writeFileSync(descriptorPath, JSON.stringify(cached, null, 2) + "\n");
 }
 
-async function transformImage(downloaded: DownloadedImage, cacheRoot?: string): Promise<{
+async function transformImage(downloaded: DownloadedImage, cacheRoot?: string, onTransform?: () => void): Promise<{
   hash: string;
   original: StoredImage;
   variants: Array<StoredImage & { width: number; height: number }>;
@@ -316,6 +385,7 @@ async function transformImage(downloaded: DownloadedImage, cacheRoot?: string): 
     hash, originalWidth: originalSize.width, originalHeight: originalSize.height, widths: targetWidths,
   });
   if (cached) return cached;
+  onTransform?.();
   const variants: Array<StoredImage & { width: number; height: number }> = [];
   for (const targetWidth of targetWidths) {
     if (Date.now() - started > transformBudgetMs) throw new Error("이미지 변환 시간 제한 초과");
@@ -356,21 +426,23 @@ function notFound(error: unknown): boolean {
 
 async function storeS3(
   client: Pick<S3Client, "send">, bucket: string, expectedBucketOwner: string, image: StoredImage,
-): Promise<void> {
+): Promise<{ etag: string; uploaded: boolean }> {
   const expectedChecksum = createHash("sha256").update(image.bytes).digest("base64");
   let exists = false;
+  let etag = "";
   try {
     const head = await client.send(new HeadObjectCommand({
       Bucket: bucket, Key: image.key, ChecksumMode: ChecksumMode.ENABLED, ExpectedBucketOwner: expectedBucketOwner,
     }));
     exists = true;
+    etag = head.ETag ?? "";
     if (head.Metadata?.sha256 !== image.sha256 || head.ChecksumSHA256 !== expectedChecksum) {
       throw new Error("S3 이미지 객체 검증 실패");
     }
   } catch (error) {
     if (!notFound(error)) throw error;
   }
-  if (exists) return;
+  if (exists) return { etag, uploaded: false };
   await client.send(new PutObjectCommand({
     Bucket: bucket,
     Key: image.key,
@@ -387,18 +459,24 @@ async function storeS3(
   if (verified.Metadata?.sha256 !== image.sha256 || verified.ChecksumSHA256 !== expectedChecksum) {
     throw new Error("S3 이미지 업로드 검증 실패");
   }
+  return { etag: verified.ETag ?? "", uploaded: true };
 }
 
 async function storeS3Images(
   client: Pick<S3Client, "send">, bucket: string, expectedBucketOwner: string, images: StoredImage[],
-): Promise<void> {
+): Promise<Map<string, { etag: string; uploaded: boolean }>> {
+  const stored = new Map<string, { etag: string; uploaded: boolean }>();
   for (let offset = 0; offset < images.length; offset += MAX_S3_CONCURRENCY) {
     const results = await Promise.allSettled(images.slice(offset, offset + MAX_S3_CONCURRENCY)
       .map((image) => storeS3(client, bucket, expectedBucketOwner, image)));
     const failure = results.find((result) => result.status === "rejected");
     // CLI가 임시 파일을 정리하기 전에 시작한 업로드와 검증 요청을 모두 마친다.
     if (failure?.status === "rejected") throw failure.reason;
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") stored.set(images[offset + index].key, result.value);
+    });
   }
+  return stored;
 }
 
 function storeLocal(assetRoot: string, image: StoredImage): void {
@@ -424,8 +502,9 @@ export function imageProcessingErrorMessage(error: unknown, stage: ImageStage): 
   const message = error instanceof Error ? error.message : "";
   const known = /^(?:이미지 (?:HTTP \d{3}|크기 제한 초과|픽셀 또는 프레임 제한 초과|변환 시간 제한 초과|리다이렉트 제한 초과|호스트 확인 실패|호스트 주소가 안전하지 않습니다|메타데이터가 없습니다|다운로드 재시도 한도 초과(?: \(HTTP \d{3}\))?)|허용되지 않은 이미지 URL|지원하지 않는 이미지 형식|S3 이미지 (?:객체|업로드) 검증 실패|로컬 이미지 캐시 검증 실패)$/.test(message);
   const label = { download: "다운로드", transform: "변환", storage: "저장" }[stage];
-  const safe = stage === "transform" && /^timeout:/i.test(message)
-    ? "이미지 변환 시간 제한 초과" : known ? message : `이미지 ${label} 오류`;
+  let safe = `이미지 ${label} 오류`;
+  if (known || message === "S3 이미지 원격 캐시 접근 권한을 확인하세요.") safe = message;
+  if (stage === "transform" && /^timeout:/i.test(message)) safe = "이미지 변환 시간 제한 초과";
   const metadata = error && typeof error === "object" ? (error as { $metadata?: { httpStatusCode?: unknown } }).$metadata : undefined;
   const status = metadata?.httpStatusCode;
   return `이미지 최적화 실패 (${label}): ${safe}${typeof status === "number" && Number.isInteger(status) && status >= 400 && status <= 599 ? ` (HTTP ${status})` : ""}`;
@@ -435,9 +514,10 @@ export function emptyImageManifest(): ImageManifest {
   return { version: 1, images: {} };
 }
 
-/** 리사이즈로 파일이 더 커진 후보는 더 선명하고 작은 파일로 대체한다. */
-export function imageVariantsForDelivery<T extends { width: number; bytes: Buffer }>(variants: T[]): T[] {
-  return variants.filter((variant) => !variants.some((other) =>
+/** 원본보다 작은 후보 중 더 선명하고 작은 파일로 대체 가능한 후보를 제외한다. */
+export function imageVariantsForDelivery<T extends { width: number; bytes: Buffer }>(variants: T[], originalBytes: number): T[] {
+  const smaller = variants.filter((variant) => variant.bytes.length < originalBytes);
+  return smaller.filter((variant) => !smaller.some((other) =>
     other.width > variant.width && other.bytes.length <= variant.bytes.length));
 }
 
@@ -450,11 +530,13 @@ export function createImageProcessor(options: ImageProcessorFactoryOptions): Ima
   const assetRoot = path.join(options.workRoot, "assets");
   const cacheRoot = path.join(options.root, ".content-sync", "image-cache");
   const manifest = emptyImageManifest();
+  const stats: ImageProcessingStats = { checked: 0, downloaded: 0, reused: 0, transformed: 0, uploaded: 0 };
   const inFlight = new Map<string, Promise<ImageAsset>>();
   let baseUrl = "";
   let bucket = "";
   let expectedBucketOwner = "";
   let s3: Pick<S3Client, "send"> | undefined;
+  let remoteCache: ReturnType<typeof createRemoteImageCache> | undefined;
   if (mode === "s3") {
     bucket = env.IMAGE_S3_BUCKET?.trim() ?? "";
     baseUrl = env.IMAGE_CDN_BASE_URL?.trim() ?? "";
@@ -470,7 +552,33 @@ export function createImageProcessor(options: ImageProcessorFactoryOptions): Ima
     baseUrl = parsedBaseUrl.href.replace(/\/$/, "");
     const config = imageS3Config(env);
     s3 = options.s3Client ?? new S3Client(config);
+    remoteCache = createRemoteImageCache({
+      client: s3, bucket, expectedBucketOwner, transformVersion: TRANSFORM_VERSION,
+      policyVersion: CACHE_POLICY_VERSION, widths: WIDTHS,
+    });
   }
+
+  const cachedAsset = (image: RemoteImageDescriptor): ImageAsset => {
+    const delivery = image.variants.length ? image.variants : [{
+      ...image.original, width: image.originalWidth, height: image.originalHeight,
+    }];
+    const selected = delivery.reduce((best, variant) =>
+      Math.abs(variant.width - 960) < Math.abs(best.width - 960) ? variant : best);
+    return {
+      src: publicUrl(baseUrl, selected.key), originalSrc: publicUrl(baseUrl, image.original.key),
+      width: selected.width, height: selected.height,
+      originalWidth: image.originalWidth, originalHeight: image.originalHeight,
+      variants: delivery.map(({ key, width }) => ({ src: publicUrl(baseUrl, key), width })),
+    };
+  };
+
+  const reuseImage = (identity: string, source: RemoteSourceRecord, image: RemoteImageDescriptor): ImageAsset => {
+    remoteCache!.remember(identity, source, image);
+    stats.reused++;
+    const asset = cachedAsset(image);
+    manifest.images[asset.src] = asset;
+    return asset;
+  };
 
   const processImage = (source: string): Promise<ImageAsset> => {
     const existing = inFlight.get(source);
@@ -478,18 +586,58 @@ export function createImageProcessor(options: ImageProcessorFactoryOptions): Ima
     const task = (async () => {
       let stage: ImageStage = "download";
       try {
-        const downloaded = await downloadImage(source, fetcher, resolver);
+        const identity = sourceIdentity(source);
+        stats.checked++;
+        stage = "storage";
+        await remoteCache?.initialize();
+        stage = "download";
+        const previous = remoteCache?.source(identity);
+        const previousImage = previous && remoteCache?.image(previous.hash);
+        const downloaded = await downloadImage(source, fetcher, resolver, previous);
+        if ("notModified" in downloaded) {
+          if (!previous || !previousImage) throw new Error("이미지 변경 확인 응답을 재사용할 수 없습니다");
+          return reuseImage(identity, {
+            hash: previous.hash, validatorUrlHash: downloaded.validatorUrlHash,
+            etag: downloaded.etag, lastModified: downloaded.lastModified,
+          }, previousImage);
+        }
+        stats.downloaded++;
+        const hash = sha256(downloaded.bytes);
+        const knownImage = remoteCache?.image(hash);
+        const sourceRecord: RemoteSourceRecord = {
+          hash, validatorUrlHash: downloaded.validatorUrlHash,
+          etag: downloaded.etag, lastModified: downloaded.lastModified,
+        };
+        if (knownImage) return reuseImage(identity, sourceRecord, knownImage);
         stage = "transform";
-        const transformed = await transformImage(downloaded, cacheRoot);
-        const all = [transformed.original, ...transformed.variants];
+        let encoded = false;
+        const transformed = await transformImage(downloaded, cacheRoot, () => {
+          encoded = true;
+          stats.transformed++;
+        });
+        if (!encoded) stats.reused++;
+        const smallerVariants = imageVariantsForDelivery(transformed.variants, transformed.original.bytes.length);
+        const deliveryVariants = smallerVariants.length ? smallerVariants : [{
+          ...transformed.original, width: transformed.originalWidth, height: transformed.originalHeight,
+        }];
+        const all = [transformed.original, ...smallerVariants];
         stage = "storage";
         if (mode === "s3") {
-          await storeS3Images(s3!, bucket, expectedBucketOwner, all);
+          const stored = await storeS3Images(s3!, bucket, expectedBucketOwner, all);
+          stats.uploaded += [...stored.values()].filter(({ uploaded }) => uploaded).length;
+          const descriptor = (image: StoredImage) => ({
+            key: image.key, sha256: image.sha256, byteLength: image.bytes.length,
+            contentType: image.contentType, etag: stored.get(image.key)?.etag ?? "",
+          });
+          remoteCache!.remember(identity, sourceRecord, {
+            hash: transformed.hash, original: descriptor(transformed.original),
+            variants: smallerVariants.map((variant) => ({ ...descriptor(variant), width: variant.width, height: variant.height })),
+            originalWidth: transformed.originalWidth, originalHeight: transformed.originalHeight,
+          });
         } else {
           for (const image of all) storeLocal(assetRoot, image);
         }
         const url = (key: string) => mode === "s3" ? publicUrl(baseUrl, key) : localUrl(key);
-        const deliveryVariants = imageVariantsForDelivery(transformed.variants);
         const variants = deliveryVariants.map(({ key, width }) => ({ src: url(key), width }));
         const defaultVariant = deliveryVariants.reduce((best, variant) =>
           Math.abs(variant.width - 960) < Math.abs(best.width - 960) ? variant : best);
@@ -511,5 +659,11 @@ export function createImageProcessor(options: ImageProcessorFactoryOptions): Ima
     inFlight.set(source, task);
     return task;
   };
-  return { manifest, process: processImage };
+  const flush = async () => {
+    const settled = await Promise.allSettled(inFlight.values());
+    const failure = settled.find((result) => result.status === "rejected");
+    if (failure?.status === "rejected") throw failure.reason;
+    await remoteCache?.flush();
+  };
+  return { manifest, stats, process: processImage, flush };
 }

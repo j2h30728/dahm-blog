@@ -92,6 +92,7 @@ export async function fetchNotionContent(
       });
       posts.push({ ...post, body });
     }
+    await imageProcessor?.flush?.();
     return { posts, assetDir, imageManifest: imageProcessor?.manifest ?? emptyImageManifest(), cleanup };
   } catch (error) {
     cleanup();

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -19,8 +19,70 @@ test("작은 해상도가 더 큰 파일이면 모바일에도 더 선명하고 
     { width: 864, bytes: Buffer.alloc(10) },
     { width: 1440, bytes: Buffer.alloc(50) },
   ];
-  assert.deepEqual(imageVariantsForDelivery(variants).map(({ width }) => width), [320, 864, 1440]);
-  assert.equal(imageVariantsForDelivery([variants[1]])[0], variants[1]);
+  assert.deepEqual(imageVariantsForDelivery(variants, 100).map(({ width }) => width), [320, 864, 1440]);
+  assert.equal(imageVariantsForDelivery([variants[1]], 100)[0], variants[1]);
+});
+
+test("원본과 같거나 큰 후보는 기본 이미지와 srcset에서 제외한다", () => {
+  const variants = [
+    { width: 320, bytes: Buffer.alloc(50) },
+    { width: 640, bytes: Buffer.alloc(100) },
+    { width: 960, bytes: Buffer.alloc(101) },
+    { width: 1440, bytes: Buffer.alloc(40) },
+  ];
+  assert.deepEqual(imageVariantsForDelivery(variants, 100), [variants[3]]);
+  assert.deepEqual(imageVariantsForDelivery(variants.slice(1, 3), 100), []);
+  assert.deepEqual(imageVariantsForDelivery([], 100), []);
+});
+
+test("변환본이 모두 크면 local·S3·캐시 재사용에서 원본만 게시하고 회전 치수를 유지한다", async (t) => {
+  const raw = Buffer.from(Array.from({ length: 100 * 80 * 3 }, (_, index) => (index * 37 + (index >> 3) * 19) % 256));
+  const source = await sharp(raw, { raw: { width: 100, height: 80, channels: 3 } })
+    .jpeg({ quality: 10 }).withMetadata({ orientation: 6 }).toBuffer();
+  for (const mode of ["local", "s3"] as const) {
+    const root = workspace(t);
+    const stored = new Map<string, { bytes: Buffer; sha256: string; checksum: string }>();
+    let uploads = 0;
+    const client = {
+      async send(command: HeadObjectCommand | PutObjectCommand) {
+        const key = String(command.input.Key);
+        if (command instanceof PutObjectCommand) {
+          uploads++;
+          const bytes = command.input.Body as Buffer;
+          stored.set(key, { bytes, sha256: String(command.input.Metadata?.sha256), checksum: String(command.input.ChecksumSHA256) });
+          return {};
+        }
+        const value = stored.get(key);
+        if (!value) throw Object.assign(new Error("missing"), { $metadata: { httpStatusCode: 404 } });
+        return { Metadata: { sha256: value.sha256 }, ChecksumSHA256: value.checksum };
+      },
+    };
+    const env = { IMAGE_ASSETS_MODE: mode, IMAGE_S3_BUCKET: "images", IMAGE_CDN_BASE_URL: "https://cdn.example.com",
+      IMAGE_AWS_ACCOUNT_ID: "123456789012", AWS_REGION: "ap-northeast-2",
+      AWS_ROLE_ARN: "arn:aws:iam::123456789012:role/test-images", VERCEL_OIDC_TOKEN: "test-token-never-sent" };
+    let previous: ImageAsset | undefined;
+    for (const workRoot of [root, path.join(root, "cached-run")]) {
+      const processor = createImageProcessor({ root, workRoot, env, resolver: publicAddress,
+        fetcher: async () => imageResponse(source, "image/jpeg"), s3Client: client as never })!;
+      const asset = await processor.process("https://velog.velcdn.com/images/example/small.jpg");
+      assert.equal(asset.src, asset.originalSrc);
+      assert.match(asset.src, /\/original\.jpg$/);
+      assert.deepEqual(asset.variants, [{ src: asset.src, width: 80 }]);
+      assert.deepEqual([asset.width, asset.height, asset.originalWidth, asset.originalHeight], [80, 100, 80, 100]);
+      assert.equal(processor.manifest.images[asset.src], asset);
+      if (previous) assert.deepEqual(asset, previous);
+      previous = asset;
+      if (mode === "local") {
+        const output = path.join(workRoot, "assets", asset.src.replace("/post-assets/", ""));
+        assert.equal(readFileSync(output).equals(source), true);
+        assert.deepEqual(readdirSync(path.dirname(output)), ["original.jpg"]);
+      } else {
+        assert.equal(uploads, 1, "캐시 재사용 시 원본도 다시 업로드하지 않는다");
+        assert.equal(stored.size, 1);
+        assert.equal([...stored.values()][0].bytes.equals(source), true);
+      }
+    }
+  }
 });
 
 test("Sharp timeout을 변환 시간 초과로 분류하고 민감한 오류 원문은 노출하지 않는다", () => {

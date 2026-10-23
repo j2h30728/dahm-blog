@@ -109,6 +109,36 @@ test("section이 없거나 비어 있으면 기술 글이며 한글·영문 선�
   }
 });
 
+test("모든 글의 이미지 준비가 성공한 뒤에만 이미지 캐시를 한 번 확정한다", async (t) => {
+  const root = workspace(t);
+  const calls: string[] = [];
+  const asset = {
+    src: "https://cdn.example.com/cached.webp", originalSrc: "https://cdn.example.com/original.png",
+    width: 640, height: 320, originalWidth: 1200, originalHeight: 600,
+    variants: [{ src: "https://cdn.example.com/cached.webp", width: 640 }],
+  };
+  const result = await fetchNotionContent(root, config, api([page(), page(second, "other")], `![사진](${imageUrl})`), () => ({
+    manifest: { version: 1, images: {} },
+    process: async () => { calls.push("image"); return asset; },
+    flush: async () => { calls.push("flush"); },
+  }));
+  t.after(result.cleanup);
+  assert.equal(result.posts.length, 2);
+  assert.deepEqual(calls, ["image", "image", "flush"]);
+});
+
+test("이미지 준비가 실패하면 캐시를 확정하지 않고 임시 게시 결과를 정리한다", async (t) => {
+  const root = workspace(t);
+  let flushed = false;
+  await assert.rejects(fetchNotionContent(root, config, api([page()], `![사진](${imageUrl})`), () => ({
+    manifest: { version: 1, images: {} },
+    process: async () => { throw new Error("변환 실패"); },
+    flush: async () => { flushed = true; },
+  })), /변환 실패/);
+  assert.equal(flushed, false);
+  assert.deepEqual(readdirSync(path.join(root, ".content-sync")).filter((name) => name.startsWith("notion-")), []);
+});
+
 test("지원하지 않는 section 선택값은 해당 값과 페이지를 알리는 오류로 중단한다", async (t) => {
   const root = workspace(t);
   await assert.rejects(

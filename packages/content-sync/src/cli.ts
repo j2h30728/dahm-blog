@@ -15,11 +15,17 @@ try {
     let preparedImages = 0;
     return {
       manifest: processor.manifest,
+      stats: processor.stats,
       process: async (source: string) => {
         const image = await processor.process(source);
         preparedImages++;
-        if (preparedImages % 25 === 0) console.log(`이미지 참조 ${preparedImages}개를 준비했습니다.`);
+        if (preparedImages % 25 === 0) console.log(`이미지 참조 ${preparedImages}개의 변경 여부를 확인했습니다.`);
         return image;
+      },
+      flush: async () => {
+        await processor.flush?.();
+        const stats = processor.stats;
+        if (stats) console.log(`이미지 확인 ${stats.checked}개: 재사용 ${stats.reused}개, 원본 다운로드 ${stats.downloaded}개, 신규 변환 ${stats.transformed}개, 이미지 업로드 ${stats.uploaded}개`);
       },
     };
   });
