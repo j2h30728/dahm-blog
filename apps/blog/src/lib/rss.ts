@@ -4,7 +4,7 @@ import { absoluteUrl, getSiteUrl, siteConfig } from "./site";
 export function renderRssFeed(posts: Post[], siteUrl = getSiteUrl()): string {
   const baseUrl = siteUrl;
   const items = posts.map((post) => renderRssItem(post, baseUrl)).join("\n");
-  const lastBuildDate = getLatestPubDate(posts);
+  const lastBuildDate = getLatestBuildDate(posts);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -21,10 +21,10 @@ ${items}
 `;
 }
 
-function getLatestPubDate(posts: Post[]): string {
+function getLatestBuildDate(posts: Post[]): string {
   if (posts.length === 0) return new Date().toUTCString();
   const latest = posts.reduce((max, post) => {
-    const time = Date.parse(post.date);
+    const time = Math.max(Date.parse(post.date), Date.parse(post.updated ?? post.date));
     return time > max ? time : max;
   }, 0);
   return new Date(latest).toUTCString();

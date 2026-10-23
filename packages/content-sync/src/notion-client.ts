@@ -69,6 +69,10 @@ export class NotionClient {
           redirect: "error",
         });
       } catch {
+        if (attempt < 2) {
+          await this.sleep(500 * 2 ** attempt);
+          continue;
+        }
         throw new Error("Notion API 네트워크 요청 실패 또는 시간 초과");
       }
       let data: Record<string, unknown>;

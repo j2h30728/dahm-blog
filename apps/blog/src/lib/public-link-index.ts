@@ -47,20 +47,31 @@ export function getBacklinks(slug: string): Backlink[] {
     .filter((backlink): backlink is Backlink => backlink !== null);
 }
 
-export function getLinkPreviewPayload(): Record<
+export function getLinkPreviewPayload(sourceSlug: string): Record<
   string,
   Pick<PublicLinkNode, "title" | "description" | "excerpt" | "tags" | "href">
 > {
+  const targetSlugs = new Set(
+    linkIndex.edges
+      .filter((edge) => edge.sourceSlug === sourceSlug)
+      .map((edge) => edge.targetSlug),
+  );
+
   return Object.fromEntries(
-    linkIndex.nodes.map((node) => [
-      node.slug,
-      {
-        title: node.title,
-        description: node.description,
-        excerpt: node.excerpt,
-        tags: node.tags,
-        href: node.href,
-      },
-    ]),
+    [...targetSlugs].flatMap((targetSlug) => {
+      const node = nodesBySlug.get(targetSlug);
+      return node
+        ? [[
+            node.slug,
+            {
+              title: node.title,
+              description: node.description,
+              excerpt: node.excerpt,
+              tags: node.tags,
+              href: node.href,
+            },
+          ]]
+        : [];
+    }),
   );
 }

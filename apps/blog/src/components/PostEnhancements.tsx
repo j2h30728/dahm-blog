@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { decodeRouteSegment } from "../lib/route-segment";
 
 interface PreviewItem {
   title: string;
@@ -16,7 +17,9 @@ interface PostEnhancementsProps {
 
 export function PostEnhancements({ previews }: PostEnhancementsProps) {
   useEffect(() => {
-    const cleanupPreview = bindInternalLinkPreviews(previews);
+    const cleanupPreview = Object.keys(previews).length > 0
+      ? bindInternalLinkPreviews(previews)
+      : () => {};
     const cleanupCopyButtons = bindCodeCopyButtons();
     const cleanupToc = bindTocActivation();
 
@@ -109,8 +112,8 @@ function slugFromLink(anchor: HTMLAnchorElement): string | null {
   const href = anchor.getAttribute("href");
   if (!href) return null;
   const url = new URL(href, window.location.origin);
-  const match = /^\/posts\/([^/]+)\/?/.exec(url.pathname);
-  return match?.[1] ?? null;
+  const match = /^\/posts\/([^/]+)\/?$/.exec(url.pathname);
+  return match ? (decodeRouteSegment(match[1]) ?? null) : null;
 }
 
 function bindCodeCopyButtons(): () => void {

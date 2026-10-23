@@ -72,7 +72,7 @@ export default async function PostPage({ params }: PageProps) {
   const Content = postModule.default;
   const related = getRelatedPosts(post, getPublishedPosts());
   const backlinks = getBacklinks(post.slug);
-  const previewPayload = getLinkPreviewPayload();
+  const previewPayload = getLinkPreviewPayload(post.slug);
   const postUrl = absoluteUrl(post.href);
   const postJsonLd = {
     "@context": "https://schema.org",

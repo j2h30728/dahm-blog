@@ -222,7 +222,8 @@ export async function notionMarkdown(
 ): Promise<string> {
   const code = protectCode(withoutDuplicateTitle(markdown, options.title));
   const media: string[] = [];
-  const escape = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const escape = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/{/g, "&#123;").replace(/}/g, "&#125;");
   const renderMedia = (url: string, label: string, image: boolean): string => {
     const extension = /\.[a-z0-9]+$/i.exec(new URL(url, "https://local.invalid").pathname)?.[0].toLowerCase();
     let html: string | undefined;
@@ -234,9 +235,14 @@ export async function notionMarkdown(
   };
   // 에셋 URL의 &를 변형하지 않도록 URL 처리 이후 MDX 문자를 escape한다.
   let body = code.body;
-  body = body.replace(/(\\*)<(?:file|video|audio|pdf|image)\b[^>]*\bsrc="([^"]+)"[^>]*>([\s\S]*?)<\/(?:file|video|audio|pdf|image)>/g,
-    (value, escapes, url, caption) => escapes.length % 2 ? value : `${escapes}![${caption.trim().replace(/[\[\]\n]/g, " ")}](${url})`)
-    .replace(/(\\*)<(?:file|video|audio|pdf|image)\b[^>]*\bsrc="([^"]+)"[^>]*\/>/g, (value, escapes, url) =>
+  const fileLink = (url: string, caption: string) => `[${caption.trim().replace(/[\[\]\n]/g, " ") || "첨부파일"}](${url})`;
+  body = body.replace(/(\\*)<file\b(?![^>]*\/>)[^>]*\bsrc="([^"]+)"[^>]*>([\s\S]*?)<\/file>/g,
+    (value, escapes, url, caption) => escapes.length % 2 ? value : escapes + fileLink(url, caption))
+    .replace(/(\\*)<file\b[^>]*\bsrc="([^"]+)"[^>]*\/>/g,
+      (value, escapes, url) => escapes.length % 2 ? value : escapes + fileLink(url, ""))
+    .replace(/(\\*)<(?:video|audio|pdf|image)\b[^>]*\bsrc="([^"]+)"[^>]*>([\s\S]*?)<\/(?:video|audio|pdf|image)>/g,
+      (value, escapes, url, caption) => escapes.length % 2 ? value : `${escapes}![${caption.trim().replace(/[\[\]\n]/g, " ")}](${url})`)
+    .replace(/(\\*)<(?:video|audio|pdf|image)\b[^>]*\bsrc="([^"]+)"[^>]*\/>/g, (value, escapes, url) =>
       escapes.length % 2 ? value : `${escapes}![](${url})`);
   for (const link of markdownLinks(body).reverse()) {
     let replacement: string | undefined;
