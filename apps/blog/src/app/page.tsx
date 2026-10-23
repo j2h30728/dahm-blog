@@ -1,25 +1,27 @@
 import type { Metadata } from "next";
 import { PostsSection } from "../components/PostsSection";
 import { getPublishedPosts } from "../lib/posts";
-import { absoluteUrl, canonicalPath, siteConfig } from "../lib/site";
+import { absoluteUrl, getSocialImage, canonicalPath, siteConfig } from "../lib/site";
 
 export const metadata: Metadata = {
-  title: "전체 글",
+  title: { absolute: siteConfig.homeTitle },
   description: siteConfig.description,
   alternates: {
     canonical: canonicalPath(siteConfig.canonicalHomePath),
   },
   openGraph: {
+    images: [getSocialImage()],
     type: "website",
     url: absoluteUrl(siteConfig.canonicalHomePath),
-    title: `${siteConfig.name} 전체 글`,
+    title: siteConfig.homeTitle,
     description: siteConfig.description,
     siteName: siteConfig.name,
     locale: siteConfig.locale,
   },
   twitter: {
-    card: "summary",
-    title: `${siteConfig.name} 전체 글`,
+    card: "summary_large_image",
+    images: [getSocialImage()],
+    title: siteConfig.homeTitle,
     description: siteConfig.description,
   },
 };

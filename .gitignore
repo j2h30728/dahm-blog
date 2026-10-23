@@ -19,3 +19,6 @@ packages/*/dist
 .content-sync/
 .playwright-mcp/
 apps/blog/src/content/publish-manifest.json
+
+# 공개 글 인덱스로 빌드할 때 생성하는 OG 이미지
+apps/blog/public/og/posts/

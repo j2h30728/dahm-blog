@@ -3,7 +3,7 @@ import TagsIndex, { indexMetadata } from "../index-view";
 import { notFound } from "next/navigation";
 import { PostList } from "../../../components/PostList";
 import { getPublishedPosts, getTagEntries, getTagEntryBySlug } from "../../../lib/posts";
-import { absoluteUrl, canonicalPath, siteConfig } from "../../../lib/site";
+import { absoluteUrl, getSocialImage, canonicalPath, siteConfig } from "../../../lib/site";
 import { ui } from "../../../lib/ui-classes";
 
 interface PageProps {
@@ -37,6 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       canonical: canonicalPath(url),
     },
     openGraph: {
+      images: [getSocialImage()],
       type: "website",
       url: absoluteUrl(url),
       title,
@@ -45,7 +46,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       locale: siteConfig.locale,
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
+      images: [getSocialImage()],
       title,
       description,
     },

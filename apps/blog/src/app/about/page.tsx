@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { absoluteUrl, canonicalPath, siteConfig } from "../../lib/site";
+import { absoluteUrl, getSocialImage, canonicalPath, siteConfig } from "../../lib/site";
 import { ui } from "../../lib/ui-classes";
 
 const description = "담을 소개하는 페이지입니다.";
@@ -11,6 +11,7 @@ export const metadata: Metadata = {
     canonical: canonicalPath("/about/"),
   },
   openGraph: {
+    images: [getSocialImage()],
     type: "website",
     url: absoluteUrl("/about/"),
     title: `About ${siteConfig.name}`,
@@ -19,7 +20,8 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
+    images: [getSocialImage()],
     title: `About ${siteConfig.name}`,
     description,
   },

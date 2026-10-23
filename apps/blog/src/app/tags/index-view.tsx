@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getPublishedPosts, getTagEntries } from "../../lib/posts";
-import { absoluteUrl, canonicalPath, siteConfig } from "../../lib/site";
+import { absoluteUrl, getSocialImage, canonicalPath, siteConfig } from "../../lib/site";
 import { ui } from "../../lib/ui-classes";
 
 const description = "담의 글을 태그별로 탐색하는 페이지입니다.";
@@ -13,6 +13,7 @@ export const indexMetadata: Metadata = {
     canonical: canonicalPath("/tags/"),
   },
   openGraph: {
+    images: [getSocialImage()],
     type: "website",
     url: absoluteUrl("/tags/"),
     title: `${siteConfig.name} Tags`,
@@ -21,7 +22,8 @@ export const indexMetadata: Metadata = {
     locale: siteConfig.locale,
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
+    images: [getSocialImage()],
     title: `${siteConfig.name} Tags`,
     description,
   },

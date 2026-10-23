@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PostsSection } from "../../components/PostsSection";
 import { getPublishedPosts } from "../../lib/posts";
-import { absoluteUrl, siteConfig } from "../../lib/site";
+import { absoluteUrl, getSocialImage, siteConfig } from "../../lib/site";
 
 const description = "일상에서 남긴 생각과 경험.";
 
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: "/life/" },
   openGraph: {
+    images: [getSocialImage()],
     type: "website",
     url: absoluteUrl("/life/"),
     title: `${siteConfig.name} 일상`,
@@ -17,7 +18,12 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     locale: siteConfig.locale,
   },
-  twitter: { card: "summary", title: `${siteConfig.name} 일상`, description },
+  twitter: {
+    card: "summary_large_image",
+    images: [getSocialImage()],
+    title: `${siteConfig.name} 일상`,
+    description,
+  },
 };
 
 export default function LifePage() {

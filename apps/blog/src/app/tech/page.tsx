@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PostsSection } from "../../components/PostsSection";
 import { getPublishedPosts } from "../../lib/posts";
-import { absoluteUrl, siteConfig } from "../../lib/site";
+import { absoluteUrl, getSocialImage, siteConfig } from "../../lib/site";
 
 const description = "개발하며 배운 것과 문제를 해결한 기록.";
 
@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   description,
   alternates: { canonical: "/tech/" },
   openGraph: {
+    images: [getSocialImage()],
     type: "website",
     url: absoluteUrl("/tech/"),
     title: `${siteConfig.name} 기술`,
@@ -17,7 +18,12 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     locale: siteConfig.locale,
   },
-  twitter: { card: "summary", title: `${siteConfig.name} 기술`, description },
+  twitter: {
+    card: "summary_large_image",
+    images: [getSocialImage()],
+    title: `${siteConfig.name} 기술`,
+    description,
+  },
 };
 
 export default function TechPage() {

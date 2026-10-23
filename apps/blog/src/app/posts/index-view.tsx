@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PostsSection } from "../../components/PostsSection";
 import { getPublishedPosts } from "../../lib/posts";
-import { absoluteUrl, siteConfig } from "../../lib/site";
+import { absoluteUrl, getSocialImage, siteConfig } from "../../lib/site";
 
 export const indexMetadata: Metadata = {
   title: "기술",
@@ -10,6 +10,7 @@ export const indexMetadata: Metadata = {
     canonical: "/tech/",
   },
   openGraph: {
+    images: [getSocialImage()],
     type: "website",
     url: absoluteUrl("/tech/"),
     title: `${siteConfig.name} 기술`,
@@ -18,7 +19,8 @@ export const indexMetadata: Metadata = {
     locale: siteConfig.locale,
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
+    images: [getSocialImage()],
     title: `${siteConfig.name} 기술`,
     description: siteConfig.description,
   },

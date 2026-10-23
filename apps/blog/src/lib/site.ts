@@ -1,5 +1,12 @@
 export const siteConfig = {
   name: "Dahm",
+  homeTitle: "Dahm — 프론트엔드 개발과 일상의 기록",
+  socialImage: {
+    url: "/og/dahm.png",
+    width: 1200,
+    height: 630,
+    alt: "dahm-lee — 글과 선택의 기록",
+  },
   description: "담의 글과 기록을 모아둔 공간입니다.",
   author: "Dahm",
   authorUrl: "https://github.com/j2h30728",
@@ -67,4 +74,19 @@ function normalizeSiteUrl(value: string): string {
 function isFileRoute(pathname: string): boolean {
   const lastSegment = pathname.split("/").filter(Boolean).at(-1) ?? "";
   return /\.[a-z0-9]+$/i.test(lastSegment);
+}
+
+export function getSocialImage(post?: { slug: string; title: string }) {
+  return {
+    ...siteConfig.socialImage,
+    url: absoluteUrl(post ? getPostSocialImagePath(post.slug) : siteConfig.socialImage.url),
+    alt: post ? post.title : siteConfig.socialImage.alt,
+  };
+}
+
+export function getPostSocialImagePath(slug: string): string {
+  if (!slug || slug === "." || slug === ".." || /[/\\\u0000-\u001f]/.test(slug)) {
+    throw new Error(`Invalid social image slug: ${slug}`);
+  }
+  return `/og/posts/${encodeURIComponent(slug)}.png`;
 }

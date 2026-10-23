@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import "./globals.css";
 import { SiteHeader } from "../components/SiteHeader";
-import { absoluteUrl, getSiteUrl, siteConfig } from "../lib/site";
+import { absoluteUrl, getSocialImage, getSiteUrl, siteConfig } from "../lib/site";
 import { ui } from "../lib/ui-classes";
 import { getPublishedPosts } from "../lib/posts";
 import { getArchiveCategory } from "../lib/archive";
@@ -31,6 +31,7 @@ export const metadata: Metadata = {
     icon: "/favicon.svg",
   },
   openGraph: {
+    images: [getSocialImage()],
     type: "website",
     url: absoluteUrl(siteConfig.canonicalHomePath),
     title: siteConfig.name,
@@ -39,7 +40,8 @@ export const metadata: Metadata = {
     locale: siteConfig.locale,
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
+    images: [getSocialImage()],
     title: siteConfig.name,
     description: siteConfig.description,
   },

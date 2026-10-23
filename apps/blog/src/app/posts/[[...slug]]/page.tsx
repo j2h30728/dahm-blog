@@ -8,7 +8,7 @@ import { Toc } from "../../../components/Toc";
 import { allPostSlugs, formatPostDate, getPost, getPostContent, getPublishedPosts } from "../../../lib/posts";
 import { getBacklinks, getLinkPreviewPayload } from "../../../lib/public-link-index";
 import { getRelatedPosts } from "../../../lib/related-posts";
-import { absoluteUrl, canonicalPath, jsonLd, siteConfig } from "../../../lib/site";
+import { absoluteUrl, getSocialImage, canonicalPath, jsonLd, siteConfig } from "../../../lib/site";
 import { ui } from "../../../lib/ui-classes";
 
 interface PageProps {
@@ -41,6 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       canonical: canonicalPath(post.href),
     },
     openGraph: {
+      images: [getSocialImage(post)],
       type: "article",
       url: absoluteUrl(post.href),
       title: post.title,
@@ -53,7 +54,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       tags: post.tags,
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
+      images: [getSocialImage(post)],
       title: post.title,
       description: post.description,
     },

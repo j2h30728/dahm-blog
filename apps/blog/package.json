@@ -4,10 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack && node scripts/check-static-routes.mjs",
+    "dev": "pnpm generate:og && next dev --webpack",
+    "build": "pnpm generate:og && next build --webpack && node scripts/check-static-routes.mjs && node scripts/check-social-metadata.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "generate:og": "node scripts/generate-social-images.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
