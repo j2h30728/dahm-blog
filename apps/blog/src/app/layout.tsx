@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { SiteHeader } from "../components/SiteHeader";
 import { absoluteUrl, getSocialImage, getSiteUrl, siteConfig } from "../lib/site";
@@ -9,6 +10,10 @@ import { getArchiveCategory } from "../lib/archive";
 
 const siteUrl = getSiteUrl();
 const postCategories = Object.fromEntries(getPublishedPosts().map((post) => [post.slug, getArchiveCategory(post.category)]));
+const gaMeasurementId =
+  process.env.NODE_ENV === "production" && process.env.VERCEL_ENV === "production"
+    ? process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim()
+    : undefined;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -91,6 +96,7 @@ export default function RootLayout({
             </nav>
           </div>
         </footer>
+        {gaMeasurementId ? <GoogleAnalytics gaId={gaMeasurementId} /> : null}
       </body>
     </html>
   );

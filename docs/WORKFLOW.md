@@ -89,8 +89,41 @@ Vercel의 빌드 명령 `pnpm build:blog`가 최신 공개 글을 가져옵니�
 
 API·출력 검사 중에는 `--out`, `--assets`, `--manifest`, `--public-index`, `--public-post-index`, `--search-index`, `--post-module-map`으로 생성 경로만 바꿀 수 있습니다. 로컬 파일 게시 모드·vault·preview 입력은 지원하지 않습니다.
 
+## Google Analytics 4
+
+GA4는 `NODE_ENV=production`과 `VERCEL_ENV=production`이고 `NEXT_PUBLIC_GA_MEASUREMENT_ID`가 있을 때만 활성화됩니다. 로컬 개발·로컬 정적 빌드·Vercel Preview에서는 수집하지 않습니다. ID를 생략하거나 공백만 입력하면 GA 없이 정상 동작합니다.
+
+### GA4 웹 스트림 설정
+
+1. [Google Analytics](https://analytics.google.com/)에서 사용할 계정과 GA4 속성을 선택합니다. 처음 생성한다면 보고 시간대를 대한민국(Asia/Seoul)으로 설정합니다.
+2. **관리 → 데이터 스트림 → 웹**에서 실제 운영 도메인의 스트림을 생성하거나 기존 스트림을 엽니다.
+3. 스트림 세부정보의 `G-...` 형태 **측정 ID**를 확인합니다. 현재 블로그에 사용할 ID는 `G-KHS56ZX54N`입니다.
+4. **향상된 측정 → 페이지 조회 → 고급 설정**에서 페이지 로드와 브라우저 기록 이벤트 기반 페이지 변경을 모두 켭니다. 내부 링크 이동과 뒤로가기도 이 설정으로 수집합니다.
+5. 기본 스크롤(페이지의 90% 도달)과 외부 링크 클릭 측정도 켭니다. 방문자·유입 경로·글별 조회수는 GA4 보고서에서 확인합니다.
+
+공통 레이아웃의 `GoogleAnalytics` 컴포넌트가 hydration 이후 Google tag를 한 번 초기화합니다. 페이지뷰는 GA4 자동 수집을 사용하므로 별도 수동 `page_view` 전송이나 동일 스트림의 태그를 추가하면 중복 집계될 수 있습니다.
+
+### Vercel 활성화
+
+[dahm-blog 프로젝트](https://vercel.com/j2h30728s-projects/dahm-blog)의 **Settings → Environment Variables**에서 아래 값을 **Production** 환경에만 등록합니다.
+
+```dotenv
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-KHS56ZX54N
+```
+
+측정 ID는 브라우저에 공개되는 식별자이며 API 비밀키가 아닙니다. 정적 내보내기에서는 빌드 시 ID와 활성화 여부가 결정되므로 코드 반영과 환경변수 저장 후 새 Production 배포가 필요합니다. 비활성화할 때도 변수를 지운 뒤 다시 배포합니다. Production 빌드 산출물을 다른 도메인에 복사하면 같은 ID로 수집하므로 로컬·Preview는 각 환경에서 새로 빌드합니다.
+
+### 수집 확인
+
+광고 차단을 해제한 브라우저에서 운영 홈에 직접 진입한 뒤 글 상세로 이동하고 뒤로가기를 실행합니다. Network에서 `gtag/js?id=G-KHS56ZX54N` 스크립트가 한 번 로드되고 `g/collect` 요청이 전송되는지 확인합니다. GA4 **실시간 보고서**에서 방문을 확인하고, 디버그 모드를 켠 브라우저에서는 **DebugView**로 각 이동의 `page_view`가 한 번씩 발생하며 `page_location`·`page_referrer`가 올바른지 확인합니다. 기본 스크롤과 외부 링크 클릭도 함께 확인합니다.
+
+로컬 개발과 Vercel Preview에서는 GA 스크립트와 수집 요청이 없어야 합니다. 실제 수신과 중복 집계 확인은 운영 환경변수 등록 및 새 배포 후 진행합니다.
+
 ## 공식 자료
 
+- [Next.js Google Analytics 연동](https://nextjs.org/docs/app/guides/third-party-libraries#google-analytics)
+- [GA4 단일 페이지 앱 측정](https://developers.google.com/analytics/devguides/collection/ga4/single-page-applications)
+- [GA4 향상된 측정](https://support.google.com/analytics/answer/9216061?hl=ko)
 - [Notion 내부 연결](https://developers.notion.com/guides/get-started/internal-connections)
 - [공개 글 조회](https://developers.notion.com/reference/query-a-data-source)
 - [Markdown 본문 조회](https://developers.notion.com/reference/retrieve-page-markdown)
