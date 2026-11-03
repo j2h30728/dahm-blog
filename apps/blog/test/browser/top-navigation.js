@@ -66,7 +66,7 @@ async (page) => {
     check(await page.getByRole("navigation", { name: "글 분류" }).count() === 0, "중복 분류 탭 제거");
     const dates = await page.locator(".post-list time").evaluateAll((nodes) => nodes.map((node) => Date.parse(node.dateTime)));
     check(dates.every((date, index) => !index || dates[index - 1] >= date), "홈 최신 발행일순");
-    for (const [path, title, expected] of [["/", "글과 선택의 기록.", homeCount], ["/tech/", "기술", homeCount], ["/life/", "일상", 0]]) {
+    for (const [path, title, expected] of [["/", "기술", homeCount], ["/tech/", "기술", homeCount], ["/life/", "일상", 0]]) {
       const response = await page.request.get(`${origin}${path}`);
       check(response.ok(), `${path} HTTP 응답`);
       const html = await response.text();

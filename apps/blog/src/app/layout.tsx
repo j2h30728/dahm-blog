@@ -82,7 +82,6 @@ export default function RootLayout({
           <div className={ui.footerInner}>
             <div>
               <span className={ui.footerBrand}>Dahm</span>
-              <p className={ui.footerMeta}>글과 선택의 기록.</p>
             </div>
             <nav aria-label="Footer" className={ui.footerLinks}>
               <Link className={ui.footerLink} href="/series/">시리즈</Link>

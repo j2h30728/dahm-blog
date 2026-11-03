@@ -32,7 +32,7 @@ export default function AboutPage() {
     <section aria-labelledby="about-title" className={ui.homeIntro} id="about">
       <div className={ui.minWidthZero}>
         <h1 className={ui.homeTitle} id="about-title">
-          안녕하세요. 담입니다.
+          안녕하세요.
         </h1>
         <div className={ui.aboutCopy}>
           <p>프론트엔드 개발자 이지현입니다.</p>

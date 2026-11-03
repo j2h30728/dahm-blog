@@ -13,9 +13,9 @@ interface PostArchiveProps {
 }
 
 const archiveCopy = {
-  all: { label: "전체", title: "글과 선택의 기록.", subtitle: "개발하며 배운 것과 일상에서 남긴 생각.", empty: "아직 작성된 글이 없어요." },
-  tech: { label: "기술", title: "기술", subtitle: "개발하며 배운 것과 문제를 해결한 기록.", empty: "아직 기술 글이 없어요." },
-  life: { label: "일상", title: "일상", subtitle: "일상에서 남긴 생각과 경험.", empty: "아직 일상 글이 없어요." },
+  all: { label: "전체", title: "기술", empty: "아직 작성된 글이 없어요." },
+  tech: { label: "기술", title: "기술", empty: "아직 기술 글이 없어요." },
+  life: { label: "일상", title: "일상", empty: "아직 일상 글이 없어요." },
 };
 
 export function PostArchive({ posts, category }: PostArchiveProps) {
@@ -54,7 +54,6 @@ function ArchiveContent({ posts, category, pathname, query, search }: PostArchiv
     <section aria-labelledby="posts-title" className={ui.archive} id="posts">
       <div className={ui.archiveIntro}>
         <h1 className={ui.archiveTitle} id="posts-title">{copy.title}</h1>
-        <p className={ui.archiveSubtitle}>{copy.subtitle}</p>
       </div>
 
       {query ? (
