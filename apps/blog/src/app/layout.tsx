@@ -33,7 +33,10 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.svg",
+    icon: [
+      { url: "/favicon.ico?v=hamster-outline", sizes: "16x16 32x32 48x48", type: "image/x-icon" },
+      { url: "/favicon.png?v=hamster-outline", sizes: "64x64", type: "image/png" },
+    ],
   },
   openGraph: {
     images: [getSocialImage()],
