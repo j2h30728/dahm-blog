@@ -6,7 +6,7 @@ export interface RelatedPostScore {
   reasons: string[];
 }
 
-export function getRelatedPosts(current: Post, posts: Post[], limit = 4): RelatedPostScore[] {
+export function getRelatedPosts(current: Post, posts: Post[], limit = 2): RelatedPostScore[] {
   const scored = posts
     .filter((candidate) => candidate.slug !== current.slug)
     .map((candidate) => scoreRelatedPost(current, candidate))
