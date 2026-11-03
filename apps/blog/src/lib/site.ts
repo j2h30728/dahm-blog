@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Dahm",
-  homeTitle: "Dahm — 프론트엔드 개발과 일상의 기록",
+  homeTitle: "이지현 (Dahm)",
   socialImage: {
     url: "/og/dahm.png",
     width: 1200,

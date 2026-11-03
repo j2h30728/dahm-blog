@@ -39,6 +39,18 @@ for (const file of readdirSync(output, { recursive: true })) {
 
   const canonical = html.match(/<link\s+rel="canonical"\s+href="([^"]+)"/);
   assert.ok(canonical, `${file}: canonical이 없습니다.`);
+  if (file === "index.html") {
+    assert.equal(html.match(/<title>(.*?)<\/title>/s)?.[1], siteConfig.homeTitle);
+    assert.equal(metadata.get("og:title"), siteConfig.homeTitle);
+    assert.equal(metadata.get("twitter:title"), siteConfig.homeTitle);
+    assert.equal(metadata.get("twitter:card"), "summary", file);
+    for (const key of metadata.keys()) {
+      assert.ok(!["description", "og:description", "twitter:description"].includes(key), `${file}: 홈 설명이 남아 있습니다: ${key}`);
+      assert.ok(!/^(og|twitter):image(?::|$)/.test(key), `${file}: 홈 이미지가 남아 있습니다: ${key}`);
+    }
+    checked++;
+    continue;
+  }
   const post = postsByPath.get(decodeURIComponent(new URL(canonical[1]).pathname));
   const imagePath = post ? getPostSocialImagePath(post.slug) : siteConfig.socialImage.url;
   const imageUrl = new URL(imagePath, canonical[1]).href;
@@ -52,13 +64,8 @@ for (const file of readdirSync(output, { recursive: true })) {
   assert.equal(metadata.get("twitter:card"), "summary_large_image", file);
   assert.equal(metadata.get("twitter:image"), imageUrl, `${file}: Twitter 이미지 URL`);
   assert.equal(metadata.get("twitter:image:alt"), imageAlt, file);
-  if (file === "index.html") {
-    assert.equal(html.match(/<title>(.*?)<\/title>/s)?.[1], siteConfig.homeTitle);
-    assert.equal(metadata.get("og:title"), siteConfig.homeTitle);
-    assert.equal(metadata.get("twitter:title"), siteConfig.homeTitle);
-  }
   checked++;
 }
 assert.ok(checked > 0, "검사할 정적 페이지가 없습니다.");
 assert.equal(checkedPosts.size, posts.length, "모든 공개 글의 개별 OG 이미지를 확인해야 합니다.");
-console.log(`정적 페이지 ${checked}개, 글별 OG ${checkedPosts.size}개, 기본 이미지 및 홈 제목 검증 통과`);
+console.log(`정적 페이지 ${checked}개, 글별 OG ${checkedPosts.size}개, 기본 이미지 및 홈 텍스트 카드 검증 통과`);
