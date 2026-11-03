@@ -59,9 +59,9 @@
 
 :root {
   color-scheme: light;
-  --code-bg: #f6f8fa;
+  --code-bg: #f5f5f5;
   --code-foreground: #24292e;
-  --code-border: #d0d7de;
+  --code-border: #e0e0e0;
   --code-control-bg: rgb(36 41 47 / 7%);
   --code-control-bg-hover: rgb(36 41 47 / 12%);
   --code-control-border: rgb(36 41 47 / 20%);
@@ -299,6 +299,16 @@ input:focus-visible {
 .content input[type="checkbox"] {
   accent-color: var(--color-accent);
   margin-right: 0.42rem;
+}
+
+.interaction-overlay:is(:focus-visible, :active) {
+  background-color: rgb(128 128 128 / 5%);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .interaction-overlay:hover {
+    background-color: rgb(128 128 128 / 5%);
+  }
 }
 
 .content :not(pre) > code {

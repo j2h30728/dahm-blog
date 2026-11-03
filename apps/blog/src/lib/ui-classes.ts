@@ -125,10 +125,10 @@ export const ui = {
   postCard:
     "post-item border-b border-line last:border-b-0",
   postCardLink:
-    "block py-7 text-inherit transition-colors duration-[160ms] hover:text-accent-ink hover:no-underline max-[640px]:py-6",
+    "interaction-overlay -mx-4 block rounded-[var(--radius-md)] px-4 py-7 text-inherit transition-colors duration-[160ms] hover:text-inherit hover:no-underline max-[640px]:py-6",
   postMeta: "post-meta flex flex-wrap items-baseline gap-x-2",
-  postDate: "mt-3 block text-[0.875rem] text-muted tabular-nums",
-  postCategory: "mt-3 text-[0.875rem] text-muted",
+  postDate: "mt-3 block text-[0.875rem] text-muted-strong tabular-nums",
+  postCategory: "mt-3 text-[0.875rem] text-muted-strong",
   postTitle:
     "mb-2.5 mt-0 block text-[clamp(1.25rem,2.1vw,1.5rem)] font-bold leading-[1.45] text-inherit break-words",
   postDescription:
