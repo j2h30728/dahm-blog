@@ -1,18 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #111111;
-  --color-ink-soft: #303030;
-  --color-muted: #707070;
-  --color-muted-strong: #555555;
-  --color-line: #e2e2e2;
-  --color-line-strong: #c7c7c7;
+  --color-ink: #212529;
+  --color-ink-soft: #343a40;
+  --color-muted: #6b7280;
+  --color-muted-strong: #495057;
+  --color-line: #e9ecef;
+  --color-line-strong: #ced4da;
   --color-paper: #ffffff;
   --color-canvas: #ffffff;
-  --color-soft: #f0f0f0;
-  --color-soft-warm: #f3f3f3;
-  --color-accent: #0f766e;
-  --color-accent-ink: #0b5f59;
+  --color-soft: #f1f3f5;
+  --color-soft-warm: #f8f9fa;
+  --color-accent: #087f5b;
+  --color-accent-ink: #066649;
   --color-accent-soft: #dff5f1;
   --color-teal: #0f766e;
   --color-rust: #9a5b13;
@@ -22,7 +22,7 @@
   --color-card-border: rgb(17 17 17 / 10%);
   --color-card-border-strong: rgb(17 17 17 / 18%);
   --color-header-bg: #ffffff;
-  --color-header-border: #e2e2e2;
+  --color-header-border: #e9ecef;
 
   --shadow-glow-sm: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent), 0 8px 20px rgb(29 31 27 / 6%);
   --shadow-glow-md: 0 0 0 1px color-mix(in srgb, var(--color-accent) 24%, transparent), 0 16px 34px rgb(29 31 27 / 8%);
@@ -45,7 +45,7 @@
   --radius-card: 8px;
   --radius-pill: 999px;
 
-  --font-sans: Inter, "Pretendard", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", system-ui, "Noto Sans KR", "Malgun Gothic", sans-serif;
   --font-mono: "SFMono-Regular", "JetBrains Mono", "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
 
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -58,7 +58,7 @@
 
 :root {
   color-scheme: light;
-  --code-bg: #ffffff;
+  --code-bg: #f6f8fa;
   --code-foreground: #24292e;
   --code-border: #d0d7de;
   --code-control-bg: rgb(36 41 47 / 7%);
@@ -67,7 +67,6 @@
   --code-control-border-hover: rgb(36 41 47 / 32%);
   --shadow: 0 18px 44px rgb(17 17 17 / 8%);
   font-family: var(--font-sans);
-  font-feature-settings: "cv02", "cv03", "cv04", "ss01";
 }
 
 * {
@@ -86,7 +85,9 @@ body {
   color: var(--color-ink);
   display: flex;
   flex-direction: column;
-  line-height: 1.65;
+  font-size: 1rem;
+  letter-spacing: -0.004em;
+  line-height: 1.7;
   min-height: 100dvh;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -132,52 +133,55 @@ input:focus-visible {
 }
 
 .content {
+  font-size: 1.125rem;
+  letter-spacing: -0.004em;
+  line-height: 1.75;
   min-inline-size: 0;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 
 .content :is(h1, h2, h3, h4, h5, h6) {
   color: var(--color-ink);
-  font-weight: 650;
-  letter-spacing: 0;
-  line-height: 1.3;
-  margin: 1.8rem 0 0.7rem;
-  scroll-margin-top: 5rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.4;
+  margin: 2.75rem 0 1rem;
+  scroll-margin-top: 7rem;
   text-wrap: balance;
 }
 
 .content h1 {
-  font-size: clamp(1.3rem, 2.6vw, 1.65rem);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
   line-height: 1.4;
 }
 
 .content h2 {
-  border-top: 1px solid var(--color-line);
-  font-size: clamp(1.15rem, 2vw, 1.35rem);
+  font-size: clamp(1.5rem, 2.6vw, 1.875rem);
   line-height: 1.4;
-  padding-top: 1.15rem;
 }
 
 .content h3 {
   color: var(--color-ink-soft);
-  font-size: clamp(1.05rem, 1.8vw, 1.18rem);
+  font-size: clamp(1.25rem, 2.2vw, 1.5rem);
   font-weight: 650;
 }
 
 .content h4 {
   color: var(--color-ink-soft);
-  font-size: 1.03rem;
+  font-size: 1.125rem;
   font-weight: 650;
 }
 
 .content h5 {
   color: var(--color-ink-soft);
-  font-size: 1rem;
+  font-size: 1.0625rem;
   font-weight: 650;
 }
 
 .content h6 {
   color: var(--color-muted-strong);
-  font-size: 0.94rem;
+  font-size: 1rem;
   font-weight: 600;
 }
 
@@ -188,11 +192,11 @@ input:focus-visible {
 }
 
 .content p {
-  margin: 0.8rem 0;
+  margin: 1em 0;
 }
 
 .content :is(ul, ol) {
-  margin: 0.9rem 0;
+  margin: 1.25rem 0;
   padding-inline-start: 1.65rem;
 }
 
@@ -229,31 +233,31 @@ input:focus-visible {
 }
 
 .content li + li {
-  margin-top: 0.18rem;
+  margin-top: 0.4rem;
 }
 
 .content a {
-  color: var(--color-ink-soft);
+  color: var(--color-accent);
   font-weight: 500;
   overflow-wrap: anywhere;
   text-decoration-line: underline;
-  text-decoration-color: var(--color-line-strong);
+  text-decoration-color: color-mix(in srgb, var(--color-accent) 50%, transparent);
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.18em;
   transition: color 160ms;
 }
 
 .content a:hover {
-  color: var(--color-ink);
+  color: var(--color-accent-ink);
 }
 
 .content blockquote {
   background: var(--color-soft-warm);
-  border-left: 2px solid var(--color-line-strong);
+  border-left: 4px solid var(--color-accent);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   color: var(--color-ink-soft);
-  margin: 1.2rem 0;
-  padding: 0.2rem 1.1rem;
+  margin: 2rem 0;
+  padding: 0.5rem 1.5rem;
 }
 
 .content blockquote > :first-child {
@@ -302,7 +306,8 @@ input:focus-visible {
   border-radius: var(--radius-sm);
   color: var(--color-accent-ink);
   font-family: var(--font-mono);
-  font-size: 0.92em;
+  font-size: 0.875em;
+  letter-spacing: 0;
   overflow-wrap: anywhere;
   padding: 0.12em 0.34em;
   white-space: break-spaces;
@@ -314,18 +319,21 @@ input:focus-visible {
   border-radius: var(--radius-card);
   color: var(--code-foreground);
   font-family: var(--font-mono);
-  font-size: 0.92rem;
-  line-height: 1.6;
-  margin: 1.4rem 0;
+  font-size: 0.875rem;
+  letter-spacing: 0;
+  line-height: 1.65;
+  margin: 2rem 0;
+  overflow-wrap: normal;
+  word-break: normal;
   max-inline-size: 100%;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  padding: 18px;
+  padding: 24px;
   -webkit-overflow-scrolling: touch;
 }
 
 .code-block-frame {
-  margin: 1.4rem 0;
+  margin: 2rem 0;
   max-inline-size: 100%;
   min-inline-size: 0;
   position: relative;
@@ -421,6 +429,11 @@ input:focus-visible {
   padding: 0;
 }
 
+/* Shiki의 인라인 배경색보다 라이트 테마의 코드 표면을 우선한다. */
+html:not([data-theme="dark"]) .content pre.shiki {
+  background-color: var(--code-bg) !important;
+}
+
 html[data-theme="dark"] .shiki,
 html[data-theme="dark"] .shiki span {
   background-color: var(--shiki-dark-bg, transparent) !important;
@@ -428,6 +441,10 @@ html[data-theme="dark"] .shiki span {
   font-style: var(--shiki-dark-font-style, inherit) !important;
   font-weight: var(--shiki-dark-font-weight, inherit) !important;
   text-decoration: var(--shiki-dark-text-decoration, inherit) !important;
+}
+
+.content > :is(p, figure):has(img) {
+  margin-block: 2rem;
 }
 
 .content img {
@@ -452,7 +469,7 @@ html[data-theme="dark"] .shiki span {
 .post-image-caption {
   color: var(--color-muted-strong);
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.6;
   margin-top: 0.5rem;
@@ -596,7 +613,7 @@ html[data-theme="dark"] .shiki span {
 .content .media-embed,
 .content .file-embed {
   display: block;
-  margin: 1.4rem 0;
+  margin: 2rem 0;
   max-width: 100%;
 }
 
@@ -629,7 +646,7 @@ html[data-theme="dark"] .shiki span {
 .content table {
   border-collapse: collapse;
   display: block;
-  font-size: 0.95rem;
+  font-size: 1rem;
   inline-size: max-content;
   margin: 1.5rem 0;
   max-inline-size: 100%;
@@ -645,7 +662,7 @@ html[data-theme="dark"] .shiki span {
   max-inline-size: 24rem;
   min-inline-size: 9rem;
   overflow-wrap: anywhere;
-  padding: 10px 12px;
+  padding: 12px 16px;
   text-align: left;
   vertical-align: top;
 }
@@ -661,6 +678,31 @@ html[data-theme="dark"] .shiki span {
 }
 
 @media (max-width: 640px) {
+  .content {
+    font-size: 1.0625rem;
+  }
+
+  .content :is(h1, h2, h3, h4, h5, h6) {
+    margin-top: 2.25rem;
+  }
+
+  .content > :first-child {
+    margin-top: 0;
+  }
+
+  .content pre {
+    font-size: 0.8125rem;
+    padding: 18px;
+  }
+
+  .content .code-block-frame pre {
+    padding-right: 58px;
+  }
+
+  .content blockquote {
+    padding-inline: 1rem;
+  }
+
   .content table {
     font-size: 0.9rem;
     margin: 1.25rem 0;
@@ -823,14 +865,14 @@ html[data-theme="dark"] {
   --code-control-bg-hover: rgb(255 255 255 / 14%);
   --code-control-border: rgb(255 255 255 / 16%);
   --code-control-border-hover: rgb(255 255 255 / 28%);
-  --color-ink: #f5f5f5;
-  --color-ink-soft: #d1d1d1;
-  --color-muted: #9a9a9a;
-  --color-muted-strong: #bbbbbb;
+  --color-ink: #f1f3f5;
+  --color-ink-soft: #dee2e6;
+  --color-muted: #adb5bd;
+  --color-muted-strong: #ced4da;
   --color-line: #333333;
   --color-line-strong: #4a4a4a;
-  --color-paper: #1a1a1a;
-  --color-canvas: #111111;
+  --color-paper: #1b1d1f;
+  --color-canvas: #17191b;
   --color-soft: #262626;
   --color-soft-warm: #242424;
   --color-accent: #5eead4;
@@ -843,7 +885,7 @@ html[data-theme="dark"] {
   --color-glass-hover: rgb(38 38 38 / 92%);
   --color-card-border: rgb(255 255 255 / 10%);
   --color-card-border-strong: rgb(255 255 255 / 18%);
-  --color-header-bg: #111111;
+  --color-header-bg: #17191b;
   --color-header-border: #333333;
   --shadow: 0 18px 44px rgb(0 0 0 / 42%);
   --shadow-glow-sm: 0 0 0 1px color-mix(in srgb, var(--color-accent) 22%, transparent), 0 10px 22px rgb(0 0 0 / 22%);

@@ -111,15 +111,17 @@ export default async function PostPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLd(postJsonLd) }}
       />
-      {post.series ? (
-        <p className={ui.tagline}>
-          {post.series}
-        </p>
-      ) : null}
-      <h1 className={ui.pageTitle}>{post.title}</h1>
-      <div className={ui.meta}>
-        <time dateTime={new Date(post.date).toISOString()}>{formatPostDate(post.date)}</time>
-      </div>
+      <header className={ui.articleHeader}>
+        {post.series ? (
+          <p className={ui.tagline}>
+            {post.series}
+          </p>
+        ) : null}
+        <h1 className={ui.articleTitle}>{post.title}</h1>
+        <div className={ui.meta}>
+          <time dateTime={new Date(post.date).toISOString()}>{formatPostDate(post.date)}</time>
+        </div>
+      </header>
       <div className={ui.postLayout}>
         <div className={ui.contentPanel}>
           <Content />

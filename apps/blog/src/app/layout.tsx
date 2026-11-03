@@ -69,7 +69,7 @@ export default function RootLayout({
   return (
     <html lang="ko" suppressHydrationWarning>
       <head>
-        <meta name="color-scheme" content="light dark" />
+        <meta name="color-scheme" content="light" />
         <script dangerouslySetInnerHTML={{ __html: initialThemeScript }} />
       </head>
       <body>
@@ -106,5 +106,5 @@ const initialThemeScript = `
 const _s = localStorage.getItem('theme');
 document.documentElement.dataset.theme =
   _s === 'dark' || _s === 'light' ? _s
-  : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  : 'light';
 `;

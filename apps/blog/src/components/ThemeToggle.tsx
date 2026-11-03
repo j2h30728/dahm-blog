@@ -12,10 +12,12 @@ export function ThemeToggle() {
     setTheme(getEffectiveTheme());
   }, []);
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+  const handleToggle = () => {
+    const nextTheme = getEffectiveTheme() === "dark" ? "light" : "dark";
+    document.documentElement.dataset.theme = nextTheme;
+    localStorage.setItem("theme", nextTheme);
+    setTheme(nextTheme);
+  };
 
   const nextLabel = theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
 
@@ -25,7 +27,7 @@ export function ThemeToggle() {
       className={ui.themeToggle}
       data-current={theme}
       id="theme-toggle"
-      onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+      onClick={handleToggle}
       type="button"
     >
       <span className={ui.themeToggleLightIcon} data-show="light">
@@ -71,5 +73,5 @@ export function ThemeToggle() {
 function getEffectiveTheme(): Theme {
   const stored = localStorage.getItem("theme");
   if (stored === "light" || stored === "dark") return stored;
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "light";
 }
