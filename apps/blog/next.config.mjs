@@ -24,6 +24,18 @@ export const mdxOptions = {
           light: "github-light",
           dark: "github-dark",
         },
+        // 실제 코드 배경에서도 작은 글자의 대비를 확보한다.
+        colorReplacements: {
+          "github-light": {
+            "#d73a49": "#cf222e",
+            "#e36209": "#9a4d00",
+            "#22863a": "#116329",
+            "#6a737d": "#57606a",
+          },
+          "github-dark": {
+            "#6a737d": "#9aa5b1",
+          },
+        },
       },
     ],
     rehypeSlug,

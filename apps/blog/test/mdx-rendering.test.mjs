@@ -6,6 +6,7 @@ import test from "node:test";
 import { createElement } from "react";
 import * as runtime from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
+import postcss from "postcss";
 import { mdxOptions } from "../next.config.mjs";
 
 const require = createRequire(import.meta.url);
@@ -120,6 +121,61 @@ test("코드 블록 원문·빈 줄·리터럴 기호를 보존하고 밝고 어
   assert.doesNotMatch(codeHtml, /<br/);
   assert.match(html, /--shiki-dark/);
   assert.match(html, /background-color:#fff(?:fff)?/i);
+});
+
+test("다중 언어 코드 토큰은 실제 라이트·다크 코드 배경에서 4.5:1 이상의 대비를 갖는다", async () => {
+  const css = postcss.parse(readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8"));
+  const backgrounds = {};
+  css.walkRules((rule) => {
+    const theme = rule.selector === ":root" ? "light" : rule.selector === 'html[data-theme="dark"]' ? "dark" : null;
+    if (theme) rule.walkDecls("--code-bg", (declaration) => { backgrounds[theme] = declaration.value; });
+  });
+  assert.deepEqual(Object.keys(backgrounds).sort(), ["dark", "light"]);
+
+  const html = await render([
+    "```javascript",
+    "// readable comment",
+    "export function read(config) {",
+    '  const label = "result";',
+    "  return config.items.map((item) => item.id + 1);",
+    "}",
+    "```",
+    "",
+    "```yaml",
+    "responses:",
+    "  '200':",
+    "    content:",
+    "      application/json:",
+    "        type: string",
+    "```",
+  ].join("\n"));
+  const declarations = (style) => Object.fromEntries(style.split(";")
+    .filter((entry) => entry.includes(":"))
+    .map((entry) => entry.split(/:(.*)/s).slice(0, 2).map((value) => value.trim())));
+  const tokens = [...html.matchAll(/<span\b[^>]*style="([^"]+)"[^>]*>([^<]*)<\/span>/g)]
+    .map((match) => ({ text: match[2], style: declarations(match[1]) }));
+  for (const sample of ["config", "export", "// readable comment", "responses"]) {
+    assert.ok(tokens.some(({ text, style }) => text === sample && style.color && style["--shiki-dark"]), `대비 회귀 대상 토큰: ${sample}`);
+  }
+
+  const luminance = (hex) => {
+    assert.match(hex, /^#[\da-f]{3}(?:[\da-f]{3})?$/i);
+    const digits = hex.slice(1);
+    const normalized = digits.length === 3 ? [...digits].map((digit) => digit.repeat(2)).join("") : digits;
+    const channels = normalized.match(/../g).map((channel) => parseInt(channel, 16) / 255)
+      .map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+    return channels.reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+  };
+  const styles = [...html.matchAll(/<(?:pre|span)\b[^>]*style="([^"]+)"/g)].map((match) => declarations(match[1]));
+  for (const [theme, property] of [["light", "color"], ["dark", "--shiki-dark"]]) {
+    const palette = new Set(styles.map((style) => style[property]).filter(Boolean));
+    assert.ok(palette.size >= 6, `${theme}: 여러 구문 종류를 강조해야 한다`);
+    for (const foreground of palette) {
+      const values = [luminance(foreground), luminance(backgrounds[theme])].sort((a, b) => a - b);
+      const ratio = (values[1] + 0.05) / (values[0] + 0.05);
+      assert.ok(ratio >= 4.5, `${theme}: ${foreground} / ${backgrounds[theme]} = ${ratio}:1`);
+    }
+  }
 });
 
 test("MDX JSX 안의 개행을 임의로 변환하지 않는다", async () => {

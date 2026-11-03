@@ -24,7 +24,7 @@ export const ui = {
   navSearchFormClosed:
     "hidden",
   navSearchField:
-    "h-10 w-full min-w-0 rounded-[var(--radius-sm)] border border-line bg-paper px-3 text-[0.95rem] text-ink transition-[border-color] duration-[160ms] focus:border-line-strong focus:outline-none max-[640px]:text-base",
+    "h-10 w-full min-w-0 rounded-[var(--radius-sm)] border border-control-border bg-paper px-3 text-[0.95rem] text-ink placeholder:text-muted placeholder:opacity-100 transition-[border-color] duration-[160ms] focus:border-accent max-[640px]:text-base",
   navIconButton:
     "group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 text-muted-strong transition-[background,color] duration-[160ms] hover:bg-soft hover:text-ink",
   shell:
