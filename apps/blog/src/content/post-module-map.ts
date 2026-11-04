@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-export type PostModule = { default: ComponentType };
+export type PostModule = { default: ComponentType; tableOfContents: Array<{ depth: number; id: string; text: string }> };
 
 export const postModules: Record<string, () => Promise<PostModule>> = {
   "10weeks": () => import("./posts/10weeks.mdx"),

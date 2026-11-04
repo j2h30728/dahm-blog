@@ -129,7 +129,7 @@ export default async function PostPage({ params }: PageProps) {
         <div className={ui.contentPanel}>
           <Content />
         </div>
-        <Toc headings={post.headings} />
+        <Toc headings={postModule.tableOfContents} />
       </div>
       <RelatedPosts related={related} />
       <Backlinks backlinks={backlinks} />

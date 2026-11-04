@@ -48,7 +48,7 @@ function moduleMap(posts: NotionPost[], options: PublishOptions): string {
     if (!target.startsWith(".")) target = `./${target}`;
     return `  ${JSON.stringify(post.slug)}: () => import(${JSON.stringify(target)}),`;
   });
-  return `import type { ComponentType } from "react";\n\nexport type PostModule = { default: ComponentType };\n\nexport const postModules: Record<string, () => Promise<PostModule>> = {\n${imports.join("\n")}\n};\n\nexport const postModuleSlugs = ${JSON.stringify(entries.map((post) => post.slug))} as const;\n`;
+  return `import type { ComponentType } from "react";\n\nexport type PostModule = { default: ComponentType; tableOfContents: Array<{ depth: number; id: string; text: string }> };\n\nexport const postModules: Record<string, () => Promise<PostModule>> = {\n${imports.join("\n")}\n};\n\nexport const postModuleSlugs = ${JSON.stringify(entries.map((post) => post.slug))} as const;\n`;
 }
 
 /** 전체 결과를 먼저 준비하고, 실패하면 이전 생성물을 복원한다. */

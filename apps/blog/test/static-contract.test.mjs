@@ -75,6 +75,22 @@ test("전체 홈을 canonical로 사용하고 루트 리다이렉트 없이 분�
   }
 });
 
+test("레거시 일상 목록 두 주소만 쿼리 조건부 영구 리디렉션한다", () => {
+  const { redirects = [] } = JSON.parse(readFileSync(path.join(workspaceRoot, "vercel.json"), "utf8"));
+  const legacyRules = redirects.filter(({ source }) => source.startsWith("/posts"));
+
+  // 정확한 목록 경로만 허용해 /posts/<slug>/ 상세 글까지 이동시키지 않는다.
+  assert.deepEqual(legacyRules.map(({ source }) => source).sort(), ["/posts", "/posts/"]);
+  for (const rule of legacyRules) {
+    // category가 없거나 tech·알 수 없는 값일 때는 조건에 해당하지 않는다.
+    assert.deepEqual(rule.has, [{ type: "query", key: "category", value: { eq: "life" } }]);
+    assert.equal(rule.destination, "/life/");
+    assert.equal(rule.permanent, true);
+    // 목적지에서 검색어를 덮어쓰지 않아 Vercel의 기본 쿼리 전달을 사용한다.
+    assert.equal(new URL(rule.destination, "https://dahm.example").search, "");
+  }
+});
+
 test("declares production-safe SEO URL generation", () => {
   const siteSource = readFileSync(path.join(appRoot, "src/lib/site.ts"), "utf8");
   const rssSource = readFileSync(path.join(appRoot, "src/lib/rss.ts"), "utf8");

@@ -8,6 +8,7 @@ import * as runtime from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
 import postcss from "postcss";
 import { mdxOptions } from "../next.config.mjs";
+import rehypePostHeadings from "../src/lib/rehype-post-headings.mjs";
 
 const require = createRequire(import.meta.url);
 const loaderRequire = createRequire(require.resolve("@mdx-js/loader"));
@@ -17,6 +18,58 @@ async function render(markdown) {
   const { default: Content } = await evaluate(markdown, { ...mdxOptions, ...runtime });
   return renderToStaticMarkup(createElement(Content));
 }
+
+function renderedHeadings(html) {
+  return [...html.matchAll(/<h([23])\b[^>]*\bid="([^"]*)"[^>]*>/g)]
+    .map(([, depth, id]) => ({ depth: Number(depth), id }));
+}
+
+test("목차는 인라인 문법과 공백, 모든 제목 깊이의 중복 순번을 실제 본문 ID와 공유한다", async () => {
+  const source = [
+    "# 공통", "", "## 공통", "", "#### 공통", "", "### 공통", "",
+    "## 2.  주체적으로 살기", "",
+    "## backup and dump\u00a0the original", "",
+    "## **제목** [A_B](https://example.com) `&` 끝", "",
+    "```md", "## 목차에 없는 코드 예제", "```",
+  ].join("\n");
+  const module = await evaluate(source, { ...mdxOptions, ...runtime });
+  const html = renderToStaticMarkup(createElement(module.default));
+  const headings = module.tableOfContents.map(({ depth, id }) => ({ depth, id }));
+  assert.deepEqual(headings, renderedHeadings(html));
+  assert.deepEqual(headings.map(({ id }) => id), [
+    "공통-1", "공통-3", "2--주체적으로-살기", "backup-and-dumpthe-original", "제목-a_b--끝",
+  ]);
+  assert.equal(module.tableOfContents.at(-1).text, "제목 A_B & 끝");
+
+  const plain = await evaluate("제목 없는 본문", { ...mdxOptions, ...runtime });
+  assert.deepEqual(plain.tableOfContents, []);
+});
+
+test("모든 공개 글의 컴파일 목차가 본문 ID와 일치하고 기존 앵커와 렌더링을 보존한다", async () => {
+  const directory = new URL("../src/content/posts/", import.meta.url);
+  const previouslyBroken = new Set([
+    "2024.mdx", "oauth-2.0-kako-login.mdx", "2024년-여름-회고.mdx",
+    "Planet-scale-백업과-복원하기.mdx", "next-image-html2canvas-html-to-image.mdx", "iBook.mdx",
+  ]);
+  const baselineOptions = {
+    ...mdxOptions,
+    rehypePlugins: mdxOptions.rehypePlugins.filter((plugin) => plugin !== rehypePostHeadings),
+  };
+  const filenames = readdirSync(directory).filter((name) => name.endsWith(".mdx"));
+  assert.ok(filenames.length > 0);
+  for (const filename of filenames) {
+    const source = readFileSync(new URL(filename, directory), "utf8");
+    const module = await evaluate(source, { ...mdxOptions, ...runtime });
+    const html = renderToStaticMarkup(createElement(module.default));
+    assert.deepEqual(module.tableOfContents.map(({ depth, id }) => ({ depth, id })), renderedHeadings(html), filename);
+    if (previouslyBroken.has(filename)) {
+      const baseline = await evaluate(source, { ...baselineOptions, ...runtime });
+      assert.equal(html, renderToStaticMarkup(createElement(baseline.default)), `${filename}: 기존 본문과 앵커 보존`);
+      previouslyBroken.delete(filename);
+    }
+  }
+  assert.equal(previouslyBroken.size, 0, "기존 오류 글을 모두 검증해야 한다");
+});
 
 test("단일 개행은 줄바꿈으로, 빈 줄은 별도 문단으로 렌더링한다", async () => {
   for (const newline of ["\n", "\r\n"]) {

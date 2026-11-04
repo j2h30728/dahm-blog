@@ -63,7 +63,11 @@ pnpm sync:content
 
 로고는 문서를 새로고침하지 않고 검색어 없는 `/` 홈으로 이동합니다. 같은 홈에서는 URL 상태를 갱신하고, 상세 글을 거쳐 돌아올 때도 도착한 홈 주소의 검색어를 정리해 전체 목록을 복원합니다. 현재 테마와 화면 배경을 유지하며, 뒤로가기로 과거 검색 기록을 다시 볼 수 있습니다.
 
-기존 `/posts/`는 기술 기본 목록으로, `/posts/?category=life`는 일상 목록으로 계속 열 수 있습니다. 글 상세의 `/posts/:slug/` 주소는 유지합니다. 홈 canonical은 `/`, 새 분류 목록은 각각 `/tech/`, `/life/`이며, Vercel의 과거 `/`→`/posts/` 리다이렉트는 제거했습니다.
+기존 `/posts/`는 기술 기본 목록으로 유지합니다. `/posts?category=life`와 `/posts/?category=life`는 Vercel에서 `/life/`로 영구 리디렉션(308)합니다. 조건은 목록 경로의 `category=life`에만 적용하므로 기술 목록, 잘못된 분류 값, `/posts/:slug/` 상세 글 주소는 이동시키지 않습니다. 홈 canonical은 `/`, 새 분류 목록은 각각 `/tech/`, `/life/`이며, Vercel의 과거 `/`→`/posts/` 리디렉션은 제거했습니다.
+
+Vercel은 리디렉션할 때 원래 쿼리를 자동 전달합니다. 예를 들어 `/posts/?category=life&q=검색&utm_source=test`는 `/life/?category=life&q=검색&utm_source=test`로 이동합니다. 남아 있는 `category=life`는 `/life/`의 명시적 일상 분류를 바꾸지 않으며, 검색어와 기타 쿼리는 유지됩니다. 이 주소의 canonical은 쿼리 없는 `/life/`입니다.
+
+쿼리 기반 `has` 조건은 Vercel 배포 환경에서 적용됩니다. Next 로컬 서버와 정적 파일 서버에서 308을 재현한 것으로 간주하지 않으며, 배포 후 두 레거시 주소의 상태 코드·목적지·검색어 전달과 도착 페이지의 canonical을 확인합니다.
 
 태그 URL은 동기화가 생성한 `tagSlugs`, 시리즈 URL은 `seriesSlug`를 앱이 그대로 사용합니다. Unicode 문자를 보존하며 `C++`와 `C#`처럼 서로 다른 이름이 같은 URL로 정규화되거나 이름이 빈 URL을 만들면 출력 전에 오류로 중단합니다.
 
