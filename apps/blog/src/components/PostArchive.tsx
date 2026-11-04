@@ -13,7 +13,7 @@ interface PostArchiveProps {
 }
 
 const archiveCopy = {
-  all: { label: "전체", title: "기술", empty: "아직 작성된 글이 없어요." },
+  all: { label: "전체", title: "전체 글", empty: "아직 작성된 글이 없어요." },
   tech: { label: "기술", title: "기술", empty: "아직 기술 글이 없어요." },
   life: { label: "일상", title: "일상", empty: "아직 일상 글이 없어요." },
 };
