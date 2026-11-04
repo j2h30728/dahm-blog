@@ -13,7 +13,7 @@ export const ui = {
   navActions:
     "flex shrink-0 items-center justify-end gap-0.5",
   navLink:
-    "relative shrink-0 px-2 py-2 transition-colors duration-[160ms] after:absolute after:inset-x-2 after:bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-[180ms] after:content-[''] hover:text-ink hover:no-underline hover:after:scale-x-100 max-[640px]:px-1 max-[640px]:after:inset-x-1",
+    "interaction-overlay relative shrink-0 rounded-[var(--radius-sm)] px-2 py-2 transition-colors duration-[160ms] after:absolute after:inset-x-2 after:bottom-1 after:h-px after:origin-left after:scale-x-0 after:bg-ink after:transition-transform after:duration-[180ms] after:content-[''] hover:no-underline max-[640px]:px-1 max-[640px]:after:inset-x-1",
   navLinkActive:
     "text-ink after:scale-x-100",
   navLinkInactive: "text-muted-strong",
@@ -26,7 +26,7 @@ export const ui = {
   navSearchField:
     "h-10 w-full min-w-0 rounded-[var(--radius-sm)] border border-control-border bg-paper px-3 text-[0.95rem] text-ink placeholder:text-muted placeholder:opacity-100 transition-[border-color] duration-[160ms] focus:border-accent max-[640px]:text-base",
   navIconButton:
-    "group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 text-muted-strong transition-[background,color] duration-[160ms] hover:bg-soft hover:text-ink",
+    "interaction-overlay group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 text-muted-strong transition-colors duration-[160ms]",
   shell:
     `${pageFrame} flex-1 pb-20 pt-14 max-[640px]:pb-12 max-[640px]:pt-9`,
   siteFooter:
@@ -40,7 +40,7 @@ export const ui = {
   footerLinks:
     "flex max-w-[520px] flex-wrap items-center justify-end gap-[var(--space-1)] max-[640px]:justify-start",
   footerLink:
-    "rounded-[var(--radius-sm)] px-2.5 py-2 text-[0.875rem] font-medium tracking-[0] text-muted transition-[background,color] duration-[160ms] hover:bg-accent-soft hover:text-accent-ink hover:no-underline",
+    "interaction-overlay rounded-[var(--radius-sm)] px-2.5 py-2 text-[0.875rem] font-medium tracking-[0] text-muted transition-colors duration-[160ms] hover:no-underline",
 
   homeIntro:
     "home-intro w-full scroll-mt-28",
@@ -79,7 +79,7 @@ export const ui = {
     "m-0 text-[clamp(1.375rem,2.4vw,1.75rem)] font-bold leading-[1.4]",
   tagList: "flex flex-wrap gap-2",
   tagPill:
-    "tag inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-transparent bg-soft px-3 py-2 text-[0.875rem] font-medium leading-[1.4] text-accent-ink transition-colors duration-[160ms] hover:bg-accent-soft hover:no-underline",
+    "interaction-overlay tag inline-flex items-center gap-1.5 rounded-[var(--radius-pill)] border border-transparent bg-soft px-3 py-2 text-[0.875rem] font-medium leading-[1.4] text-accent-ink transition-colors duration-[160ms] hover:no-underline",
   tagCount:
     "text-[0.8125rem] text-muted-strong",
   pageSection: "scroll-mt-28",
@@ -107,7 +107,7 @@ export const ui = {
   seriesCard:
     "border-b border-line last:border-b-0",
   seriesCardLink:
-    "group grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 py-[var(--space-5)] text-inherit transition-[background,padding,color] duration-[180ms] hover:bg-[color-mix(in_srgb,var(--color-accent)_5%,transparent)] hover:pl-2 hover:text-ink hover:no-underline max-[640px]:grid-cols-1 max-[640px]:gap-3 max-[640px]:py-[var(--space-4)]",
+    "interaction-overlay -mx-4 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 rounded-[var(--radius-md)] px-4 py-[var(--space-5)] text-inherit transition-colors duration-[180ms] hover:no-underline max-[640px]:grid-cols-1 max-[640px]:gap-3 max-[640px]:py-[var(--space-4)]",
   seriesBody:
     "min-w-0",
   seriesTopline:
@@ -119,7 +119,7 @@ export const ui = {
   seriesPreviewItem:
     "rounded-[var(--radius-pill)] border border-card-border px-3 py-2 text-[0.875rem] leading-[1.4] text-muted-strong",
   seriesAction:
-    "whitespace-nowrap pt-1 text-[0.875rem] font-medium tracking-[0] text-muted transition-colors duration-[160ms] group-hover:text-accent-ink max-[640px]:pt-0",
+    "whitespace-nowrap pt-1 text-[0.875rem] font-medium tracking-[0] text-muted max-[640px]:pt-0",
 
   postList: "post-list",
   postCard:
@@ -163,7 +163,7 @@ export const ui = {
   relatedTitle: "mb-5 mt-0 text-[1.125rem] font-semibold text-muted-strong",
   relatedGrid: "grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-x-6 gap-y-3",
   relatedCard:
-    "related-card py-3 text-inherit transition-colors duration-[160ms] hover:text-accent-ink hover:no-underline",
+    "interaction-overlay related-card -mx-3 rounded-[var(--radius-md)] px-3 py-3 text-inherit transition-colors duration-[160ms] hover:no-underline",
   relatedKicker:
     "mb-2 block text-[0.875rem] text-muted",
   relatedMeta: "text-[0.875rem] text-muted",
@@ -173,7 +173,7 @@ export const ui = {
     "search-box glass-surface mb-5 w-full max-w-[620px] rounded-[var(--radius-card)] border border-card-border px-3.5 py-[13px] text-ink transition-[background,border-color,box-shadow] duration-[200ms] focus:border-accent-blend focus:bg-[var(--color-glass-hover)] focus:shadow-glass-md focus:outline-none",
 
   themeToggle:
-    "theme-toggle group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 leading-none text-muted-strong transition-[background,color] duration-[160ms] hover:bg-soft hover:text-ink",
+    "interaction-overlay theme-toggle group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 leading-none text-muted-strong transition-colors duration-[160ms]",
   themeToggleLightIcon: "hidden group-data-[current=light]:flex",
   themeToggleDarkIcon: "hidden group-data-[current=dark]:flex",
 } as const;

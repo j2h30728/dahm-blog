@@ -301,13 +301,17 @@ input:focus-visible {
   margin-right: 0.42rem;
 }
 
+.interaction-overlay {
+  --interaction-overlay-color: rgb(128 128 128 / 5%);
+}
+
 .interaction-overlay:is(:focus-visible, :active) {
-  background-color: rgb(128 128 128 / 5%);
+  background-image: linear-gradient(var(--interaction-overlay-color), var(--interaction-overlay-color));
 }
 
 @media (hover: hover) and (pointer: fine) {
   .interaction-overlay:hover {
-    background-color: rgb(128 128 128 / 5%);
+    background-image: linear-gradient(var(--interaction-overlay-color), var(--interaction-overlay-color));
   }
 }
 
