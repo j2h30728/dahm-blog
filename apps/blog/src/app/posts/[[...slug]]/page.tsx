@@ -3,6 +3,7 @@ import PostsIndex, { indexMetadata } from "../index-view";
 import { notFound } from "next/navigation";
 import { Backlinks } from "../../../components/Backlinks";
 import { PostEnhancements } from "../../../components/PostEnhancements";
+import { PostComments } from "../../../components/PostComments";
 import { RelatedPosts } from "../../../components/RelatedPosts";
 import { Toc } from "../../../components/Toc";
 import { allPostSlugs, formatPostDate, getPost, getPostContent, getPublishedPosts } from "../../../lib/posts";
@@ -10,6 +11,7 @@ import { getBacklinks, getLinkPreviewPayload } from "../../../lib/public-link-in
 import { getRelatedPosts } from "../../../lib/related-posts";
 import { absoluteUrl, getSocialImage, canonicalPath, jsonLd, siteConfig } from "../../../lib/site";
 import { ui } from "../../../lib/ui-classes";
+import { getGiscusConfig } from "../../../lib/comments";
 
 interface PageProps {
   params: Promise<{
@@ -76,6 +78,7 @@ export default async function PostPage({ params }: PageProps) {
   const backlinks = getBacklinks(post.slug);
   const previewPayload = getLinkPreviewPayload(post.slug);
   const postUrl = absoluteUrl(post.href);
+  const commentsConfig = getGiscusConfig();
   const postJsonLd = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
@@ -130,6 +133,7 @@ export default async function PostPage({ params }: PageProps) {
       </div>
       <RelatedPosts related={related} />
       <Backlinks backlinks={backlinks} />
+      {commentsConfig ? <PostComments config={commentsConfig} key={post.slug} slug={post.slug} /> : null}
       <PostEnhancements previews={previewPayload} />
     </article>
   );

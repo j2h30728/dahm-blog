@@ -95,6 +95,34 @@ Vercel의 빌드 명령 `pnpm build:blog`가 최신 공개 글을 가져옵니�
 
 API·출력 검사 중에는 `--out`, `--assets`, `--manifest`, `--public-index`, `--public-post-index`, `--search-index`, `--post-module-map`으로 생성 경로만 바꿀 수 있습니다. 로컬 파일 게시 모드·vault·preview 입력은 지원하지 않습니다.
 
+## 댓글 (Giscus)
+
+글 상세 하단에 GitHub 로그인 기반 댓글을 표시합니다. 댓글은 공개 저장소 `j2h30728/dahm-blog`의 GitHub Discussions에 저장됩니다. 목록·소개·태그·시리즈 페이지에는 댓글을 표시하지 않습니다.
+
+### GitHub 연결
+
+현재 `j2h30728/dahm-blog`의 Discussions와 giscus 앱을 연결했으며, `Announcements` 카테고리를 사용합니다. 저장소·저장소 ID·카테고리·카테고리 ID는 `src/lib/comments.ts`의 공개 설정으로 관리합니다. 별도 Vercel 환경변수나 GitHub 토큰·OAuth 비밀키 없이 기본 활성화됩니다.
+
+저장소나 카테고리를 옮길 때는 [Giscus 설정](https://giscus.app/ko)에서 해당 공개 ID를 확인해 코드를 함께 변경합니다. 새 저장소는 공개 저장소여야 하며, 소유자 계정으로 **Settings → Features → Discussions**를 켜고 [giscus 앱](https://github.com/apps/giscus)에 해당 저장소를 연결해야 합니다. 카테고리는 공지(Announcements) 형식을 권장합니다.
+
+댓글을 잠시 끄려면 로컬 루트 `.env.local` 또는 Vercel 환경변수에 다음 값을 지정하고 다시 빌드합니다. `false`는 앞뒤 공백과 대소문자에 관계없이 적용하며, 미설정·공백·`true`는 기본 활성 상태입니다.
+
+```dotenv
+GISCUS_ENABLED=false
+```
+
+Vercel의 `pnpm build:blog` 실행 시 설정이 정적 페이지에 반영됩니다. 코드 또는 환경변수 변경 후에는 새 배포가 필요합니다. 비활성화하면 댓글 영역과 외부 위젯을 모두 표시하지 않습니다.
+
+### 동작과 확인
+
+댓글은 `post:<slug>`를 정확히 일치시키는 방식으로 연결합니다. 글 제목이나 도메인을 바꿔도 같은 댓글을 사용하며, 글의 `slug`를 바꾸면 다른 댓글로 연결됩니다. 기존 댓글을 유지하려면 발행 후 `slug`를 유지합니다.
+
+댓글 영역 근처에 도달하면 공식 `@giscus/react` 위젯을 불러옵니다. 한국어와 상단 입력창을 사용하고, 댓글 위에 좋아요 등 이모지 반응 버튼을 표시합니다. 반응을 남길 때도 GitHub 로그인이 필요합니다. 블로그의 라이트·다크 선택에 맞춰 위젯 테마도 바뀝니다. 글을 이동하면 댓글 위젯을 새로 만들어 이전 글의 댓글이 남지 않게 합니다. 위젯 접근이 어려우면 댓글 제목 옆 **GitHub에서 보기**로 저장소의 Discussions를 열 수 있습니다.
+
+설정 후에는 글 두 개를 오가며 각각 다른 댓글 스레드가 표시되는지 확인합니다. 다크 상태로 글에 직접 진입한 뒤 댓글까지 스크롤하고, 테마 전환·모바일 너비도 확인합니다. 실제 댓글 작성은 GitHub 로그인과 Giscus OAuth 승인이 필요하며, 작성한 댓글은 GitHub에서도 관리할 수 있습니다.
+
+공식 자료: [Giscus 설정](https://giscus.app/ko), [React 컴포넌트](https://github.com/giscus/giscus-component), [테마·메시지 연동](https://github.com/giscus/giscus/blob/main/ADVANCED-USAGE.md).
+
 ## Google Analytics 4
 
 GA4는 `NODE_ENV=production`과 `VERCEL_ENV=production`이고 `NEXT_PUBLIC_GA_MEASUREMENT_ID`가 있을 때만 활성화됩니다. 로컬 개발·로컬 정적 빌드·Vercel Preview에서는 수집하지 않습니다. ID를 생략하거나 공백만 입력하면 GA 없이 정상 동작합니다.
