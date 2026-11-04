@@ -5,7 +5,7 @@ import { absoluteUrl, canonicalPath, siteConfig } from "../lib/site";
 
 export const metadata: Metadata = {
   title: { absolute: siteConfig.homeTitle },
-  description: null,
+  description: siteConfig.homeDescription,
   alternates: {
     canonical: canonicalPath(siteConfig.canonicalHomePath),
   },
@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     type: "website",
     url: absoluteUrl(siteConfig.canonicalHomePath),
     title: siteConfig.homeTitle,
+    description: siteConfig.homeDescription,
     siteName: siteConfig.name,
     locale: siteConfig.locale,
   },
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
     card: "summary",
     images: [],
     title: siteConfig.homeTitle,
+    description: siteConfig.homeDescription,
   },
 };
 

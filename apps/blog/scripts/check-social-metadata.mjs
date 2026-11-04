@@ -44,8 +44,10 @@ for (const file of readdirSync(output, { recursive: true })) {
     assert.equal(metadata.get("og:title"), siteConfig.homeTitle);
     assert.equal(metadata.get("twitter:title"), siteConfig.homeTitle);
     assert.equal(metadata.get("twitter:card"), "summary", file);
+    for (const key of ["description", "og:description", "twitter:description"]) {
+      assert.equal(metadata.get(key), siteConfig.homeDescription, `${file}: 홈 설명 ${key}`);
+    }
     for (const key of metadata.keys()) {
-      assert.ok(!["description", "og:description", "twitter:description"].includes(key), `${file}: 홈 설명이 남아 있습니다: ${key}`);
       assert.ok(!/^(og|twitter):image(?::|$)/.test(key), `${file}: 홈 이미지가 남아 있습니다: ${key}`);
     }
     checked++;
