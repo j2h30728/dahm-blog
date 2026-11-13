@@ -9,9 +9,11 @@
     "preinstall": "node scripts/check-env.mjs",
     "dev": "node scripts/dev.mjs",
     "sync:content": "node scripts/sync-content.mjs",
-    "test": "pnpm --filter @dahm-blog/content-sync test && pnpm --filter @dahm-blog/blog test",
+    "publish:blog": "node scripts/publish-blog.mjs",
+    "test": "pnpm --filter @dahm-blog/content-sync test && pnpm --filter @dahm-blog/blog test && pnpm test:publish",
     "test:browser": "node scripts/test-browser.mjs",
     "test:integration": "node scripts/test-content-integration.mjs",
+    "test:publish": "node --test scripts/test/publish-blog.test.mjs",
     "build:blog": "node scripts/prepare-content.mjs && pnpm --filter @dahm-blog/blog build",
     "build": "pnpm build:blog",
     "typecheck": "pnpm --filter @dahm-blog/blog typecheck"

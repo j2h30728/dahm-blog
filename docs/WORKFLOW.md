@@ -100,6 +100,46 @@ pnpm test:browser
 
 출력은 `apps/blog/dist`입니다. Vercel도 이 디렉터리를 배포합니다. 배포 서버는 Google Drive를 읽지 않으므로, 공개 사본을 갱신하고 코드와 함께 저장소에 반영해야 다음 Git 배포에 포함됩니다. Google Drive 동기화 자체가 배포를 실행하지는 않습니다.
 
+## 한 명령으로 발행
+
+최초 Astro 전환 코드와 발행 스크립트는 먼저 별도로 커밋·push하고 Vercel의 Git 배포 연결을 확인합니다. 이 초기 반영은 발행 명령이 대신하지 않습니다.
+
+이후 글·메모의 `publish: true` 설정과 본문을 저장한 뒤 프로젝트에서 실행합니다.
+
+```bash
+pnpm publish:blog
+```
+
+다음 순서로 처리합니다.
+
+1. 현재 브랜치·upstream·staging·미커밋 변경과 원격 이력을 확인합니다.
+2. 공개 문서와 참조 첨부를 동기화합니다.
+3. snapshot과 Astro 정적 빌드를 검증합니다. 공유 이미지는 실제 배포 빌드에서 생성합니다.
+4. `apps/blog/src/content/`와 `apps/blog/public/blog-assets/`의 변경만 커밋합니다.
+5. `origin/main`에 일반 push합니다. 이후 Vercel Git 배포가 진행됩니다. 이 명령은 Vercel 배포 성공까지 기다리지는 않습니다.
+
+자동 커밋 제목은 `[docs](blog): 공개 글·메모 변경 반영`입니다. 비공개 전환으로 생기는 공개 사본과 첨부 삭제도 함께 반영합니다. 변경이 없으면 새 커밋과 push를 생략합니다.
+
+기본 대상은 `origin/main`이며 `.env.local`의 `BLOG_PUBLISH_REMOTE`, `BLOG_PUBLISH_BRANCH`로 변경할 수 있습니다. 현재 브랜치와 설정된 upstream이 정확히 일치해야 하며, 운영 사이트를 갱신하려면 이 브랜치를 Vercel Production branch와 맞춥니다.
+
+```bash
+pnpm publish:blog --dry-run
+pnpm publish:blog --help
+```
+
+`--dry-run`은 로컬 Git 준비상태와 예정 절차만 확인합니다. 원격 fetch, 동기화, 빌드, staging, 커밋, push를 하지 않으며 실제 콘텐츠 변경 건수는 계산하지 않습니다. 원격 상태는 실제 실행 시 갱신합니다.
+
+안전하게 발행하기 위한 조건:
+
+- 이미 스테이징한 변경, 사이트 코드의 미커밋·새 파일이 있으면 중단합니다. 기존 변경을 자동으로 포함하거나 되돌리지 않습니다.
+- 미push 커밋에 사이트 코드가 있거나 원격이 앞선 경우, merge/rebase 진행 중이면 중단합니다. 자동 pull·rebase·force push는 하지 않습니다.
+- 원본·빌드 검증에 실패하면 Git staging·커밋·push를 하지 않습니다. 동기화된 공개 사본은 작업 폴더에서 확인할 수 있습니다.
+- 커밋 hook 등의 실패 시 staging은 유지하고 해제 명령을 안내합니다. 원인을 해결하고 해당 경로의 staging을 해제한 뒤 다시 실행합니다.
+- push 실패 시 로컬 콘텐츠 커밋은 유지합니다. 연결·권한 문제를 해결한 후 같은 명령을 다시 실행하면 이미 만든 콘텐츠 커밋을 중복 생성하지 않고 재시도합니다.
+- 중복 실행은 Git 디렉터리의 `blog-publish.lock`으로 차단합니다. 강제 종료로 lock이 남았다면 실행 중인 발행이 없는지 확인한 다음 정리합니다.
+
+이번 기능 구현 중에는 실제 프로젝트의 커밋·push·배포를 수행하지 않습니다. 발행 테스트의 Git 쓰기는 임시 저장소와 로컬 bare remote에만 수행합니다.
+
 ## 댓글과 통계
 
 Giscus는 기존 저장소와 카테고리를 사용합니다. 글은 `post:<slug>`에 연결하므로 기존 댓글을 유지하려면 slug를 유지합니다. 메모는 `note:<slug>`로 구분합니다. `GISCUS_ENABLED=false`로 끌 수 있습니다.
