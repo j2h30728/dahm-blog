@@ -10,6 +10,7 @@ import { getTitDateParts } from '../lib/tit';
 interface Props { post: Post; }
 const { post } = Astro.props;
 const { Content, headings } = await render(post.entry);
+const tocHeadings = headings.filter(heading => heading.depth <= 3);
 const all = await getPublishedPosts();
 const related = getRelatedPosts(post, all.filter(item => item.kind === post.kind));
 const backlinks = getBacklinks(post, all);
@@ -30,17 +31,20 @@ const ld = { '@context': 'https://schema.org', '@type': 'BlogPosting', headline:
       <div class={ui.meta}><time datetime={post.date}>{post.kind === 'notes' ? getTitDateParts(post.date).dateLabel : formatPostDate(post.date)}</time>{post.kind === 'notes' && <span>· 메모</span>}</div>
       {post.kind === 'notes' && <a class="tit-back-link" href="/notes/">← 메모 목록으로 돌아가기</a>}
     </header>
-    <div class={ui.postLayout}>
-      <div class={ui.contentPanel}><Content /></div>
-      {headings.length > 0 && <aside class={ui.toc} aria-label="목차">
-        <h2 class={ui.tocTitle}>목차</h2>
+    {tocHeadings.length > 0 && <details class={ui.toc}>
+      <summary class={ui.tocSummary}>
+        목차
+        <svg class="toc-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </summary>
+      <nav class="toc-navigation" aria-label="글 목차">
         <ol class={ui.tocList}>
-          {headings.filter(heading => heading.depth <= 3).map(heading => <li class:list={[heading.depth >= 3 && 'depth-3']}>
-            <a class={heading.depth >= 3 ? ui.tocLinkNested : ui.tocLink} href={`#${heading.slug}`} data-toc-link data-heading-id={heading.slug}>{heading.text}</a>
+          {tocHeadings.map(heading => <li class:list={[heading.depth >= 3 && 'depth-3']}>
+            <a class={heading.depth >= 3 ? ui.tocLinkNested : ui.tocLink} href={`#${heading.slug}`} data-toc-link data-heading-id={heading.slug} data-astro-reload>{heading.text}</a>
           </li>)}
         </ol>
-      </aside>}
-    </div>
+      </nav>
+    </details>}
+    <div class={ui.contentPanel}><Content /></div>
     {post.tags.length > 0 && <nav class="mt-8 flex flex-wrap gap-2" aria-label={post.kind === 'notes' ? '메모 태그' : '글 태그'}>
       {post.tags.map(tag => <a class={ui.tagPill} href={`/tags/${encodeURIComponent(labelSlug(tag))}/`}>{tag}</a>)}
     </nav>}

@@ -757,35 +757,54 @@ html[data-theme="dark"] .shiki span {
   }
 }
 
-/* 본문 축은 고정하고, 넓은 화면에서만 목차를 바깥에 둔다. */
-.post-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
-  gap: 3rem;
-}
-
 .toc {
+  border-block: 1px solid var(--color-line);
+  margin-bottom: 2rem;
   min-width: 0;
-  border-top: 1px solid var(--color-line);
-  padding-top: 1.5rem;
 }
 
-@media (min-width: 80rem) {
-  .post-layout {
-    grid-template-columns: minmax(0, 1fr) 12rem;
-    margin-inline-end: -15rem;
-  }
+.toc-summary {
+  align-items: center;
+  color: var(--color-muted-strong);
+  cursor: pointer;
+  display: flex;
+  font-size: 0.875rem;
+  font-weight: 600;
+  justify-content: space-between;
+  line-height: 1.5;
+  list-style: none;
+  min-height: 44px;
+  padding-block: 0.75rem;
+}
 
-  .toc {
-    position: sticky;
-    top: var(--header-offset);
-    max-height: calc(100dvh - var(--header-offset) - 1.5rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    border-top: 0;
-    padding-top: 0;
-  }
+.toc-summary::-webkit-details-marker {
+  display: none;
+}
+
+.toc-summary:hover {
+  color: var(--color-accent-ink);
+}
+
+.toc-summary:focus-visible {
+  border-radius: var(--radius-xs);
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.toc-chevron {
+  flex-shrink: 0;
+  transition: transform 160ms;
+}
+
+.toc[open] > .toc-summary .toc-chevron {
+  transform: rotate(180deg);
+}
+
+.toc-navigation {
+  max-height: min(50dvh, 24rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 0.75rem;
 }
 
 .post-link:is(:hover, :focus-visible) .post-title {
@@ -835,6 +854,7 @@ html[data-theme="dark"] .shiki span {
 .toc a {
   border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
   display: block;
+  overflow-wrap: anywhere;
   padding: 4px 14px;
 }
 

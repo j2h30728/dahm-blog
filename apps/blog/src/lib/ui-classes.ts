@@ -141,15 +141,13 @@ export const ui = {
 
   meta:
     "meta m-0 flex flex-wrap items-center gap-2 text-[length:var(--type-meta)] leading-[1.6] text-muted-strong tabular-nums",
-  postLayout:
-    "post-layout",
   contentPanel:
     "content content-panel w-full min-w-0",
 
   toc:
     "toc",
-  tocTitle:
-    "mb-2 mt-0 px-4 py-2 text-[0.875rem] font-semibold text-muted",
+  tocSummary:
+    "toc-summary",
   tocList: "list-none",
   tocItem: "",
   tocItemNested: "",
