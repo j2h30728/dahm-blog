@@ -64,6 +64,7 @@ const menu = [{ label: '글', href: '/posts/', id: 'posts' }, { label: '메모',
     <ClientRouter />
   </head>
   <body data-search-target={searchTarget}>
+    <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
     <header class={ui.siteHeader}>
       <nav class={ui.nav} aria-label="주 메뉴">
         <a class={ui.brand} href="/" data-brand>Dahm</a>
@@ -85,7 +86,7 @@ const menu = [{ label: '글', href: '/posts/', id: 'posts' }, { label: '메모',
         </form>
       </nav>
     </header>
-    <main class={ui.shell}><slot /></main>
+    <main id="main-content" tabindex="-1" class={ui.shell}><slot /></main>
     <footer class={ui.siteFooter}>
       <div class={ui.footerInner}>
         <span class={ui.footerBrand}>Dahm</span>

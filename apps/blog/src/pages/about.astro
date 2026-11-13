@@ -2,15 +2,19 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { ui } from '../lib/ui-classes';
 ---
-<BaseLayout title="About" description="담을 소개하는 페이지입니다." active="about">
+<BaseLayout title="소개" description="담을 소개하는 페이지입니다." active="about">
   <section aria-labelledby="about-title" class={ui.homeIntro} id="about">
-    <h1 class={ui.homeTitle} id="about-title">안녕하세요.</h1>
-    <div class={ui.aboutCopy}>
-      <p>프론트엔드 개발자 이지현입니다.</p>
+    <header class={ui.archiveIntro}>
+      <div class={ui.sectionHeading}>
+        <h1 class={ui.archiveTitle} id="about-title">소개</h1>
+      </div>
+      <p class={ui.archiveSubtitle}>안녕하세요. 프론트엔드 개발자 이지현입니다.</p>
+    </header>
+    <div class={ui.aboutCopy} data-about-copy>
       <p>사용자에게 자연스러운 화면과 오래 다루기 좋은 구조를 고민합니다.</p>
       <p>이곳에는 개발하며 배운 것과 선택의 이유, 일상에서 남긴 생각을 기록합니다.</p>
     </div>
-    <div aria-label="Profile links" class={ui.homeSummary}>
+    <div aria-label="프로필 링크" class={ui.homeSummary}>
       <a class={ui.summaryPill} href="https://github.com/j2h30728">GitHub</a>
       <a class={ui.summaryPill} href="mailto:rachel2148072@gmail.com">Email</a>
       <a class={ui.summaryPill} href="https://velog.io/@rachel28/posts">Velog</a>

@@ -1,13 +1,13 @@
-const pageFrame = "mx-auto w-full max-w-[1104px] px-6 max-[640px]:px-[18px]";
+const pageFrame = "mx-auto w-full max-w-[768px] px-6 max-[640px]:px-5";
 const pageHeading = "text-[clamp(1.75rem,3vw,2.25rem)] font-bold leading-[1.35] tracking-[-0.02em] text-ink text-balance";
 
 export const ui = {
   siteHeader:
     "sticky top-0 z-10 border-b border-header-border bg-header-bg",
   nav:
-    `${pageFrame} relative grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-[var(--space-3)] gap-y-[var(--space-2)] py-4 max-[640px]:gap-x-1.5 max-[640px]:py-2.5`,
+    `${pageFrame} relative grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-[var(--space-3)] gap-y-[var(--space-2)] py-3 max-[640px]:gap-x-1 max-[640px]:py-2`,
   brand:
-    "inline-flex min-w-0 items-center text-ink text-[1.4rem] font-[760] max-[640px]:text-xl tracking-[-0.01em] transition-opacity duration-[160ms] hover:opacity-70 hover:no-underline",
+    "inline-flex min-w-0 items-center text-ink text-[1.5rem] font-bold max-[640px]:text-xl tracking-[-0.01em] transition-opacity duration-[160ms] hover:opacity-70 hover:no-underline",
   navLinks:
     "flex min-w-0 items-center justify-end gap-1 text-[0.9375rem] max-[640px]:gap-0 max-[640px]:text-[0.875rem]",
   navActions:
@@ -28,11 +28,11 @@ export const ui = {
   navIconButton:
     "interaction-overlay group flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-[var(--radius-pill)] border border-transparent bg-transparent p-0 text-muted-strong transition-colors duration-[160ms]",
   shell:
-    `${pageFrame} flex-1 pb-20 pt-14 max-[640px]:pb-12 max-[640px]:pt-9`,
+    `${pageFrame} flex-1 pb-20 pt-10 max-[640px]:pb-12 max-[640px]:pt-7`,
   siteFooter:
-    "shrink-0 border-t border-line",
+    "shrink-0",
   footerInner:
-    `${pageFrame} grid grid-cols-[minmax(0,1fr)_auto] items-start gap-[var(--space-6)] py-8 text-[0.875rem] max-[640px]:grid-cols-1 max-[640px]:gap-[var(--space-3)]`,
+    `${pageFrame} grid grid-cols-[minmax(0,1fr)_auto] items-start gap-[var(--space-6)] border-t border-line py-8 text-[0.875rem] max-[640px]:grid-cols-1 max-[640px]:gap-[var(--space-3)]`,
   footerBrand:
     "block font-[720] text-muted-strong",
   footerMeta:
@@ -52,13 +52,13 @@ export const ui = {
   pageTitle:
     `page-title mb-3 mt-0 ${pageHeading}`,
   aboutCopy:
-    "max-w-[768px] space-y-5 text-[1.125rem] leading-[1.8] max-[640px]:text-[1.0625rem] text-muted-strong [&_p]:m-0",
+    "flex flex-col gap-[1.15em] text-[length:var(--type-body)] leading-[1.75] text-ink-soft break-keep wrap-anywhere [&_p]:m-0",
   pageSubtitle:
     "m-0 max-w-[720px] wrap-anywhere text-[clamp(1rem,2vw,1.18rem)] text-muted",
   homeSummary:
     "mt-6 flex flex-wrap items-center gap-x-5 gap-y-2",
   summaryPill:
-    "inline-flex min-h-10 items-center text-[0.85rem] text-muted-strong underline decoration-line-strong underline-offset-4 transition-colors hover:text-ink",
+    "inline-flex min-h-11 items-center text-[0.875rem] text-accent underline decoration-line-strong underline-offset-4 transition-colors hover:text-accent-ink",
 
   latestStrip:
     "latest-strip relative grid grid-cols-[minmax(0,1fr)_auto] items-end gap-6 overflow-hidden border-b border-line py-[26px] max-[860px]:grid-cols-1",
@@ -84,12 +84,12 @@ export const ui = {
     "text-[0.8125rem] text-muted-strong",
   pageSection: "scroll-mt-28",
   archive: "w-full",
-  archiveIntro: "mb-6",
+  archiveIntro: "mb-7",
   archiveTitle:
-    `mb-2 mt-0 ${pageHeading}`,
+    "mb-2 mt-0 text-[1.5rem] font-bold leading-[1.4] tracking-[-0.015em] text-ink",
   archiveSubtitle:
     "m-0 text-base leading-[1.7] text-muted-strong",
-  sectionHeading: "mb-[18px] flex items-end justify-between max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-[var(--space-2)]",
+  sectionHeading: "mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2",
   sectionMeta:
     "m-0 text-[0.875rem] font-medium tracking-[0] text-muted tabular-nums",
   activeSearch:
@@ -121,33 +121,33 @@ export const ui = {
   seriesAction:
     "whitespace-nowrap pt-1 text-[0.875rem] font-medium tracking-[0] text-muted max-[640px]:pt-0",
 
-  postList: "post-list",
+  postList: "post-list space-y-[2rem] max-[640px]:space-y-[1.75rem]",
   postCard:
-    "post-item border-b border-line last:border-b-0",
+    "post-item",
   postCardLink:
-    "interaction-overlay -mx-4 block rounded-[var(--radius-md)] px-4 py-7 text-inherit transition-colors duration-[160ms] hover:text-inherit hover:no-underline max-[640px]:py-6",
-  postMeta: "post-meta flex flex-wrap items-baseline gap-x-2",
-  postDate: "mt-3 block text-[0.875rem] text-muted-strong tabular-nums",
-  postCategory: "mt-3 text-[0.875rem] text-muted-strong",
+    "post-link block rounded-[var(--radius-xs)] text-inherit hover:text-inherit hover:no-underline",
+  postMeta: "post-meta mb-1 flex flex-wrap items-baseline gap-x-2 text-[length:var(--type-list-meta)] leading-[1.6] text-muted-strong",
+  postDate: "block tabular-nums",
+  postCategory: "text-muted-strong",
   postTitle:
-    "mb-2.5 mt-0 block text-[clamp(1.25rem,2.1vw,1.5rem)] font-bold leading-[1.45] text-inherit break-words",
+    "post-title mb-1.5 mt-0 text-[length:var(--type-list-title)] font-bold leading-[1.45] tracking-[-0.015em] text-accent break-keep wrap-anywhere text-pretty",
   postDescription:
-    "m-0 line-clamp-2 text-base leading-[1.7] text-muted-strong",
+    "m-0 line-clamp-2 text-[0.9375rem] leading-[1.75] text-ink-soft",
 
   articleHeader:
-    "mb-10 max-w-[768px] max-[1119px]:mx-auto max-[640px]:mb-8",
+    "mb-12 max-[640px]:mb-9",
   articleTitle:
-    "mb-5 mt-0 text-[clamp(2rem,4vw,3rem)] font-bold leading-[1.3] tracking-[-0.025em] text-ink break-words",
+    "mb-4 mt-0 text-[length:var(--type-article-title)] font-bold leading-[1.4] tracking-[-0.02em] text-ink break-keep wrap-anywhere text-pretty",
 
   meta:
-    "meta m-0 flex flex-wrap items-center gap-2 text-[0.9375rem] text-muted tabular-nums",
+    "meta m-0 flex flex-wrap items-center gap-2 text-[length:var(--type-meta)] leading-[1.6] text-muted-strong tabular-nums",
   postLayout:
-    "post-layout grid grid-cols-[minmax(0,1fr)_240px] items-start gap-12 max-[1119px]:grid-cols-1",
+    "post-layout",
   contentPanel:
-    "content content-panel w-full min-w-0 max-w-[768px] max-[1119px]:mx-auto",
+    "content content-panel w-full min-w-0",
 
   toc:
-    "toc sticky top-[104px] max-h-[calc(100dvh-128px)] self-start overflow-y-auto overscroll-contain border-l border-line max-[1119px]:static max-[1119px]:mx-auto max-[1119px]:max-h-none max-[1119px]:w-full max-[1119px]:max-w-[768px] max-[1119px]:border-l-0 max-[1119px]:border-t max-[1119px]:pt-6",
+    "toc",
   tocTitle:
     "mb-2 mt-0 px-4 py-2 text-[0.875rem] font-semibold text-muted",
   tocList: "list-none",

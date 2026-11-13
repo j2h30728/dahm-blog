@@ -33,9 +33,11 @@ const tags = getTitTags(posts);
             const date = getTitDateParts(post.date);
             const entryTags = [...new Set(post.tags)];
             return <li class="tit-row" data-post-card data-href={post.href} data-search={[post.title, post.description, post.excerpt, post.series, ...post.tags].filter(Boolean).join(' ').toLowerCase()} data-tags={JSON.stringify(entryTags)}>
-              <time class="tit-date" datetime={post.date} aria-label={date.dateLabel}>{date.dayLabel}</time>
               <a class="tit-entry-title" href={post.href}>{post.title}</a>
-              <div class="tit-entry-tags" aria-label="태그">{entryTags.map(tag => <span class="tit-entry-tag">{tag}</span>)}</div>
+              <div class="tit-entry-meta">
+                <time class="tit-date" datetime={post.date} aria-label={date.dateLabel}>{date.dayLabel}</time>
+                <div class="tit-entry-tags" aria-label="태그">{entryTags.map(tag => <span class="tit-entry-tag">{tag}</span>)}</div>
+              </div>
             </li>;
           })}
         </ul>
