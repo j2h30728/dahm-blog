@@ -1,168 +1,107 @@
-# Notion 게시 워크플로
+# Obsidian 작성·발행
 
-게시 원본은 기존 `😎 blog` DB 하나입니다. 저장소 Markdown·샘플 글·이전 생성물을 게시 입력으로 읽지 않습니다.
+## 원본과 공개 사본
 
-## 설정
+원본은 Obsidian vault의 `blog` 폴더입니다. 원본 파일은 사이트에서 수정하지 않습니다.
 
-Notion 개발자 포털에서 내부 연결을 만들고 `Read content` 권한을 부여한 뒤 `Content access`에 기존 DB를 연결합니다.
-
-```dotenv
-NOTION_TOKEN=발급받은_API_토큰
-NOTION_DATABASE_ID=308e8c228b6581a7ad3ac188b53210d0
-NOTION_DATA_SOURCE_ID=308e8c22-8b65-81ce-b792-000b7eb2b8bf
-PUBLIC_SITE_URL=https://실제-블로그-도메인
+```text
+blog/
+├─ posts/   # 정리된 글
+├─ notes/   # 짧은 메모
+└─ assets/  # 첨부
 ```
 
-루트 `.env.local` 또는 `.env`, Vercel 환경변수에 입력합니다. 우선순위는 `process.env > .env.local > .env`입니다. 토큰은 서버/빌드에서만 사용하며 Git과 채팅에 넣지 않습니다. 데이터 소스 ID가 있으면 직접 조회하고, DB ID만 있으면 단일 데이터 소스를 찾아 사용합니다.
+`publish: true`인 Markdown만 사이트로 내보냅니다. YAML의 boolean `true`만 공개이며, 누락·`false`·문자열 `"true"`는 공개하지 않습니다. 비공개 항목의 제목과 첨부도 내보내지 않습니다. 공개 글이 참조하는 첨부는 공개 파일이므로, 이미지 안에 포함된 정보도 발행 전에 확인합니다.
 
-## 작성 속성
+저장소에는 공개 사본만 둡니다.
 
-| Notion 속성 | 블로그 값 | 조건 |
-| --- | --- | --- |
-| `title` | 제목 | 필수 |
-| `summary` | description | 필수 |
-| `date` | 발행일 | 필수 |
-| `tags` | 태그 | 한 개 이상 |
-| `slug` | /posts/slug/ | 필수, 문자·숫자·점·밑줄·하이픈의 단일 경로 |
-| `category` | topic | 비어 있으면 general |
-| `section` | 글 분류 | 선택, `기술`/`tech` 또는 `일상`/`life`; 없거나 비어 있으면 `tech` |
-| `status` | 공개 여부 | published만 게시 |
-| `type` | 글 종류 | post만 게시 |
-| `series`, `seriesOrder` | 시리즈·순서 | 선택 |
-| 페이지 수정 시각 | updated | API last_edited_time |
+- `apps/blog/src/content/posts/`, `notes/`: 공개 Markdown
+- `apps/blog/src/content/export-manifest.json`: 파일 검증과 배포용 manifest
+- `apps/blog/public/blog-assets/`: 공개 문서가 참조한 첨부
 
-`author`, `thumbnail` 속성은 현재 UI에서 사용하지 않습니다. 로컬 파일의 frontmatter나 별도 페이지 ID 예외 매핑도 사용하지 않습니다. URL 유지를 위해 세 기존 글의 DB slug를 `rsc-dot-notation`, `esmodule-singleton`, `axios-cancel`로 정리했습니다.
+위 경로는 동기화가 관리하므로 직접 수정하지 않습니다. 글·메모를 비공개로 바꾸거나 삭제하면 다음 동기화 때 공개 사본과 더 이상 사용하지 않는 첨부가 제거됩니다. Notion API, Notion 이미지 만료 처리, S3 업로더는 사용하지 않습니다.
 
-Notion DB의 `section` 선택 속성에서 `기술` 또는 `일상`을 선택합니다. 비어 있는 글은 기술 글로 동기화됩니다. API에서는 `tech`와 `life` 값도 지원하며, 지원하지 않는 선택값은 잘못된 분류를 조용히 게시하지 않도록 동기화 오류로 처리합니다. 기존 `category`는 주제(`topic`) 용도이며 글 분류와 별개입니다.
+## 로컬 설정
 
-## 동기화와 확인
+Node 24와 저장소의 pnpm 버전을 사용합니다. `.env.local`에 아래 값을 설정합니다. 이 파일은 Git에서 제외됩니다.
+
+```dotenv
+OBSIDIAN_BLOG_DIR=/absolute/path/to/Obsidian/blog
+PUBLIC_SITE_URL=https://your-blog.example
+```
+
+기존 프로세스 환경변수가 가장 우선하고, 다음은 `.env.local`, `.env` 순서입니다. 개인 PC의 절대 경로를 Vercel에 설정하지 않습니다.
 
 ```bash
+pnpm install
 pnpm dev
-# 서버가 실행 중일 때 글 변경 반영:
+```
+
+`pnpm dev`는 최초 동기화 후 Obsidian 폴더 변경을 감시합니다. 원본을 저장하면 공개 사본을 갱신하고 Astro 개발 서버를 자동으로 다시 시작합니다. 빈 메모 목록에서 첫 메모를 공개하거나 마지막 공개 메모를 숨겨도 이전 데이터가 남지 않도록 처리합니다. 동기화 오류가 생기면 터미널에 원인이 표시되고, 원본을 고쳐 저장하면 다시 시도합니다.
+
+개발 서버 없이 공개 사본만 갱신하려면:
+
+```bash
 pnpm sync:content
 ```
 
-첫 명령은 API 동기화에 성공해야 개발 서버를 시작합니다. 공개 글이 0개이면 빈 목록을 생성합니다. 비공개·삭제한 글은 이전 MDX·인덱스·에셋에서 제거합니다. API 실패 시 과거 글을 읽어 대신 게시하지 않습니다.
+## 글과 메모 속성
 
-목록·태그·시리즈·검색·RSS·사이트맵은 모두 같은 공개 글 메타데이터를 사용합니다. 표준 Markdown 내부 링크로 backlinks와 링크 미리보기를 만들고, 코드 예제의 링크는 제외합니다. 코드 복사·목차 활성화도 유지합니다.
-
-탑메뉴는 `기술`(`/tech/`)·`일상`(`/life/`)·`소개`(`/about/`)이며, 로고는 전체 공개 글을 발행일 최신순으로 보여주는 홈(`/`)으로 이동합니다. 본문에 중복 분류 탭은 표시하지 않습니다. 상세 글에서도 해당 분류 메뉴가 활성화됩니다.
-
-홈과 홈 검색 결과에서는 글 날짜 옆에 작은 `기술`·`일상` 분류를 표시합니다. 분류별 목록·태그·시리즈 목록에서는 중복 표시하지 않습니다.
-
-헤더·본문·푸터는 `ui-classes.ts`의 공통 `pageFrame`을 사용합니다. 최대 너비는 1104px, 좌우 여백은 기본 24px·모바일 18px입니다. 상세 본문은 최대 768px로 제한하고, 1120px 이상 화면에서는 48px 간격과 240px 목차를 함께 배치합니다. 그보다 작은 화면에서는 본문을 가운데 놓고 목차를 본문 아래에 표시합니다. 긴 데스크톱 목차는 화면 높이 안에서 스크롤합니다.
-
-벨로그 본문 타이포그래피를 참고해 본문 18px·모바일 17px, 행간 1.75, 자간 -0.004em을 사용합니다. 글꼴은 운영체제의 한국어·영문 시스템 글꼴이며 외부 웹폰트를 요청하지 않습니다. 목록 제목은 20~24px, 설명은 16px·최대 두 줄이고 날짜와 분류는 14px입니다. 게시글 제목은 일반 페이지 제목과 분리하며, 본문의 제목·문단·인용·코드·이미지에 단계별 크기와 여백을 적용합니다. 라이트·다크 테마에서 본문·보조 정보·링크의 색상을 나누고 본문 링크는 강조색과 밑줄로 표시합니다.
-
-기본 테마는 운영체제 설정과 무관하게 라이트 모드입니다. 사용자가 테마 버튼으로 선택한 라이트·다크 모드는 저장해 다음 방문에도 유지하며, 저장값이 없거나 유효하지 않으면 라이트 모드로 표시합니다. 초기 마운트에서는 저장값을 덮어쓰지 않습니다.
-
-코드 강조는 기존 GitHub 라이트·다크 테마를 사용하며, 실제 코드 배경에서 대비가 부족한 토큰색은 Shiki의 테마별 `colorReplacements`로 보정합니다. 작은 코드 글자의 전경·배경 대비는 4.5:1 이상으로 확인합니다. 검색창 placeholder는 불투명한 보조 글자색을 사용하고, 입력 영역에는 장식 구분선과 별개인 `control-border` 토큰을 적용해 비포커스 상태에서도 경계를 구분합니다. 입력 경계와 단색 포커스 윤곽의 대비는 3:1 이상을 기준으로 확인합니다.
-
-검색은 홈에서는 전체 글, 기술·일상 목록과 상세 글에서는 해당 분류를 대상으로 합니다. 검색 해제는 현재 목록 범위를 유지하며, 메뉴·로고로 이동하면 검색어와 검색창을 초기화합니다. 소개·태그·시리즈에서 시작한 검색은 전체 글을 대상으로 합니다.
-
-로고는 문서를 새로고침하지 않고 검색어 없는 `/` 홈으로 이동합니다. 같은 홈에서는 URL 상태를 갱신하고, 상세 글을 거쳐 돌아올 때도 도착한 홈 주소의 검색어를 정리해 전체 목록을 복원합니다. 현재 테마와 화면 배경을 유지하며, 뒤로가기로 과거 검색 기록을 다시 볼 수 있습니다.
-
-기존 `/posts/`는 기술 기본 목록으로 유지합니다. `/posts?category=life`와 `/posts/?category=life`는 Vercel에서 `/life/`로 영구 리디렉션(308)합니다. 조건은 목록 경로의 `category=life`에만 적용하므로 기술 목록, 잘못된 분류 값, `/posts/:slug/` 상세 글 주소는 이동시키지 않습니다. 홈 canonical은 `/`, 새 분류 목록은 각각 `/tech/`, `/life/`이며, Vercel의 과거 `/`→`/posts/` 리디렉션은 제거했습니다.
-
-Vercel은 리디렉션할 때 원래 쿼리를 자동 전달합니다. 예를 들어 `/posts/?category=life&q=검색&utm_source=test`는 `/life/?category=life&q=검색&utm_source=test`로 이동합니다. 남아 있는 `category=life`는 `/life/`의 명시적 일상 분류를 바꾸지 않으며, 검색어와 기타 쿼리는 유지됩니다. 이 주소의 canonical은 쿼리 없는 `/life/`입니다.
-
-쿼리 기반 `has` 조건은 Vercel 배포 환경에서 적용됩니다. Next 로컬 서버와 정적 파일 서버에서 308을 재현한 것으로 간주하지 않으며, 배포 후 두 레거시 주소의 상태 코드·목적지·검색어 전달과 도착 페이지의 canonical을 확인합니다.
-
-태그 URL은 동기화가 생성한 `tagSlugs`, 시리즈 URL은 `seriesSlug`를 앱이 그대로 사용합니다. Unicode 문자를 보존하며 `C++`와 `C#`처럼 서로 다른 이름이 같은 URL로 정규화되거나 이름이 빈 URL을 만들면 출력 전에 오류로 중단합니다.
-
-## 본문과 미디어
-
-CJK 문장과 문장부호가 붙어 문자로 남은 `**강조(설명)**에서는` 형태는 원문과 AST text가 일치할 때만 강조로 보완합니다. escape된 기호와 코드·링크 주소는 재해석하지 않습니다.
-
-- 제목, 단락, 목록, 인용, 링크, 코드, 이미지와 일반 표를 변환합니다.
-- 본문 이미지는 클릭·키보드로 확대합니다. ESC·바깥 영역·닫기 버튼으로 닫으며, 모바일 화면 안에 원래 비율로 표시합니다. 닫으면 원래 이미지로 포커스와 배경 스크롤 상태를 복원합니다. 이미지 링크도 확대를 지원하고 보조키 클릭은 원래 링크 동작을 유지합니다.
-- 이미지 캡션 끝에 `로그인 화면 {width=360}`처럼 적으면 본문에서 가로 360px로 표시하고, 작은 화면에서는 부모 너비 안으로 축소합니다. 높이는 원래 비율을 유지합니다. 크기 표기는 블로그 캡션·대체 텍스트·확대 안내에서 제거하고 `로그인 화면`만 표시합니다. `{width=360}`만 적으면 캡션은 표시하지 않습니다. 너비 생략 시 기존 자동 크기를 유지하고 설명이 있으면 이미지 아래에 표시합니다. 너비는 단위 없는 1~10000의 정수(px)만 지원하며 잘못된 표기는 텍스트로 보존합니다. 노션에서는 표기가 그대로 보이며, 블로그의 다음 동기화·빌드 때 반영됩니다.
-- 본문의 첫 비어 있지 않은 줄이 메타데이터 제목과 같은 H1이면 중복 표시를 막기 위해 해당 H1 하나만 제거합니다. 다른 H1과 코드 예제의 `#`은 보존합니다.
-- Notion의 단일 개행은 화면 줄바꿈으로, 빈 줄은 문단 구분으로 표시합니다. 의도적으로 escape한 Markdown 문자는 원문 그대로 보존합니다.
-- 본문 요소와 코드 강조는 밝은 테마와 어두운 테마에서 같은 구조·간격 정책을 사용하며 색상만 각 테마에 맞춥니다.
-- callout은 강조 제목·본문, toggle은 펼친 제목·본문으로 표시합니다.
-- PDF·오디오·영상은 일반 MDX 미디어로 표시합니다.
-- 병합/중첩 표, 표 안의 fenced code, columns 등 미지원 XML·잘린 본문은 오류로 중단합니다. 수식 전용 렌더러는 추가하지 않습니다.
-- Notion/S3의 임시 첨부 URL은 HTTPS로 내려받아 영속화합니다. 외부 이미지 URL은 유지합니다. 파일별 최대 크기는 25MB입니다.
-- Notion에서 생성한 코드 예제는 보존하고, 일반 텍스트의 JSX·중괄호는 실행되지 않도록 이스케이프합니다.
-
-임시 본문 처리·다운로드 파일은 `.content-sync/notion-*`에 만들고 실행 후 삭제합니다. 최종 MDX는 `apps/blog/src/content/posts`, 첨부는 `apps/blog/public/post-assets`에 생성합니다. 첨부 파일명 `notion-<해시>.<확장자>`는 Git에서 제외됩니다.
-
-동기화는 전체 결과를 준비한 뒤 생성물을 교체합니다. 교체 도중 오류가 생기면 이전 생성물을 복원하며, 복원까지 실패하면 복구용 백업 경로를 표시합니다.
-
-## 배포
-
-이미지 사전 변환과 S3·CloudFront의 실행 모드·개인 계정 인증·전환 검증은 [이미지 CDN 운영](./IMAGE-CDN.md)을 참고합니다.
-
-Vercel의 빌드 명령 `pnpm build:blog`가 최신 공개 글을 가져옵니다. Notion 변경으로 배포를 자동 시작하는 웹훅은 아직 없습니다. 운영 반영은 Vercel 재배포 또는 새 Git 배포로 진행합니다.
-
-API·출력 검사 중에는 `--out`, `--assets`, `--manifest`, `--public-index`, `--public-post-index`, `--search-index`, `--post-module-map`으로 생성 경로만 바꿀 수 있습니다. 로컬 파일 게시 모드·vault·preview 입력은 지원하지 않습니다.
-
-## 댓글 (Giscus)
-
-글 상세 하단에 GitHub 로그인 기반 댓글을 표시합니다. 댓글은 공개 저장소 `j2h30728/dahm-blog`의 GitHub Discussions에 저장됩니다. 목록·소개·태그·시리즈 페이지에는 댓글을 표시하지 않습니다.
-
-### GitHub 연결
-
-현재 `j2h30728/dahm-blog`의 Discussions와 giscus 앱을 연결했으며, `Announcements` 카테고리를 사용합니다. 저장소·저장소 ID·카테고리·카테고리 ID는 `src/lib/comments.ts`의 공개 설정으로 관리합니다. 별도 Vercel 환경변수나 GitHub 토큰·OAuth 비밀키 없이 기본 활성화됩니다.
-
-저장소나 카테고리를 옮길 때는 [Giscus 설정](https://giscus.app/ko)에서 해당 공개 ID를 확인해 코드를 함께 변경합니다. 새 저장소는 공개 저장소여야 하며, 소유자 계정으로 **Settings → Features → Discussions**를 켜고 [giscus 앱](https://github.com/apps/giscus)에 해당 저장소를 연결해야 합니다. 카테고리는 공지(Announcements) 형식을 권장합니다.
-
-댓글을 잠시 끄려면 로컬 루트 `.env.local` 또는 Vercel 환경변수에 다음 값을 지정하고 다시 빌드합니다. `false`는 앞뒤 공백과 대소문자에 관계없이 적용하며, 미설정·공백·`true`는 기본 활성 상태입니다.
-
-```dotenv
-GISCUS_ENABLED=false
+```yaml
+---
+title: 표시할 제목
+publish: false
+date: 2026-11-12
+slug: stable-url
+section: 기술
+tags:
+  - React
+summary: 선택적으로 작성하는 설명
+---
 ```
 
-Vercel의 `pnpm build:blog` 실행 시 설정이 정적 페이지에 반영됩니다. 코드 또는 환경변수 변경 후에는 새 배포가 필요합니다. 비활성화하면 댓글 영역과 외부 위젯을 모두 표시하지 않습니다.
+- `title`: 제목. 비어 있으면 파일명을 사용합니다.
+- `publish`: 공개 여부. 초안은 `false`로 둡니다.
+- `date`: 최초 발행일. 공개할 때 유효한 날짜가 필요합니다.
+- `slug`: 최초 공개 후 유지합니다. 글은 `/posts/slug/`, 메모는 `/notes/slug/`입니다. 글 제목이나 파일명을 바꾸더라도 `slug`를 유지하면 주소를 보존합니다.
+- `section`: 글의 `기술` 또는 `일상` 분류입니다. 메모는 별도의 메모 목록에 표시합니다.
+- `tags`: 선택 속성. 없는 경우 빈 목록입니다.
+- `summary`: 선택 속성. 생략하면 본문 텍스트에서 설명을 만듭니다.
 
-### 동작과 확인
+기존 `updated`, `series`, `seriesOrder`도 지원합니다. 비공개 초안에는 발행 속성을 모두 채울 필요가 없습니다. 같은 종류에서 중복된 slug, 잘못된 공개 메타데이터, 누락된 첨부는 오류로 중단합니다. 기존 정상 공개 사본은 실패한 동기화로 교체하지 않습니다.
 
-댓글은 `post:<slug>`를 정확히 일치시키는 방식으로 연결합니다. 글 제목이나 도메인을 바꿔도 같은 댓글을 사용하며, 글의 `slug`를 바꾸면 다른 댓글로 연결됩니다. 기존 댓글을 유지하려면 발행 후 `slug`를 유지합니다.
+현재 메모가 모두 비공개라면 `/notes/`에는 빈 상태가 표시됩니다. 메모를 작성하고 `publish: true`로 바꾸면 다음 동기화에 포함됩니다.
 
-댓글 영역 근처에 도달하면 공식 `@giscus/react` 위젯을 불러옵니다. 한국어와 상단 입력창을 사용하고, 댓글 위에 좋아요 등 이모지 반응 버튼을 표시합니다. 반응을 남길 때도 GitHub 로그인이 필요합니다. 블로그의 라이트·다크 선택에 맞춰 위젯 테마도 바뀝니다. 글을 이동하면 댓글 위젯을 새로 만들어 이전 글의 댓글이 남지 않게 합니다. 위젯 접근이 어려우면 댓글 제목 옆 **GitHub에서 보기**로 저장소의 Discussions를 열 수 있습니다.
+## 이미지와 링크
 
-설정 후에는 글 두 개를 오가며 각각 다른 댓글 스레드가 표시되는지 확인합니다. 다크 상태로 글에 직접 진입한 뒤 댓글까지 스크롤하고, 테마 전환·모바일 너비도 확인합니다. 실제 댓글 작성은 GitHub 로그인과 Giscus OAuth 승인이 필요하며, 작성한 댓글은 GitHub에서도 관리할 수 있습니다.
+Obsidian에서 이미지 모서리를 조절해 저장한 크기를 읽습니다.
 
-공식 자료: [Giscus 설정](https://giscus.app/ko), [React 컴포넌트](https://github.com/giscus/giscus-component), [테마·메시지 연동](https://github.com/giscus/giscus/blob/main/ADVANCED-USAGE.md).
-
-## Google Analytics 4
-
-GA4는 `NODE_ENV=production`과 `VERCEL_ENV=production`이고 `NEXT_PUBLIC_GA_MEASUREMENT_ID`가 있을 때만 활성화됩니다. 로컬 개발·로컬 정적 빌드·Vercel Preview에서는 수집하지 않습니다. ID를 생략하거나 공백만 입력하면 GA 없이 정상 동작합니다.
-
-### GA4 웹 스트림 설정
-
-1. [Google Analytics](https://analytics.google.com/)에서 사용할 계정과 GA4 속성을 선택합니다. 처음 생성한다면 보고 시간대를 대한민국(Asia/Seoul)으로 설정합니다.
-2. **관리 → 데이터 스트림 → 웹**에서 실제 운영 도메인의 스트림을 생성하거나 기존 스트림을 엽니다.
-3. 스트림 세부정보의 `G-...` 형태 **측정 ID**를 확인합니다. 현재 블로그에 사용할 ID는 `G-VEGH5K4QQF`입니다.
-4. **향상된 측정 → 페이지 조회 → 고급 설정**에서 페이지 로드와 브라우저 기록 이벤트 기반 페이지 변경을 모두 켭니다. 내부 링크 이동과 뒤로가기도 이 설정으로 수집합니다.
-5. 기본 스크롤(페이지의 90% 도달)과 외부 링크 클릭 측정도 켭니다. 방문자·유입 경로·글별 조회수는 GA4 보고서에서 확인합니다.
-
-공통 레이아웃의 `GoogleAnalytics` 컴포넌트가 hydration 이후 Google tag를 한 번 초기화합니다. 페이지뷰는 GA4 자동 수집을 사용하므로 별도 수동 `page_view` 전송이나 동일 스트림의 태그를 추가하면 중복 집계될 수 있습니다.
-
-### Vercel 활성화
-
-[dahm-blog 프로젝트](https://vercel.com/j2h30728s-projects/dahm-blog)의 **Settings → Environment Variables**에서 아래 값을 **Production** 환경에만 등록합니다.
-
-```dotenv
-NEXT_PUBLIC_GA_MEASUREMENT_ID=G-VEGH5K4QQF
+```markdown
+![[blog/assets/screenshot.png|360]]
+![[blog/assets/screenshot.png|360x480]]
 ```
 
-측정 ID는 브라우저에 공개되는 식별자이며 API 비밀키가 아닙니다. 정적 내보내기에서는 빌드 시 ID와 활성화 여부가 결정되므로 코드 반영과 환경변수 저장 후 새 Production 배포가 필요합니다. 비활성화할 때도 변수를 지운 뒤 다시 배포합니다. Production 빌드 산출물을 다른 도메인에 복사하면 같은 ID로 수집하므로 로컬·Preview는 각 환경에서 새로 빌드합니다.
+너비만 지정하면 원래 비율을 유지하며, 작은 화면에서는 본문 너비를 넘지 않습니다. 너비·높이를 모두 지정한 값도 전달합니다. 이미지 클릭·키보드로 확대할 수 있습니다. 코드 예제 안의 이미지 문법은 변환하지 않습니다. 일반 Markdown의 상대 이미지·첨부 링크도 지원합니다.
 
-### 수집 확인
+공개 노트끼리의 위키 링크와 상대 Markdown 링크는 사이트 주소로 연결합니다. 비공개 노트를 가리키는 내부 링크는 글자로 표시하며 해당 노트나 첨부를 함께 게시하지 않습니다. 일반 외부 웹 링크는 유지합니다.
 
-광고 차단을 해제한 브라우저에서 운영 홈에 직접 진입한 뒤 글 상세로 이동하고 뒤로가기를 실행합니다. Network에서 `gtag/js?id=G-VEGH5K4QQF` 스크립트가 한 번 로드되고 `g/collect` 요청이 전송되는지 확인합니다. GA4 **실시간 보고서**에서 방문을 확인하고, 디버그 모드를 켠 브라우저에서는 **DebugView**로 각 이동의 `page_view`가 한 번씩 발생하며 `page_location`·`page_referrer`가 올바른지 확인합니다. 기본 스크롤과 외부 링크 클릭도 함께 확인합니다.
+첨부 경로는 원본 `assets` 안으로 제한하고, 외부 경로나 symlink를 통한 원본 밖 파일 접근은 허용하지 않습니다.
 
-로컬 개발과 Vercel Preview에서는 GA 스크립트와 수집 요청이 없어야 합니다. 실제 수신과 중복 집계 확인은 운영 환경변수 등록 및 새 배포 후 진행합니다.
+## 빌드와 배포
 
-## 공식 자료
+```bash
+pnpm build
+pnpm typecheck
+pnpm test
+pnpm test:browser
+```
 
-- [Next.js Google Analytics 연동](https://nextjs.org/docs/app/guides/third-party-libraries#google-analytics)
-- [GA4 단일 페이지 앱 측정](https://developers.google.com/analytics/devguides/collection/ga4/single-page-applications)
-- [GA4 향상된 측정](https://support.google.com/analytics/answer/9216061?hl=ko)
-- [Notion 내부 연결](https://developers.notion.com/guides/get-started/internal-connections)
-- [공개 글 조회](https://developers.notion.com/reference/query-a-data-source)
-- [Markdown 본문 조회](https://developers.notion.com/reference/retrieve-page-markdown)
-- [파일 URL 만료](https://developers.notion.com/reference/file-object)
+`build`는 `OBSIDIAN_BLOG_DIR`이 설정된 PC에서는 먼저 동기화한 다음 Astro 정적 HTML을 만듭니다. 설정이 없으면 저장소에 포함된 공개 사본과 manifest를 검증한 뒤 빌드합니다. 사본이 없거나 손상됐으면 실패합니다. 명시한 원본 경로가 잘못됐을 때 과거 사본으로 조용히 대체하지 않습니다.
+
+출력은 `apps/blog/dist`입니다. Vercel도 이 디렉터리를 배포합니다. 배포 서버는 Google Drive를 읽지 않으므로, 공개 사본을 갱신하고 코드와 함께 저장소에 반영해야 다음 Git 배포에 포함됩니다. Google Drive 동기화 자체가 배포를 실행하지는 않습니다.
+
+## 댓글과 통계
+
+Giscus는 기존 저장소와 카테고리를 사용합니다. 글은 `post:<slug>`에 연결하므로 기존 댓글을 유지하려면 slug를 유지합니다. 메모는 `note:<slug>`로 구분합니다. `GISCUS_ENABLED=false`로 끌 수 있습니다.
+
+GA4는 `PUBLIC_GA_MEASUREMENT_ID`로 설정합니다. 기존 `NEXT_PUBLIC_GA_MEASUREMENT_ID`도 호환용으로 읽습니다. Vercel Production에서만 활성화하며 로컬과 Preview에서는 수집하지 않습니다. 정적 사이트이므로 설정 변경 후 다시 빌드해야 합니다.

@@ -1,0 +1,61 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import { getPublishedPosts, getBacklinks, formatPostDate, labelSlug, type Post } from '../lib/posts';
+import { getRelatedPosts } from '../lib/related-posts';
+import { absoluteUrl, jsonLd, siteConfig } from '../lib/site';
+import { getGiscusConfig } from '../lib/comments';
+import { ui } from '../lib/ui-classes';
+interface Props { post: Post; }
+const { post } = Astro.props;
+const { Content, headings } = await render(post.entry);
+const all = await getPublishedPosts();
+const related = getRelatedPosts(post, all.filter(item => item.kind === post.kind));
+const backlinks = getBacklinks(post, all);
+const active = post.kind === 'notes' ? 'notes' : post.category;
+const searchTarget = post.kind === 'notes' ? '/notes/' : post.category === 'life' ? '/life/' : '/tech/';
+const comments = getGiscusConfig();
+const ld = { '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.title,
+  description: post.description, datePublished: post.date, dateModified: post.updated ?? post.date,
+  author: { '@type': 'Person', name: siteConfig.author, url: siteConfig.authorUrl },
+  mainEntityOfPage: absoluteUrl(post.href), url: absoluteUrl(post.href), keywords: post.tags.join(', '), inLanguage: 'ko' };
+---
+<BaseLayout title={post.title} description={post.description} post={post} active={active} searchTarget={searchTarget}>
+  <article>
+    <script type="application/ld+json" set:html={jsonLd(ld)} />
+    <header class={ui.articleHeader}>
+      {post.series && <p class={ui.tagline}>{post.series}</p>}
+      <h1 class={ui.articleTitle}>{post.title}</h1>
+      <div class={ui.meta}><time datetime={post.date}>{formatPostDate(post.date)}</time>{post.kind === 'notes' && <span>· 메모</span>}</div>
+    </header>
+    <div class={ui.postLayout}>
+      <div class={ui.contentPanel}><Content /></div>
+      {headings.length > 0 && <aside class={ui.toc} aria-label="목차">
+        <h2 class={ui.tocTitle}>목차</h2>
+        <ol class={ui.tocList}>
+          {headings.filter(heading => heading.depth <= 3).map(heading => <li class:list={[heading.depth >= 3 && 'depth-3']}>
+            <a class={heading.depth >= 3 ? ui.tocLinkNested : ui.tocLink} href={`#${heading.slug}`} data-toc-link data-heading-id={heading.slug}>{heading.text}</a>
+          </li>)}
+        </ol>
+      </aside>}
+    </div>
+    {post.tags.length > 0 && <nav class="mt-8 flex flex-wrap gap-2" aria-label="글 태그">
+      {post.tags.map(tag => <a class={ui.tagPill} href={`/tags/${encodeURIComponent(labelSlug(tag))}/`}>{tag}</a>)}
+    </nav>}
+    {related.length > 0 && <section class={ui.relatedSection} aria-labelledby="related-title">
+      <h2 class={ui.relatedTitle} id="related-title">함께 읽을 기록</h2>
+      <div class={ui.relatedGrid}>
+        {related.map(({ post: item }) => <a class={ui.relatedCard} href={item.href}><strong>{item.title}</strong><p class={ui.relatedDescription}>{item.description}</p></a>)}
+      </div>
+    </section>}
+    {backlinks.length > 0 && <section class="backlinks-compact" aria-labelledby="backlinks-title">
+      <h2 class="backlinks-compact-title" id="backlinks-title">이 글을 언급한 기록</h2>
+      {backlinks.map(item => <a class="backlinks-compact-link" href={item.href}>{item.title}</a>)}
+    </section>}
+    {comments && <section aria-labelledby="comments-title" class="mt-14 w-full max-w-[768px] border-t border-line pt-8 max-[1119px]:mx-auto">
+      <div class="flex flex-wrap items-baseline justify-between gap-3"><h2 class="m-0 text-[1.125rem] font-semibold text-ink" id="comments-title">댓글</h2><a class="text-sm text-muted-strong" href={`https://github.com/${comments.repo}/discussions`} target="_blank" rel="noopener noreferrer">GitHub에서 보기</a></div>
+      <p class="mb-0 mt-3 text-sm text-muted-strong">GitHub 계정으로 댓글과 반응을 남길 수 있어요.</p>
+      <div class="giscus mt-6 min-h-[300px]" data-comments data-repo={comments.repo} data-repo-id={comments.repoId} data-category={comments.category} data-category-id={comments.categoryId} data-term={`${post.kind === 'notes' ? 'note' : 'post'}:${post.slug}`}><p class="text-sm text-muted-strong" data-comments-loading>댓글을 불러오는 중…</p></div>
+    </section>}
+  </article>
+</BaseLayout>

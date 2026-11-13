@@ -1,0 +1,19 @@
+---
+import type { Post } from '../lib/posts';
+import { formatPostDate } from '../lib/posts';
+import { ui } from '../lib/ui-classes';
+interface Props { posts: Post[]; showCategory?: boolean; }
+const { posts, showCategory = false } = Astro.props;
+---
+<div class={ui.postList} data-post-list>
+  {posts.map(post => <article class={ui.postCard} data-post-card data-href={post.href} data-search={[post.title, post.description, post.excerpt, post.series, ...post.tags].filter(Boolean).join(' ').toLowerCase()}>
+    <a class={ui.postCardLink} href={post.href}>
+      <h2 class={ui.postTitle}>{post.title}</h2>
+      <p class={ui.postDescription}>{post.description}</p>
+      <div class={ui.postMeta}>
+        <time class={ui.postDate} datetime={post.date}>{formatPostDate(post.date)}</time>
+        {showCategory && <span class={ui.postCategory}><span aria-hidden="true">· </span>{post.kind === 'notes' ? '메모' : post.category === 'life' ? '일상' : '기술'}</span>}
+      </div>
+    </a>
+  </article>)}
+</div>

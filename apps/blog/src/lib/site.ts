@@ -26,6 +26,11 @@ export function getSiteUrl(env: NodeJS.ProcessEnv = process.env): string {
     return normalizeSiteUrl(`https://${env.VERCEL_URL}`);
   }
 
+  // 로컬 정적 빌드에서만 명시적으로 localhost 메타데이터를 허용한다.
+  if (env.ALLOW_LOCAL_SITE_URL === "true" && !env.VERCEL_ENV && env.REQUIRE_PUBLIC_SITE_URL !== "true") {
+    return localSiteUrl;
+  }
+
   if (shouldRequirePublicSiteUrl(env)) {
     throw new Error(
       "PUBLIC_SITE_URL is required for production SEO URL generation. Set PUBLIC_SITE_URL=https://your-domain.example.",
@@ -77,17 +82,17 @@ function isFileRoute(pathname: string): boolean {
   return /\.[a-z0-9]+$/i.test(lastSegment);
 }
 
-export function getSocialImage(post?: { slug: string; title: string }) {
+export function getSocialImage(post?: { slug: string; title: string; kind?: 'posts' | 'notes' }) {
   return {
     ...siteConfig.socialImage,
-    url: absoluteUrl(post ? getPostSocialImagePath(post.slug) : siteConfig.socialImage.url),
+    url: absoluteUrl(post ? getPostSocialImagePath(post.slug, post.kind) : siteConfig.socialImage.url),
     alt: post ? post.title : siteConfig.socialImage.alt,
   };
 }
 
-export function getPostSocialImagePath(slug: string): string {
+export function getPostSocialImagePath(slug: string, kind: 'posts' | 'notes' = 'posts'): string {
   if (!slug || slug === "." || slug === ".." || /[/\\\u0000-\u001f]/.test(slug)) {
     throw new Error(`Invalid social image slug: ${slug}`);
   }
-  return `/og/posts/${encodeURIComponent(slug)}.png`;
+  return `/og/${kind}/${encodeURIComponent(slug)}.png`;
 }

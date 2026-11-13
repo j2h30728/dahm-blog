@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, getLabels } from '../../lib/posts';
+import { ui } from '../../lib/ui-classes';
+const tags = getLabels(await getPublishedPosts(), 'tags');
+---
+<BaseLayout title="태그" description="주제별로 글과 메모를 찾아보세요.">
+  <h1 class={ui.pageTitle}>태그</h1>
+  <div class={ui.tagList}>{tags.map(tag => <a class={ui.tagPill} href={`/tags/${encodeURIComponent(tag.slug)}/`}>{tag.name}<span class={ui.tagCount}>{tag.posts.length}</span></a>)}</div>
+  {tags.length === 0 && <p class={ui.emptyState}>아직 등록된 태그가 없습니다.</p>}
+</BaseLayout>

@@ -1,24 +1,23 @@
 {
   "name": "@dahm-blog/content-sync",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.mjs",
+  "exports": "./src/index.mjs",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test --import tsx test/*.test.ts",
-    "sync": "tsx src/cli.ts"
+    "sync": "node src/cli.mjs",
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "node --check src/index.mjs && node --check src/cli.mjs",
+    "build": "node --check src/index.mjs"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1153.0",
-    "@vercel/oidc-aws-credentials-provider": "3.3.7",
-    "sharp": "0.34.5",
-    "tsx": "^4.20.3"
-  },
-  "devDependencies": {
-    "@types/node": "^24.0.4",
-    "typescript": "^5.8.3"
+    "github-slugger": "^2.0.0",
+    "mdast-util-to-string": "^4.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "yaml": "^2.8.1"
   }
 }

@@ -8,7 +8,7 @@ export interface RelatedPostScore {
 
 export function getRelatedPosts(current: Post, posts: Post[], limit = 2): RelatedPostScore[] {
   const scored = posts
-    .filter((candidate) => candidate.slug !== current.slug)
+    .filter((candidate) => candidate.href !== current.href)
     .map((candidate) => scoreRelatedPost(current, candidate))
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;

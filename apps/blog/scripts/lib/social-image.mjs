@@ -1,10 +1,11 @@
 import { readFile } from "node:fs/promises";
-import { createElement as h } from "react";
-import { ImageResponse } from "next/og.js";
+import satori from "satori";
+import { Resvg } from "@resvg/resvg-js";
 import { siteConfig } from "../../src/lib/site.ts";
 
 const brand = "dahm-lee";
 const font = readFile(new URL("../../assets/fonts/Pretendard-SemiBold.woff", import.meta.url));
+const h = (type, props, ...children) => ({ type, props: { ...props, children: children.filter(child => child !== null && child !== undefined) } });
 
 export function socialImageElement({ title, hostname }) {
   const isPost = title !== undefined;
@@ -27,10 +28,10 @@ export function socialImageElement({ title, hostname }) {
 }
 
 export async function renderSocialImage(options) {
-  const response = new ImageResponse(socialImageElement(options), {
+  const svg = await satori(socialImageElement(options), {
     width: siteConfig.socialImage.width,
     height: siteConfig.socialImage.height,
     fonts: [{ name: "Pretendard", data: await font, weight: 600, style: "normal" }],
   });
-  return Buffer.from(await response.arrayBuffer());
+  return new Resvg(svg).render().asPng();
 }

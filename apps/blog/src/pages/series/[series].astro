@@ -1,0 +1,10 @@
+---
+import Archive from '../../components/Archive.astro';
+import { getPublishedPosts, getLabels } from '../../lib/posts';
+export async function getStaticPaths() {
+  return getLabels(await getPublishedPosts(), 'series').map(series => ({ params: { series: series.slug }, props: { series } }));
+}
+const { series } = Astro.props;
+const posts = [...series.posts].sort((a, b) => (a.seriesOrder ?? Number.MAX_SAFE_INTEGER) - (b.seriesOrder ?? Number.MAX_SAFE_INTEGER) || Date.parse(a.date) - Date.parse(b.date));
+---
+<Archive posts={posts} title={series.name} description="순서대로 이어지는 기록입니다." searchTarget={`/series/${encodeURIComponent(series.slug)}/`} showCategory />

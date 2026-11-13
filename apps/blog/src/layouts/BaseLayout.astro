@@ -1,0 +1,113 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
+import { ui } from '../lib/ui-classes';
+import { absoluteUrl, canonicalPath, getSocialImage, jsonLd, siteConfig } from '../lib/site';
+import { getPublishedPosts, type Post } from '../lib/posts';
+
+interface Props { title?: string; description?: string; post?: Post; searchTarget?: string; active?: string; }
+const { title, description = siteConfig.description, post, searchTarget = '/', active = '' } = Astro.props;
+const home = Astro.url.pathname === '/';
+const pageTitle = home ? siteConfig.homeTitle : `${title ?? siteConfig.name} | ${siteConfig.name}`;
+const canonical = absoluteUrl(canonicalPath(Astro.url.pathname));
+const social = getSocialImage(post);
+const posts = await getPublishedPosts();
+const searchIndex = posts.map(({ href, title, description, excerpt, tags, kind, category, date }) => ({ href, title, description, excerpt, tags, kind, category, date }));
+const gaId = process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production'
+  ? (process.env.PUBLIC_GA_MEASUREMENT_ID || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID)?.trim() : undefined;
+const menu = [{ label: '기술', href: '/tech/', id: 'tech' }, { label: '일상', href: '/life/', id: 'life' }, { label: '메모', href: '/notes/', id: 'notes' }, { label: '소개', href: '/about/', id: 'about' }];
+---
+<!doctype html>
+<html lang="ko" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <title>{pageTitle}</title>
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.ico?v=hamster-outline" sizes="16x16 32x32 48x48" />
+    <link rel="icon" href="/favicon.png?v=hamster-outline" type="image/png" sizes="64x64" />
+    <link rel="alternate" type="application/rss+xml" title="Dahm RSS" href={absoluteUrl('/rss.xml')} />
+    <meta property="og:type" content={post ? 'article' : 'website'} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content={siteConfig.name} />
+    <meta property="og:locale" content="ko_KR" />
+    {!home && <>
+      <meta property="og:image" content={social.url} />
+      <meta property="og:image:width" content={String(social.width)} />
+      <meta property="og:image:height" content={String(social.height)} />
+      <meta property="og:image:alt" content={social.alt} />
+      <meta name="twitter:image" content={social.url} />
+    </>}
+    <meta name="twitter:card" content={home ? 'summary' : 'summary_large_image'} />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    {post && <>
+      <meta property="article:published_time" content={post.date} />
+      <meta property="article:modified_time" content={post.updated ?? post.date} />
+      <meta property="article:author" content={siteConfig.author} />
+      {post.tags.map(tag => <meta property="article:tag" content={tag} />)}
+    </>}
+    <script is:inline>
+      (() => { try { document.documentElement.dataset.theme = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'; } catch { document.documentElement.dataset.theme ||= 'light'; } })();
+      if (!window.__dahmThemeSwapBound) {
+        window.__dahmThemeSwapBound = true;
+        document.addEventListener('astro:before-swap', (event) => {
+          event.newDocument.documentElement.dataset.theme = document.documentElement.dataset.theme || 'light';
+        });
+      }
+    </script>
+    <ClientRouter />
+  </head>
+  <body data-search-target={searchTarget}>
+    <header class={ui.siteHeader}>
+      <nav class={ui.nav} aria-label="주 메뉴">
+        <a class={ui.brand} href="/" data-brand>Dahm</a>
+        <div class={ui.navLinks}>
+          {menu.map(item => <a href={item.href} class:list={[ui.navLink, active === item.id ? ui.navLinkActive : ui.navLinkInactive]} aria-current={active === item.id ? 'page' : undefined}>{item.label}</a>)}
+        </div>
+        <div class={ui.navActions}>
+          <button type="button" class={ui.navIconButton} aria-label="검색 열기" aria-expanded="false" aria-controls="site-search-form" data-search-toggle>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
+          </button>
+          <button type="button" class={ui.themeToggle} aria-label="어두운 테마로 변경" data-theme-toggle>
+            <svg data-light-icon width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z" /></svg>
+            <svg data-dark-icon style="display:none" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></svg>
+          </button>
+        </div>
+        <form id="site-search-form" class={ui.navSearchForm} action={searchTarget} role="search" hidden>
+          <label for="site-search" class="sr-only">글과 메모 검색</label>
+          <input id="site-search" class={ui.navSearchField} type="search" name="q" placeholder="글과 메모 검색" autocomplete="off" />
+        </form>
+      </nav>
+    </header>
+    <main class={ui.shell}><slot /></main>
+    <footer class={ui.siteFooter}>
+      <div class={ui.footerInner}>
+        <span class={ui.footerBrand}>Dahm</span>
+        <nav aria-label="Footer" class={ui.footerLinks}>
+          <a class={ui.footerLink} href="/series/">시리즈</a><a class={ui.footerLink} href="/tags/">태그</a>
+          <a class={ui.footerLink} href="/rss.xml">RSS</a><a class={ui.footerLink} href="https://github.com/j2h30728">GitHub</a>
+          <a class={ui.footerLink} href="mailto:rachel2148072@gmail.com">Email</a>
+        </nav>
+      </div>
+    </footer>
+    <script id="search-data" type="application/json" set:html={jsonLd(searchIndex)} />
+    {gaId && <script is:inline define:vars={{ gaId }}>
+      if (!window.__dahmGa) {
+        window.__dahmGa = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        const tag = document.createElement('script'); tag.async = true; tag.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(gaId); document.head.append(tag);
+        window.gtag('js', new Date()); window.gtag('config', gaId);
+      }
+    </script>}
+    <script>
+      import '../scripts/site';
+    </script>
+  </body>
+</html>

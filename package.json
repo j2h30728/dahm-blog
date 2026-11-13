@@ -7,19 +7,21 @@
   "scripts": {
     "check:env": "node scripts/check-env.mjs",
     "preinstall": "node scripts/check-env.mjs",
-    "dev": "pnpm sync:content && pnpm --filter @dahm-blog/blog dev",
-    "sync:content": "pnpm --filter @dahm-blog/content-sync sync",
-    "test": "pnpm --filter @dahm-blog/content-sync test && pnpm sync:content && pnpm --filter @dahm-blog/blog test",
-    "build:blog": "pnpm sync:content && pnpm --filter @dahm-blog/blog build",
-    "build": "pnpm --filter @dahm-blog/content-sync build && pnpm build:blog",
-    "typecheck": "pnpm --filter @dahm-blog/content-sync typecheck && pnpm sync:content && pnpm --filter @dahm-blog/blog typecheck"
+    "dev": "node scripts/dev.mjs",
+    "sync:content": "node scripts/sync-content.mjs",
+    "test": "pnpm --filter @dahm-blog/content-sync test && pnpm --filter @dahm-blog/blog test",
+    "test:browser": "node scripts/test-browser.mjs",
+    "test:integration": "node scripts/test-content-integration.mjs",
+    "build:blog": "node scripts/prepare-content.mjs && pnpm --filter @dahm-blog/blog build",
+    "build": "pnpm build:blog",
+    "typecheck": "pnpm --filter @dahm-blog/blog typecheck"
   },
   "engines": {
     "node": "24.x"
   },
   "devDependencies": {
     "@types/node": "^24.0.4",
-    "next": "^16.2.9",
+    "@playwright/test": "^1.56.1",
     "typescript": "^5.8.3"
   },
   "volta": {

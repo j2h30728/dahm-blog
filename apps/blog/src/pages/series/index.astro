@@ -1,0 +1,11 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublishedPosts, getLabels } from '../../lib/posts';
+import { ui } from '../../lib/ui-classes';
+const series = getLabels(await getPublishedPosts(), 'series');
+---
+<BaseLayout title="시리즈" description="이어지는 기록을 모았습니다.">
+  <h1 class={ui.pageTitle}>시리즈</h1>
+  <div class={ui.seriesList}>{series.map(item => <article class={ui.seriesCard}><a class={ui.seriesCardLink} href={`/series/${encodeURIComponent(item.slug)}/`}><h2 class={ui.seriesTitle}>{item.name}</h2><span class={ui.sectionMeta}>{item.posts.length}개의 기록</span></a></article>)}</div>
+  {series.length === 0 && <p class={ui.emptyState}>아직 공개된 시리즈가 없습니다.</p>}
+</BaseLayout>

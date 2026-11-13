@@ -1,0 +1,6 @@
+---
+import Archive from '../components/Archive.astro';
+import { getPublishedPosts } from '../lib/posts';
+const posts = (await getPublishedPosts()).filter(post => post.kind === 'posts' && post.category === 'life');
+---
+<Archive posts={posts} title="일상" description="일상에서 남긴 생각과 경험을 기록합니다." active="life" searchTarget="/life/" />

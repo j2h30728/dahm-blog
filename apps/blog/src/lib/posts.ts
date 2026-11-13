@@ -1,15 +1,11 @@
-import postIndexJson from "../content/public-post-index.json";
-import { postModules, postModuleSlugs } from "../content/post-module-map";
-import type { PostCategory } from "./archive";
-import { decodeRouteSegment } from "./route-segment";
+import { getCollection, type CollectionEntry } from 'astro:content';
+import type { PostCategory } from './archive';
+import manifest from '../content/export-manifest.json';
 
-export interface Heading {
-  depth: number;
-  id: string;
-  text: string;
-}
-
+export type Entry = CollectionEntry<'posts'> | CollectionEntry<'notes'>;
 export interface Post {
+  entry: Entry;
+  kind: 'posts' | 'notes';
   slug: string;
   href: string;
   title: string;
@@ -20,126 +16,54 @@ export interface Post {
   category: PostCategory;
   topic: string;
   tags: string[];
-  tagSlugs: Partial<Record<string, string>>;
   series?: string;
-  seriesSlug?: string;
-  seriesHref?: string;
   seriesOrder?: number;
-  headings: Heading[];
 }
-
-interface PublicPostIndex {
-  posts: Post[];
+export function plainText(body: string): string {
+  return body.replace(/```[\s\S]*?```/g, '').replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/<[^>]*>/g, '').replace(/[#*_`>~]/g, '').replace(/\s+/g, ' ').trim();
 }
-
-const postIndex = postIndexJson as PublicPostIndex;
-const postsBySlug = new Map(postIndex.posts.map((post) => [post.slug, post]));
-
-export const allPostSlugs = postModuleSlugs;
-
-export function getPublishedPosts(): Post[] {
-  return [...postIndex.posts].sort(comparePostsByDateDesc);
+let buildPosts: Promise<Post[]> | undefined;
+export function getPublishedPosts(): Promise<Post[]> {
+  // A static build shares one collection read; dev always reads the current loader store.
+  return import.meta.env.DEV ? readPublishedPosts() : (buildPosts ??= readPublishedPosts());
 }
-
-export function getPost(slug: string): Post | undefined {
-  const key = decodeRouteSegment(slug);
-  return key ? postsBySlug.get(key) : undefined;
+async function readPublishedPosts(): Promise<Post[]> {
+  const groups = await Promise.all([
+    manifest.entries.some(entry => entry.kind === 'posts') ? getCollection('posts') : Promise.resolve([]),
+    manifest.entries.some(entry => entry.kind === 'notes') ? getCollection('notes') : Promise.resolve([]),
+  ]);
+  return groups.flat().filter(entry => entry.data.publish === true).map(entry => {
+    const { data } = entry;
+    const kind = entry.collection;
+    const excerpt = plainText(entry.body ?? '').slice(0, 240);
+    return {
+      entry, kind, slug: data.slug, href: `/${kind}/${encodeURIComponent(data.slug)}/`,
+      title: data.title, description: data.summary || excerpt, excerpt,
+      date: data.date, updated: data.updated,
+      category: data.section === '일상' ? 'life' as const : 'tech' as const,
+      topic: data.tags[0] ?? '', tags: data.tags, series: data.series, seriesOrder: data.seriesOrder,
+    };
+  }).sort((a, b) => Date.parse(b.date) - Date.parse(a.date) || a.title.localeCompare(b.title));
 }
-
-export async function getPostContent(slug: string) {
-  const key = decodeRouteSegment(slug);
-  const load = key ? postModules[key] : undefined;
-  if (!load) return undefined;
-  return load();
+export function formatPostDate(value: string) {
+  return new Date(value).toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
-
-export function getSeriesPosts(posts: Post[], series: string): Post[] {
-  return posts
-    .filter((post) => post.series === series)
-    .sort((a, b) => {
-      const orderA = a.seriesOrder ?? Number.MAX_SAFE_INTEGER;
-      const orderB = b.seriesOrder ?? Number.MAX_SAFE_INTEGER;
-      if (orderA !== orderB) return orderA - orderB;
-      return Date.parse(a.date) - Date.parse(b.date);
-    });
-}
-
-export function getSeriesEntries(posts: Post[]): Array<{ name: string; slug: string; posts: Post[] }> {
-  const entries = new Map<string, Post[]>();
-  for (const post of posts) {
-    if (!post.series) continue;
-    entries.set(post.series, [...(entries.get(post.series) ?? []), post]);
+export const labelSlug = (label: string) => label.normalize('NFC').toLowerCase().replace(/['"]/g, '')
+  .replace(/[^\p{Letter}\p{Number}\p{Mark}]+/gu, '-').replace(/^-+|-+$/g, '').replace(/-{2,}/g, '-');
+export function getLabels(posts: Post[], property: 'tags' | 'series') {
+  const labels = new Set(posts.flatMap(post => property === 'tags' ? post.tags : post.series ? [post.series] : []));
+  const names = [...labels].sort((a, b) => a.localeCompare(b));
+  const slugs = new Set<string>();
+  for (const name of names) {
+    const slug = labelSlug(name);
+    if (!slug || slugs.has(slug)) throw new Error(`태그/시리즈 주소가 중복되거나 비어 있습니다: ${name}`);
+    slugs.add(slug);
   }
-
-  return [...entries.entries()]
-    .map(([name, seriesPosts]) => ({
-      name,
-      slug: seriesPosts[0]?.seriesSlug ?? "",
-      posts: getSeriesPosts(seriesPosts, name),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  return names.map(name => ({
+    name, slug: labelSlug(name), posts: posts.filter(post => property === 'tags' ? post.tags.includes(name) : post.series === name),
+  }));
 }
-
-export function getSeriesEntryBySlug(seriesSlug: string): { name: string; posts: Post[] } | undefined {
-  const key = decodeRouteSegment(seriesSlug);
-  if (!key) return undefined;
-  const posts = getPublishedPosts();
-  const match = posts.find((post) => post.seriesSlug === key);
-  if (!match || !match.series) return undefined;
-  return {
-    name: match.series,
-    posts: getSeriesPosts(posts, match.series),
-  };
-}
-
-export function getTagPosts(posts: Post[], tag: string): Post[] {
-  return posts.filter((post) => post.tags.includes(tag)).sort(comparePostsByDateDesc);
-}
-
-export function getTagEntries(posts: Post[]): Array<{ count: number; name: string; posts: Post[]; slug: string }> {
-  const entries = new Map<string, Post[]>();
-  for (const post of posts) {
-    for (const tag of post.tags) {
-      entries.set(tag, [...(entries.get(tag) ?? []), post]);
-    }
-  }
-
-  return [...entries.entries()]
-    .map(([name, tagPosts]) => {
-      const slug = tagPosts[0].tagSlugs[name];
-      if (!slug) throw new Error(`태그 URL 인덱스가 없습니다. sync:content를 실행하세요: ${name}`);
-      return { count: tagPosts.length, name, posts: getTagPosts(tagPosts, name), slug };
-    })
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-}
-
-export function getTagEntryBySlug(tagSlug: string): { name: string; posts: Post[]; slug: string } | undefined {
-  const key = decodeRouteSegment(tagSlug);
-  return key ? getTagEntries(getPublishedPosts()).find((entry) => entry.slug === key) : undefined;
-}
-
-export function getTopicEntries(posts: Post[]): Array<{ count: number; name: string }> {
-  const entries = new Map<string, number>();
-  for (const post of posts) {
-    entries.set(post.topic, (entries.get(post.topic) ?? 0) + 1);
-  }
-
-  return [...entries.entries()]
-    .map(([name, count]) => ({ count, name }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-}
-
-export function formatPostDate(value: string): string {
-  return new Date(value).toLocaleDateString("en", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
-
-function comparePostsByDateDesc(a: Post, b: Post): number {
-  const dateDiff = Date.parse(b.date) - Date.parse(a.date);
-  if (dateDiff !== 0) return dateDiff;
-  return a.title.localeCompare(b.title);
+export function getBacklinks(current: Post, posts: Post[]) {
+  return posts.filter(post => post.href !== current.href && (post.entry.body ?? '').includes(current.href));
 }

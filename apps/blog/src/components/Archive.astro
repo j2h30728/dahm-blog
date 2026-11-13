@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostList from './PostList.astro';
+import { ui } from '../lib/ui-classes';
+import type { Post } from '../lib/posts';
+interface Props { posts: Post[]; title: string; description?: string; active?: string; searchTarget?: string; showCategory?: boolean; }
+const { posts, title, description = '', active = '', searchTarget = '/', showCategory = false } = Astro.props;
+---
+<BaseLayout title={title} description={description} active={active} searchTarget={searchTarget}>
+  <section class={ui.archive} aria-labelledby="archive-title" data-archive>
+    <header class={ui.archiveIntro}>
+      <div class={ui.sectionHeading}>
+        <h1 class={ui.archiveTitle} id="archive-title">{title}</h1>
+        <p class={ui.sectionMeta}><span data-result-count>{posts.length}</span>개의 기록</p>
+      </div>
+      {description && <p class={ui.archiveSubtitle}>{description}</p>}
+      <div class={ui.activeSearch} data-search-state hidden>
+        <span class={ui.activeSearchLabel} data-search-label></span>
+        <a class={ui.activeSearchClear} href={searchTarget} data-search-clear>검색 해제</a>
+      </div>
+    </header>
+    <PostList posts={posts} showCategory={showCategory} />
+    <p class={ui.emptyState} data-empty-state hidden={posts.length > 0}>아직 공개된 {active === 'notes' ? '메모가' : '글이'} 없습니다.</p>
+  </section>
+</BaseLayout>

@@ -1,0 +1,9 @@
+---
+import Archive from '../../components/Archive.astro';
+import { getPublishedPosts, getLabels } from '../../lib/posts';
+export async function getStaticPaths() {
+  return getLabels(await getPublishedPosts(), 'tags').map(tag => ({ params: { tag: tag.slug }, props: { tag } }));
+}
+const { tag } = Astro.props;
+---
+<Archive posts={tag.posts} title={`#${tag.name}`} description={`${tag.name}에 관한 글과 메모입니다.`} searchTarget={`/tags/${encodeURIComponent(tag.slug)}/`} showCategory />

@@ -1,0 +1,6 @@
+---
+import Archive from '../../components/Archive.astro';
+import { getPublishedPosts } from '../../lib/posts';
+const posts = (await getPublishedPosts()).filter(post => post.kind === 'posts' && post.category === 'tech');
+---
+<Archive posts={posts} title="기술" description="개발하며 배운 것과 선택의 이유를 기록합니다." active="tech" searchTarget="/posts/" />

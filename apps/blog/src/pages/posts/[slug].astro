@@ -1,0 +1,9 @@
+---
+import ContentLayout from '../../layouts/ContentLayout.astro';
+import { getPublishedPosts } from '../../lib/posts';
+export async function getStaticPaths() {
+  return (await getPublishedPosts()).filter(post => post.kind === 'posts').map(post => ({ params: { slug: post.slug }, props: { post } }));
+}
+const { post } = Astro.props;
+---
+<ContentLayout post={post} />

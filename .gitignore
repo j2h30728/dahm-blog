@@ -8,17 +8,12 @@ dist
 .env
 .env.*
 !.env.example
-apps/blog/.next
-apps/blog/out
-apps/blog/public/search/index.json
-apps/blog/public/search/pagefind
-apps/blog/public/post-assets/**/notion-*
-apps/blog/public/post-assets/blog-images/
+apps/blog/.astro/
 packages/*/dist
 *.tsbuildinfo
 .content-sync/
 .playwright-mcp/
-apps/blog/src/content/publish-manifest.json
 
 # 공개 글 인덱스로 빌드할 때 생성하는 OG 이미지
 apps/blog/public/og/posts/
+apps/blog/public/og/notes/

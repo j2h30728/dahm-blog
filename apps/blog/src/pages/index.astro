@@ -1,0 +1,7 @@
+---
+import Archive from '../components/Archive.astro';
+import { getPublishedPosts } from '../lib/posts';
+import { siteConfig } from '../lib/site';
+const posts = await getPublishedPosts();
+---
+<Archive posts={posts} title="글과 기록" description={siteConfig.homeDescription} showCategory />
