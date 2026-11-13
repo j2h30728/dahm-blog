@@ -1,0 +1,22 @@
+---
+import { getPublishedPosts } from '../lib/posts';
+import type { ArchiveScope } from '../lib/archive';
+
+interface Props { selected: ArchiveScope; }
+const { selected } = Astro.props;
+const posts = (await getPublishedPosts()).filter(post => post.kind === 'posts');
+const categories = [
+  { id: 'all', label: '전체', href: '/posts/', count: posts.length },
+  { id: 'tech', label: '기술', href: '/tech/', count: posts.filter(post => post.category === 'tech').length },
+  { id: 'life', label: '일상', href: '/life/', count: posts.filter(post => post.category === 'life').length },
+];
+---
+<nav class="post-category-tabs" aria-label="글 분류">
+  {categories.map(category => <a
+    class="post-category-tab"
+    href={category.href}
+    data-post-category={category.id}
+    data-category-href={category.href}
+    aria-current={category.id === selected ? 'page' : undefined}
+  >{category.label}<span class="post-category-count" data-category-count={category.id}>{category.count}</span></a>)}
+</nav>

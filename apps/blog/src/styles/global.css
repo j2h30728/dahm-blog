@@ -910,6 +910,207 @@ html[data-theme="dark"] {
   --shadow-glass-md: 0 1px 0 rgb(255 255 255 / 9%) inset, 0 28px 68px rgb(0 0 0 / 34%);
 }
 
+/* TIT: 날짜·제목·태그를 월별로 모아 보여주는 짧은 기록 목록. */
+.tit-archive {
+  min-width: 0;
+  width: 100%;
+}
+
+.post-category-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--color-line);
+  margin: 0 0 0.75rem;
+}
+
+.post-category-tab {
+  align-items: center;
+  border-bottom: 2px solid transparent;
+  color: var(--color-muted-strong);
+  display: inline-flex;
+  font-size: 0.9375rem;
+  gap: 0.5rem;
+  margin-bottom: -1px;
+  min-height: 44px;
+  padding: 0.65rem 0.9rem;
+  text-decoration: none;
+}
+
+.post-category-tab:hover {
+  color: var(--color-accent-ink);
+  text-decoration: none;
+}
+
+.post-category-tab[aria-current="page"] {
+  border-bottom-color: var(--color-accent);
+  color: var(--color-ink);
+  font-weight: 650;
+}
+
+.post-category-count {
+  color: var(--color-muted-strong);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tit-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.5rem 0 2.75rem;
+  min-width: 0;
+}
+
+.tit-filter {
+  align-items: center;
+  appearance: none;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-pill);
+  color: var(--color-muted-strong);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+  justify-content: center;
+  line-height: 1.5;
+  max-width: 100%;
+  min-height: 40px;
+  overflow-wrap: anywhere;
+  padding: 0.45rem 0.9rem;
+  text-align: left;
+  transition: background 160ms, border-color 160ms, color 160ms;
+}
+
+.tit-filter:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.tit-filter[aria-pressed="true"] {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-weight: 650;
+}
+
+.tit-filter-count {
+  color: var(--color-muted-strong);
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tit-month:not([hidden]) ~ .tit-month:not([hidden]) {
+  margin-top: 2.5rem;
+}
+
+.tit-month-title {
+  color: var(--color-ink);
+  font-size: 1.125rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.65rem;
+}
+
+.tit-list {
+  border-top: 1px solid var(--color-line);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tit-row {
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-line);
+  column-gap: 1.2rem;
+  display: grid;
+  grid-template-columns: 3.75rem minmax(0, 1fr) minmax(0, 34%);
+  min-width: 0;
+  padding: 0.85rem 0;
+  row-gap: 0.35rem;
+}
+
+.tit-month[hidden],
+.tit-row[hidden] {
+  display: none;
+}
+
+.tit-date {
+  color: var(--color-muted-strong);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tit-entry-title {
+  color: var(--color-ink-soft);
+  font-size: 1rem;
+  font-weight: 550;
+  line-height: 1.6;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.tit-entry-title:hover {
+  color: var(--color-accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.tit-entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.tit-entry-tag {
+  background: var(--color-soft);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted-strong);
+  display: inline-block;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 0.15rem 0.45rem;
+}
+
+.tit-back-link {
+  display: inline-block;
+  font-size: 0.875rem;
+  margin-top: 1rem;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+@media (max-width: 640px) {
+  .tit-filters {
+    margin-bottom: 2rem;
+  }
+
+  .tit-row {
+    column-gap: 0.75rem;
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+    padding-block: 0.9rem;
+  }
+
+  .tit-entry-tags {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+
+  .tit-entry-tags:empty {
+    display: none;
+  }
+}
+
 html[data-theme="light"] {
   color-scheme: light;
 }

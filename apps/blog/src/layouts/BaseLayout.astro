@@ -6,7 +6,7 @@ import { absoluteUrl, canonicalPath, getSocialImage, jsonLd, siteConfig } from '
 import { getPublishedPosts, type Post } from '../lib/posts';
 
 interface Props { title?: string; description?: string; post?: Post; searchTarget?: string; active?: string; }
-const { title, description = siteConfig.description, post, searchTarget = '/', active = '' } = Astro.props;
+const { title, description = siteConfig.description, post, searchTarget = '/posts/', active = '' } = Astro.props;
 const home = Astro.url.pathname === '/';
 const pageTitle = home ? siteConfig.homeTitle : `${title ?? siteConfig.name} | ${siteConfig.name}`;
 const canonical = absoluteUrl(canonicalPath(Astro.url.pathname));
@@ -15,7 +15,7 @@ const posts = await getPublishedPosts();
 const searchIndex = posts.map(({ href, title, description, excerpt, tags, kind, category, date }) => ({ href, title, description, excerpt, tags, kind, category, date }));
 const gaId = process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production'
   ? (process.env.PUBLIC_GA_MEASUREMENT_ID || process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID)?.trim() : undefined;
-const menu = [{ label: '기술', href: '/tech/', id: 'tech' }, { label: '일상', href: '/life/', id: 'life' }, { label: '메모', href: '/notes/', id: 'notes' }, { label: '소개', href: '/about/', id: 'about' }];
+const menu = [{ label: '글', href: '/posts/', id: 'posts' }, { label: '메모', href: '/notes/', id: 'notes' }, { label: '소개', href: '/about/', id: 'about' }];
 ---
 <!doctype html>
 <html lang="ko" data-theme="light">

@@ -6,14 +6,15 @@ import { getRelatedPosts } from '../lib/related-posts';
 import { absoluteUrl, jsonLd, siteConfig } from '../lib/site';
 import { getGiscusConfig } from '../lib/comments';
 import { ui } from '../lib/ui-classes';
+import { getTitDateParts } from '../lib/tit';
 interface Props { post: Post; }
 const { post } = Astro.props;
 const { Content, headings } = await render(post.entry);
 const all = await getPublishedPosts();
 const related = getRelatedPosts(post, all.filter(item => item.kind === post.kind));
 const backlinks = getBacklinks(post, all);
-const active = post.kind === 'notes' ? 'notes' : post.category;
-const searchTarget = post.kind === 'notes' ? '/notes/' : post.category === 'life' ? '/life/' : '/tech/';
+const active = post.kind === 'notes' ? 'notes' : 'posts';
+const searchTarget = post.kind === 'notes' ? '/notes/' : '/posts/';
 const comments = getGiscusConfig();
 const ld = { '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.title,
   description: post.description, datePublished: post.date, dateModified: post.updated ?? post.date,
@@ -26,7 +27,8 @@ const ld = { '@context': 'https://schema.org', '@type': 'BlogPosting', headline:
     <header class={ui.articleHeader}>
       {post.series && <p class={ui.tagline}>{post.series}</p>}
       <h1 class={ui.articleTitle}>{post.title}</h1>
-      <div class={ui.meta}><time datetime={post.date}>{formatPostDate(post.date)}</time>{post.kind === 'notes' && <span>· 메모</span>}</div>
+      <div class={ui.meta}><time datetime={post.date}>{post.kind === 'notes' ? getTitDateParts(post.date).dateLabel : formatPostDate(post.date)}</time>{post.kind === 'notes' && <span>· 메모</span>}</div>
+      {post.kind === 'notes' && <a class="tit-back-link" href="/notes/">← 메모 목록으로 돌아가기</a>}
     </header>
     <div class={ui.postLayout}>
       <div class={ui.contentPanel}><Content /></div>
@@ -39,7 +41,7 @@ const ld = { '@context': 'https://schema.org', '@type': 'BlogPosting', headline:
         </ol>
       </aside>}
     </div>
-    {post.tags.length > 0 && <nav class="mt-8 flex flex-wrap gap-2" aria-label="글 태그">
+    {post.tags.length > 0 && <nav class="mt-8 flex flex-wrap gap-2" aria-label={post.kind === 'notes' ? '메모 태그' : '글 태그'}>
       {post.tags.map(tag => <a class={ui.tagPill} href={`/tags/${encodeURIComponent(labelSlug(tag))}/`}>{tag}</a>)}
     </nav>}
     {related.length > 0 && <section class={ui.relatedSection} aria-labelledby="related-title">

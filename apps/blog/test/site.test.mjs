@@ -39,21 +39,41 @@ test('all public posts and notes have static detail pages, metadata and RSS entr
   assert.equal((rss.match(/<item>/g) ?? []).length, manifest.entries.length);
 });
 
-test('home contains the entire public collection and a notes menu', async () => {
+test('home contains only public posts and the 글·메모·소개 navigation', async () => {
   const home = await htmlFor('/');
-  assert.equal((home.match(/data-post-card/g) ?? []).length, manifest.entries.length);
+  assert.equal((home.match(/data-post-card/g) ?? []).length, manifest.entries.filter(entry => entry.kind === 'posts').length);
   assert.match(home, /href="\/notes\/"/);
+  assert.match(home, /href="\/notes\/"[^>]*>메모<\/a>/);
+  assert.match(home, /href="\/posts\/"[^>]*>글<\/a>/);
   assert.match(home, /name="twitter:card" content="summary"/);
   assert.doesNotMatch(home, /property="og:image"/);
   assert.doesNotMatch(home, /_next\/|react-dom|react\/jsx/);
 });
 
-test('notes archive supports an empty collection without rendering private content', async () => {
+test('memo archive keeps monthly groups on the notes URL and supports an empty collection', async () => {
   const notes = manifest.entries.filter(entry => entry.kind === 'notes');
   const html = await htmlFor('/notes/');
   assert.equal((html.match(/data-post-card/g) ?? []).length, notes.length);
+  assert.match(html, /data-tit-archive/);
+  assert.match(html, /<h1[^>]*>메모<\/h1>/);
   if (!notes.length) assert.match(html, /아직 공개된 메모가 없습니다/);
   for (const entry of notes) assert.ok(html.includes(escape(entry.title)));
+});
+
+test('posts, tech and life preserve their URLs and show public-post category counts', async () => {
+  const posts = manifest.entries.filter(entry => entry.kind === 'posts');
+  const counts = { all: posts.length, tech: posts.filter(entry => entry.section !== '일상').length, life: posts.filter(entry => entry.section === '일상').length };
+  for (const [category, pathname] of [['all', '/posts/'], ['tech', '/tech/'], ['life', '/life/']]) {
+    const html = await htmlFor(pathname);
+    assert.equal((html.match(/data-post-card/g) ?? []).length, counts[category]);
+    assert.match(html, /<h1[^>]*>글<\/h1>/);
+    assert.match(html, /aria-label="글 분류"/);
+    const selected = [...html.matchAll(/<a\b[^>]*data-post-category="([^"]+)"[^>]*>/g)].filter(match => match[0].includes('aria-current="page"'));
+    assert.deepEqual(selected.map(match => match[1]), [category]);
+    for (const [name, count] of Object.entries(counts)) {
+      assert.match(html, new RegExp(`data-category-count="${name}"[^>]*>${count}<`));
+    }
+  }
 });
 
 test('images reference exported assets and never expose Obsidian size markers', async () => {

@@ -1,6 +1,6 @@
 ---
-import Archive from '../../components/Archive.astro';
+import TitArchive from '../../components/TitArchive.astro';
 import { getPublishedPosts } from '../../lib/posts';
 const posts = (await getPublishedPosts()).filter(post => post.kind === 'notes');
 ---
-<Archive posts={posts} title="메모" description="짧게 남기는 생각, 배운 것과 작은 발견들입니다." active="notes" searchTarget="/notes/" />
+<TitArchive posts={posts} />

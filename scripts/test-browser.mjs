@@ -20,7 +20,7 @@ try {
   await page.goto(server.url, { waitUntil: 'networkidle' });
   await page.waitForSelector('[data-theme-toggle]');
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'light');
-  assert.equal(await page.locator('nav[aria-label="주 메뉴"] a').allTextContents().then(values => values.map(v => v.trim())).then(v => v.includes('메모')), true);
+  assert.deepEqual(await page.locator('nav[aria-label="주 메뉴"] a:not([data-brand])').allTextContents().then(values => values.map(v => v.trim())), ['글', '메모', '소개']);
   await page.screenshot({ path: path.join(artifacts, 'home-desktop.png') });
 
   await page.locator('[data-theme-toggle]').click();
@@ -31,7 +31,9 @@ try {
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');
   assert.equal(await page.evaluate(() => performance.timeOrigin), origin, 'Astro navigation should not reload the document');
   const noteCount = manifest.entries.filter(entry => entry.kind === 'notes').length;
-  if (!noteCount) assert.match(await page.locator('main').innerText(), /없|준비|아직/);
+  assert.equal(await page.locator('main h1').innerText(), '메모');
+  await page.locator('[data-tit-archive]').waitFor();
+  if (!noteCount) assert.match(await page.locator('main').innerText(), /아직 공개된 메모가 없습니다/);
   await page.locator('[data-brand]').click();
   await page.waitForURL(server.url + '/');
   assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark');

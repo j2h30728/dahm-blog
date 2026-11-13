@@ -30,6 +30,27 @@ function bindSearch(signal: AbortSignal) {
   const empty = document.querySelector<HTMLElement>('[data-empty-state]');
   const emptyText = empty?.textContent || '';
   const cards = [...document.querySelectorAll<HTMLElement>('[data-post-card]')];
+  const categoryLinks = [...document.querySelectorAll<HTMLAnchorElement>('[data-post-category][data-category-href]')];
+  const tit = document.querySelector('[data-tit-archive]');
+  const tagButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-tit-tag]')];
+  const knownTags = new Set(tagButtons.map(button => button.dataset.titTag || '').filter(Boolean));
+  const months = [...document.querySelectorAll<HTMLElement>('[data-tit-month]')];
+  const tagsByCard = new Map(cards.map(card => {
+    let tags: string[] = [];
+    try {
+      const value: unknown = JSON.parse(card.dataset.tags || '[]');
+      if (Array.isArray(value)) tags = value.filter((tag): tag is string => typeof tag === 'string');
+    } catch { /* A malformed optional tag list must not break text search. */ }
+    return [card, tags] as const;
+  }));
+  let selectedTag = '';
+  const updateCategoryLinks = (query: string) => {
+    for (const link of categoryLinks) {
+      const url = new URL(link.dataset.categoryHref!, location.origin);
+      if (query.trim()) url.searchParams.set('q', query.trim());
+      link.href = url.pathname + url.search;
+    }
+  };
   const setOpen = (open: boolean) => {
     form.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
@@ -38,17 +59,45 @@ function bindSearch(signal: AbortSignal) {
   const filter = (value: string) => {
     const query = value.trim().toLowerCase();
     let count = 0;
-    cards.forEach(card => { card.hidden = Boolean(query && !card.dataset.search?.includes(query)); if (!card.hidden) count++; });
+    cards.forEach(card => {
+      const textMatches = !query || Boolean(card.dataset.search?.includes(query));
+      const tagMatches = !selectedTag || Boolean(tagsByCard.get(card)?.includes(selectedTag));
+      card.hidden = !textMatches || !tagMatches;
+      if (!card.hidden) count++;
+    });
+    months.forEach(month => { month.hidden = ![...month.querySelectorAll<HTMLElement>('[data-post-card]')].some(card => !card.hidden); });
+    tagButtons.forEach(button => button.setAttribute('aria-pressed', String((button.dataset.titTag || '') === selectedTag)));
     const countElement = document.querySelector('[data-result-count]');
     if (countElement) countElement.textContent = String(count);
-    if (empty) { empty.hidden = count > 0; empty.textContent = query ? '검색 결과가 없습니다.' : emptyText; }
+    if (empty) {
+      empty.hidden = count > 0;
+      empty.textContent = tit && (query || selectedTag) ? '조건에 맞는 메모가 없습니다.' : query ? '검색 결과가 없습니다.' : emptyText;
+    }
     const state = document.querySelector<HTMLElement>('[data-search-state]');
     if (state) state.hidden = !query;
     const label = document.querySelector('[data-search-label]');
     if (label) label.textContent = `“${value.trim()}” 검색 결과`;
+    updateCategoryLinks(value);
+    const clear = document.querySelector<HTMLAnchorElement>('[data-search-clear]');
+    if (tit && clear) {
+      const url = new URL(location.href);
+      url.searchParams.delete('q');
+      if (selectedTag) url.searchParams.set('tag', selectedTag); else url.searchParams.delete('tag');
+      clear.href = url.pathname + url.search + url.hash;
+    }
   };
   const synchronize = () => {
-    const query = new URLSearchParams(location.search).get('q') || '';
+    const params = new URLSearchParams(location.search);
+    const query = params.get('q') || '';
+    if (tit) {
+      const requested = params.get('tag') || '';
+      selectedTag = knownTags.has(requested) ? requested : '';
+      if (params.has('tag') && !selectedTag) {
+        const url = new URL(location.href);
+        url.searchParams.delete('tag');
+        history.replaceState(history.state, '', url);
+      }
+    }
     input.value = query;
     setOpen(Boolean(query));
     if (archive) filter(query);
@@ -59,6 +108,16 @@ function bindSearch(signal: AbortSignal) {
     history.replaceState(history.state, '', url);
   };
   toggle.addEventListener('click', () => { const open = form.hidden; setOpen(open); if (open) input.focus(); }, { signal });
+  tagButtons.forEach(button => button.addEventListener('click', () => {
+    const tag = button.dataset.titTag || '';
+    if (tag === selectedTag) return;
+    selectedTag = tag;
+    const url = new URL(location.href);
+    if (tag) url.searchParams.set('tag', tag); else url.searchParams.delete('tag');
+    // Preserve ClientRouter's history metadata when adding an in-page filter state.
+    history.pushState({ ...history.state }, '', url);
+    filter(input.value);
+  }, { signal }));
   input.addEventListener('keydown', event => { if (event.key === 'Escape') { setOpen(false); toggle.focus(); } }, { signal });
   input.addEventListener('input', () => { if (archive) { filter(input.value); updateUrl(input.value); } }, { signal });
   form.addEventListener('submit', event => {

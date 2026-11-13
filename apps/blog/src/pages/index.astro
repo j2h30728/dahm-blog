@@ -2,6 +2,6 @@
 import Archive from '../components/Archive.astro';
 import { getPublishedPosts } from '../lib/posts';
 import { siteConfig } from '../lib/site';
-const posts = await getPublishedPosts();
+const posts = (await getPublishedPosts()).filter(post => post.kind === 'posts');
 ---
-<Archive posts={posts} title="글과 기록" description={siteConfig.homeDescription} showCategory />
+<Archive posts={posts} title="글" description={siteConfig.homeDescription} active="posts" searchTarget="/" postCategory="all" showCategory />

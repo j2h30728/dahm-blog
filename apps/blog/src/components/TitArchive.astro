@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { ui } from '../lib/ui-classes';
+import { getTitDateParts, getTitTags, groupTitEntries } from '../lib/tit';
+import type { Post } from '../lib/posts';
+
+interface Props { posts: Post[]; }
+const { posts } = Astro.props;
+const months = groupTitEntries(posts);
+const tags = getTitTags(posts);
+---
+<BaseLayout title="메모" description="배운 것과 떠오른 생각을 짧게 남깁니다." active="notes" searchTarget="/notes/">
+  <section class="tit-archive" aria-labelledby="tit-title" data-tit-archive data-archive>
+    <header class={ui.archiveIntro}>
+      <div class={ui.sectionHeading}>
+        <h1 class={ui.archiveTitle} id="tit-title">메모</h1>
+        <p class={ui.sectionMeta} aria-live="polite" aria-atomic="true"><span data-result-count>{posts.length}</span>개의 메모</p>
+      </div>
+      <p class={ui.archiveSubtitle}>배운 것과 떠오른 생각을 짧게 남깁니다.</p>
+      <div class={ui.activeSearch} data-search-state hidden>
+        <span class={ui.activeSearchLabel} data-search-label></span>
+        <a class={ui.activeSearchClear} href="/notes/" data-search-clear>검색 해제</a>
+      </div>
+    </header>
+    <div class="tit-filters" role="group" aria-label="메모 태그 필터">
+      <button class="tit-filter" type="button" data-tit-tag="" aria-pressed="true">전체<span class="tit-filter-count">{posts.length}</span></button>
+      {tags.map(tag => <button class="tit-filter" type="button" data-tit-tag={tag.name} aria-pressed="false">{tag.name}<span class="tit-filter-count">{tag.count}</span></button>)}
+    </div>
+    <div class="tit-months" data-post-list>
+      {months.map(month => <section class="tit-month" data-tit-month={month.key} aria-labelledby={`tit-month-${month.key}`}>
+        <h2 class="tit-month-title" id={`tit-month-${month.key}`}>{month.label}</h2>
+        <ul class="tit-list">
+          {month.entries.map(post => {
+            const date = getTitDateParts(post.date);
+            const entryTags = [...new Set(post.tags)];
+            return <li class="tit-row" data-post-card data-href={post.href} data-search={[post.title, post.description, post.excerpt, post.series, ...post.tags].filter(Boolean).join(' ').toLowerCase()} data-tags={JSON.stringify(entryTags)}>
+              <time class="tit-date" datetime={post.date} aria-label={date.dateLabel}>{date.dayLabel}</time>
+              <a class="tit-entry-title" href={post.href}>{post.title}</a>
+              <div class="tit-entry-tags" aria-label="태그">{entryTags.map(tag => <span class="tit-entry-tag">{tag}</span>)}</div>
+            </li>;
+          })}
+        </ul>
+      </section>)}
+    </div>
+    <p class={ui.emptyState} data-empty-state hidden={posts.length > 0}>아직 공개된 메모가 없습니다.</p>
+  </section>
+</BaseLayout>
