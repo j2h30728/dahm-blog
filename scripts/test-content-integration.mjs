@@ -33,7 +33,7 @@ async function assertTitState(page, slugs, { months, tag = '', query } = {}) {
     const visible = await page.locator('[data-post-card]').evaluateAll(elements => elements.filter(element => element.getClientRects().length).map(element => element.getAttribute('data-href')));
     return JSON.stringify(visible) === JSON.stringify(slugs.map(slug => `/notes/${slug}/`));
   }, () => `TIT rows do not match ${JSON.stringify(slugs)} at ${page.url()}`);
-  assert.equal(Number(await page.locator('[data-result-count]').textContent()), slugs.length);
+  assert.equal(await page.locator('[data-tit-archive] [data-result-count], .tit-filter-count').count(), 0, '메모 건수는 화면에 표시하지 않는다');
   assert.equal(await tagButton(page, tag).getAttribute('aria-pressed'), 'true');
   assert.equal(await page.locator('[data-tit-tag][aria-pressed="true"]').count(), 1);
   if (months) {

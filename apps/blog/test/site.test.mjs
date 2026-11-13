@@ -56,6 +56,8 @@ test('memo archive keeps monthly groups on the notes URL and supports an empty c
   assert.equal((html.match(/data-post-card/g) ?? []).length, notes.length);
   assert.match(html, /data-tit-archive/);
   assert.match(html, /<h1[^>]*>메모<\/h1>/);
+  assert.doesNotMatch(html, /data-result-count|tit-filter-count/);
+  assert.match(html, /data-tit-tag=""[^>]*>전체<\/button>/);
   if (!notes.length) assert.match(html, /아직 공개된 메모가 없습니다/);
   for (const entry of notes) assert.ok(html.includes(escape(entry.title)));
 });

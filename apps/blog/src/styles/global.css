@@ -996,13 +996,6 @@ html[data-theme="dark"] {
   font-weight: 650;
 }
 
-.tit-filter-count {
-  color: var(--color-muted-strong);
-  flex: 0 0 auto;
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-}
-
 .tit-month:not([hidden]) ~ .tit-month:not([hidden]) {
   margin-top: 2.5rem;
 }

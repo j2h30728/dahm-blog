@@ -14,7 +14,6 @@ const tags = getTitTags(posts);
     <header class={ui.archiveIntro}>
       <div class={ui.sectionHeading}>
         <h1 class={ui.archiveTitle} id="tit-title">메모</h1>
-        <p class={ui.sectionMeta} aria-live="polite" aria-atomic="true"><span data-result-count>{posts.length}</span>개의 메모</p>
       </div>
       <p class={ui.archiveSubtitle}>배운 것과 떠오른 생각을 짧게 남깁니다.</p>
       <div class={ui.activeSearch} data-search-state hidden>
@@ -23,8 +22,8 @@ const tags = getTitTags(posts);
       </div>
     </header>
     <div class="tit-filters" role="group" aria-label="메모 태그 필터">
-      <button class="tit-filter" type="button" data-tit-tag="" aria-pressed="true">전체<span class="tit-filter-count">{posts.length}</span></button>
-      {tags.map(tag => <button class="tit-filter" type="button" data-tit-tag={tag.name} aria-pressed="false">{tag.name}<span class="tit-filter-count">{tag.count}</span></button>)}
+      <button class="tit-filter" type="button" data-tit-tag="" aria-pressed="true">전체</button>
+      {tags.map(tag => <button class="tit-filter" type="button" data-tit-tag={tag.name} aria-pressed="false">{tag.name}</button>)}
     </div>
     <div class="tit-months" data-post-list>
       {months.map(month => <section class="tit-month" data-tit-month={month.key} aria-labelledby={`tit-month-${month.key}`}>
@@ -42,6 +41,6 @@ const tags = getTitTags(posts);
         </ul>
       </section>)}
     </div>
-    <p class={ui.emptyState} data-empty-state hidden={posts.length > 0}>아직 공개된 메모가 없습니다.</p>
+    <p class={ui.emptyState} data-empty-state role="status" aria-live="polite" hidden={posts.length > 0}>아직 공개된 메모가 없습니다.</p>
   </section>
 </BaseLayout>
