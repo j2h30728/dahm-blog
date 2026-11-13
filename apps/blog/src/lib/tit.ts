@@ -21,7 +21,7 @@ export function getTitDateParts(value: string | Date) {
     year, month, day,
     monthKey: `${year}-${month}`,
     monthLabel: `${year}년 ${Number(month)}월`,
-    dayLabel: `${month}.${day}`,
+    dayLabel: `${Number(day)}일`,
     dateLabel: `${year}년 ${Number(month)}월 ${Number(day)}일`,
   };
 }

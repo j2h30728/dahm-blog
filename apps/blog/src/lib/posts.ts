@@ -1,5 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import type { PostCategory } from './archive';
+import { getTitDateParts } from './tit';
 import manifest from '../content/export-manifest.json';
 
 export type Entry = CollectionEntry<'posts'> | CollectionEntry<'notes'>;
@@ -47,7 +48,7 @@ async function readPublishedPosts(): Promise<Post[]> {
   }).sort((a, b) => Date.parse(b.date) - Date.parse(a.date) || a.title.localeCompare(b.title));
 }
 export function formatPostDate(value: string) {
-  return new Date(value).toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' });
+  return getTitDateParts(value).dateLabel;
 }
 export const labelSlug = (label: string) => label.normalize('NFC').toLowerCase().replace(/['"]/g, '')
   .replace(/[^\p{Letter}\p{Number}\p{Mark}]+/gu, '-').replace(/^-+|-+$/g, '').replace(/-{2,}/g, '-');

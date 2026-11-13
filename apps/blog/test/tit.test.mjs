@@ -6,12 +6,16 @@ test('TIT dates use Korea time at month and year boundaries', () => {
   const december = getTitDateParts('2026-11-30T16:30:00.000Z');
   assert.equal(december.monthKey, '2026-12');
   assert.equal(december.monthLabel, '2026년 12월');
-  assert.equal(december.dayLabel, '12.01');
+  assert.equal(december.dayLabel, '1일');
+  assert.equal(december.dateLabel, '2026년 12월 1일');
   const newYear = getTitDateParts(new Date('2025-12-31T15:00:00.000Z'));
   assert.equal(newYear.monthKey, '2026-01');
-  assert.equal(newYear.dayLabel, '01.01');
+  assert.equal(newYear.dayLabel, '1일');
+  assert.equal(newYear.dateLabel, '2026년 1월 1일');
   assert.equal(getTitDateParts('2025-12-31T14:59:59.000Z').monthKey, '2025-12');
-  assert.equal(getTitDateParts('2026-01-09').dayLabel, '01.09');
+  assert.equal(getTitDateParts('2026-01-09').dayLabel, '9일');
+  assert.equal(getTitDateParts('2026-01-09').dateLabel, '2026년 1월 9일');
+  assert.equal(getTitDateParts('2026-11-13').dateLabel, '2026년 11월 13일');
   assert.throws(() => getTitDateParts('not a date'));
 });
 
