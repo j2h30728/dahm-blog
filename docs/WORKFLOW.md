@@ -80,7 +80,7 @@ summary: 선택적으로 작성하는 설명
 
 ## Obsidian 템플릿
 
-기본 Templates 기능의 `_templates` 폴더에 다음 두 템플릿을 추가했습니다. 저장소에도 [글 템플릿](templates/blog-post.md)과 [메모 템플릿](templates/blog-note.md) 사본을 둡니다.
+Obsidian 기본 Templates 기능의 `_templates` 폴더에 블로그 글과 메모 템플릿을 두고 사용합니다.
 
 - **블로그 글**: `blog/posts/`에서 새 파일을 만들고 사용합니다. `section`은 기술 또는 일상으로 정합니다.
 - **블로그 메모**: `blog/notes/`에서 새 파일을 만들고 사용합니다. 카테고리·요약 없이 바로 작성할 수 있습니다.
