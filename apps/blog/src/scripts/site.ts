@@ -234,6 +234,31 @@ function bindCodeCopy(signal: AbortSignal) {
 }
 
 function bindToc(signal: AbortSignal) {
+  const toc = document.querySelector<HTMLDetailsElement>('details.toc');
+  if (!toc) return;
+  const summary = toc.querySelector<HTMLElement>('summary');
+  // CSS의 플로팅 목차 분기와 동일하게 유지한다.
+  const floating = window.matchMedia('(min-width: 80rem)');
+  const synchronizeLayout = () => {
+    if (!floating.matches && toc.contains(document.activeElement)) summary?.focus({ preventScroll: true });
+    toc.open = floating.matches;
+  };
+  floating.addEventListener('change', synchronizeLayout, { signal });
+  synchronizeLayout();
+  toc.addEventListener('click', event => {
+    if (floating.matches || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+    if (event.target instanceof Element && event.target.closest('[data-toc-link]')) {
+      toc.open = false;
+      summary?.focus({ preventScroll: true });
+    }
+  }, { signal });
+  toc.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && toc.open) {
+      toc.open = false;
+      summary?.focus({ preventScroll: true });
+      event.stopPropagation();
+    }
+  }, { signal });
   const links = [...document.querySelectorAll<HTMLAnchorElement>('[data-toc-link]')];
   const activate = () => {
     let current = links[0]?.dataset.headingId;
