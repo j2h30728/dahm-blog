@@ -462,11 +462,16 @@ html[data-theme="dark"] .shiki span {
   margin-block: 2rem;
 }
 
+.content :is(p, figure):has(img) {
+  text-align: center;
+}
+
 .content img {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   display: block;
   height: auto;
+  margin-inline: auto;
   max-width: 100%;
 }
 
